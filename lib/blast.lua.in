@@ -1,0 +1,112 @@
+----------------------------------------------------------------------------
+-- @author Julien Danjou &lt;julien@danjou.info&gt;
+-- @copyright 2008 Julien Danjou
+-- @release @AWESOME_VERSION@
+----------------------------------------------------------------------------
+
+-- Grab environment
+local ipairs = ipairs
+local setmetatable = setmetatable
+local table = table
+local math = math
+local capi =
+{
+    client = client,
+    image = image,
+    button = button,
+    wibox = wibox,
+    widget = widget,
+    mouse = mouse,
+    screen = screen
+}
+local client = require("awful.client")
+local tag = require("awful.tag")
+
+--- Exposé library
+module("blast")
+
+-- Destroy an array of wiboxes.
+-- @param wiboxes The wibxoxes to destroy.
+local function erase(wiboxes)
+    for k, w in ipairs(wiboxes) do
+        w.screen = nil
+    end
+end
+
+--- Arrange windows thumbnail in a circle
+-- Click on one to get to it.
+-- @param _ Ignored.
+-- @param screen Screen number.
+local function blast(_, screen)
+    local w = capi.screen[screen].geometry.width
+    local h = capi.screen[screen].geometry.height
+    
+    local cls = client.visible(screen)
+
+    -- Remove unuseful clients
+    local lcls = {}
+    for k, v in ipairs(cls) do
+        if client.focus.filter(v) then
+            table.insert(lcls, v)
+        end
+    end
+    cls = lcls
+
+    -- No client? return!
+    if #cls == 0 then return end
+
+    local coords = {}
+    
+    -- Center the client if only one
+    if #cls == 1 then
+        coords[1] = { x = 0, y = 0 }
+    else
+        arc_angle = - (2 * math.pi) / #cls
+        local cos = math.cos(arc_angle)
+        local sin = math.sin(arc_angle)
+        coords[1] = { x = 0, y = h / 2.1 }
+        for i = 2, #cls do
+            coords[i] = {}
+            coords[i].x = math.ceil(coords[i - 1].x * cos - coords[i - 1].y * sin)
+            coords[i].y = math.ceil(coords[i - 1].x * sin + coords[i - 1].y * cos)
+        end
+    end
+
+    local wiboxes = {}
+    for i, c in ipairs(cls) do
+        local wb = capi.wibox({ position = "floating" })
+        table.insert(wiboxes, wb)
+        wb.widgets = capi.widget({ type = "imagebox" })
+        wb.widgets.image = c.content
+        local g = c:geometry()
+        wb:geometry({ x = coords[i].x - (g.width / 6) + w / 2,
+                      y = coords[i].y - (g.height / 6) + h / 2,
+                      width = g.width / 3,
+                      height = g.height / 3 })
+        wb.ontop = true
+        wb.screen = screen
+        wb.widgets.mouse_enter = function ()
+            wb:geometry({ x = coords[i].x - (g.width / 5) + w / 2,
+                          y = coords[i].y - (g.height / 5) + h / 2,
+                          width = g.width / 2.5,
+                          height = g.height / 2.5 })
+                      end
+        wb.widgets.mouse_leave = function ()
+            wb:geometry({ x = coords[i].x - (g.width / 6) + w / 2,
+                          y = coords[i].y - (g.height / 6) + h / 2,
+                          width = g.width / 3,
+                          height = g.height / 3 })
+                      end
+
+        wb:buttons({ capi.button({ }, 1, function ()
+                                             erase(wiboxes)
+                                             tag.viewonly(c:tags()[1])
+                                             capi.client.focus = c
+                                             c:raise()
+                                         end)})
+    end
+end
+
+setmetatable(_M, { __call = blast })
+
+-- vim: filetype=lua:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
