@@ -266,6 +266,14 @@ if(GENERATE_LUADOC)
         VERBATIM)
     # }}}
 
+    add_custom_command(
+        COMMAND ${SOURCE_DIR}/build-utils/lua-doc-generate.lua
+                ${BUILD_DIR}/lib > ${BUILD_DIR}/lib/awful/doc/awesome.lua
+        OUTPUT ${BUILD_DIR}/lib/awful/doc/awesome.lua
+        DEPENDS ${capi_lua}
+        COMMENT "Generating documentation for Lua libraries."
+        VERBATIM)
+
     # Generate documentation of lib//0lua
     file(GLOB_RECURSE lua_lib_files ${BUILD_DIR}/lib/*.lua)
     foreach(filename ${lua_lib_files})
@@ -277,6 +285,9 @@ if(GENERATE_LUADOC)
         COMMAND ${LUADOC_EXECUTABLE} ${luadoc_srcs} -d ${BUILD_DIR}/luadoc
         WORKING_DIRECTORY ${BUILD_DIR}/lib
         DEPENDS ${AWE_LUA_FILES} ${capi_lua})
+
+    add_custom_target(awful.doc ALL
+        DEPENDS ${BUILD_DIR}/lib/awful/doc/awesome.lua)
 endif()
 # }}}
 
