@@ -341,8 +341,7 @@ static void
 wibox_set_border_color(lua_State *L, int udx, const xcolor_t *color)
 {
     wibox_t *w = luaA_checkudata(L, udx, &wibox_class);
-    xcb_change_window_attributes(globalconf.connection, w->window,
-                                 XCB_CW_BORDER_PIXEL, &color->pixel);
+    xwindow_set_border_color(w->window, &w->border_color);
     w->border_color = *color;
     luaA_object_emit_signal(L, udx, "property::border_color", 0);
 }
