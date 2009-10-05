@@ -365,7 +365,7 @@ wibox_map(wibox_t *wibox)
     /* We must make sure the wibox does not display garbage */
     wibox_need_update(wibox);
     /* Stack this wibox correctly */
-    client_stack();
+    stack_windows();
 }
 
 /** Kick out systray windows.
@@ -997,7 +997,7 @@ luaA_wibox_set_ontop(lua_State *L, wibox_t *wibox)
     if(b != wibox->ontop)
     {
         wibox->ontop = b;
-        client_stack();
+        stack_windows();
         luaA_object_emit_signal(L, -3, "property::ontop", 0);
     }
     return 0;
