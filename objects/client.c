@@ -1254,8 +1254,6 @@ luaA_client_lower(lua_State *L)
     for(client_t *tc = c->transient_for; tc; tc = tc->transient_for)
         stack_client_push(tc);
 
-    stack_windows();
-
     return 0;
 }
 
