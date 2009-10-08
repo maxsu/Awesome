@@ -494,8 +494,6 @@ HANDLE_GEOM(height)
     /* update strut */
     ewmh_process_client_strut(c, NULL);
 
-    ewmh_update_net_client_list(c->phys_screen);
-
     /* Always stay in NORMAL_STATE. Even though iconified seems more
      * appropriate sometimes. The only possible loss is that clients not using
      * visibility events may continue to process data (when banned).
@@ -962,8 +960,6 @@ client_unmanage(client_t *c)
         screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
 
     xwindow_set_state(c->window, XCB_WM_STATE_WITHDRAWN);
-
-    ewmh_update_net_client_list(c->phys_screen);
 
     /* set client as invalid */
     c->invalid = true;
