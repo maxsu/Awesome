@@ -68,7 +68,6 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
             xcb_get_wm_hints_unchecked(globalconf.connection, c->window);
 
         c->urgent = urgent;
-        ewmh_client_update_hints(c);
 
         /* update ICCCM hints */
         xcb_wm_hints_t wmh;
@@ -718,7 +717,6 @@ client_set_minimized(lua_State *L, int cidx, bool s)
             xwindow_set_state(c->window, XCB_WM_STATE_ICONIC);
         else
             xwindow_set_state(c->window, XCB_WM_STATE_NORMAL);
-        ewmh_client_update_hints(c);
         if(strut_has_value(&c->strut))
             screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
         luaA_object_emit_signal(L, cidx, "property::minimized", 0);
@@ -739,7 +737,6 @@ client_set_sticky(lua_State *L, int cidx, bool s)
     {
         c->sticky = s;
         banning_need_update((c)->screen);
-        ewmh_client_update_hints(c);
         luaA_object_emit_signal(L, cidx, "property::sticky", 0);
     }
 }
@@ -772,7 +769,6 @@ client_set_fullscreen(lua_State *L, int cidx, bool s)
         luaA_object_emit_signal(L, abs_cidx, "request::fullscreen", 1);
         c->fullscreen = s;
         stack_windows();
-        ewmh_client_update_hints(c);
         luaA_object_emit_signal(L, abs_cidx, "property::fullscreen", 0);
     }
 }
@@ -796,7 +792,6 @@ client_set_fullscreen(lua_State *L, int cidx, bool s)
             luaA_object_emit_signal(L, abs_cidx, "request::maximized_" #type, 1); \
             c->maximized_##type = s; \
             stack_windows(); \
-            ewmh_client_update_hints(c); \
             luaA_object_emit_signal(L, abs_cidx, "property::maximized_" #type, 0); \
         } \
     }
@@ -825,7 +820,6 @@ client_set_above(lua_State *L, int cidx, bool s)
         }
         c->above = s;
         stack_windows();
-        ewmh_client_update_hints(c);
         luaA_object_emit_signal(L, cidx, "property::above", 0);
     }
 }
@@ -851,7 +845,6 @@ client_set_below(lua_State *L, int cidx, bool s)
         }
         c->below = s;
         stack_windows();
-        ewmh_client_update_hints(c);
         luaA_object_emit_signal(L, cidx, "property::below", 0);
     }
 }
@@ -870,7 +863,6 @@ client_set_modal(lua_State *L, int cidx, bool s)
     {
         c->modal = s;
         stack_windows();
-        ewmh_client_update_hints(c);
         luaA_object_emit_signal(L, cidx, "property::modal", 0);
     }
 }
@@ -913,7 +905,6 @@ client_set_skip_taskbar(lua_State *L, int cidx, bool s)
     if(c->skip_taskbar != s)
     {
         c->skip_taskbar = s;
-        ewmh_client_update_hints(c);
         luaA_object_emit_signal(L, cidx, "property::skip_taskbar", 0);
     }
 }
