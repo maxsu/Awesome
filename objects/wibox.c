@@ -761,8 +761,6 @@ luaA_wibox_new(lua_State *L)
     if(!w->geometry.height)
         w->geometry.height = 1;
 
-    luaA_object_connect_signal(L, -2, "property::border_width", luaA_wibox_need_update);
-
     return 1;
 }
 
@@ -1262,6 +1260,8 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip);
+
+    luaA_class_connect_signal(L, &wibox_class, "property::border_width", luaA_wibox_need_update);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
