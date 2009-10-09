@@ -449,7 +449,7 @@ main(int argc, char **argv)
     ewmh_init();
     systray_init();
 
-    /* init spawn (sn) */
+    ewmh_init();
     spawn_init();
     banning_init();
     stack_init();
