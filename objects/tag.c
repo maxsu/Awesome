@@ -56,13 +56,6 @@ tag_view(lua_State *L, int udx, bool view)
     if(tag->selected != view)
     {
         tag->selected = view;
-
-        if(tag->screen)
-        {
-            int screen_index = screen_array_indexof(&globalconf.screens, tag->screen);
-            ewmh_update_net_current_desktop(screen_virttophys(screen_index));
-        }
-
         luaA_object_emit_signal(L, udx, "property::selected", 0);
     }
 }
