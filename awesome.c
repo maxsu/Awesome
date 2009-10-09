@@ -536,11 +536,11 @@ main(int argc, char **argv)
                                      xutil_screen_get(globalconf.connection, screen_nbr)->root,
                                      XCB_CW_EVENT_MASK,
                                      change_win_vals);
-        ewmh_init(screen_nbr);
+        ewmh_init_screen(screen_nbr);
         systray_init(screen_nbr);
     }
 
-    /* init spawn (sn) */
+    ewmh_init();
     spawn_init();
     banning_init();
     stack_init();

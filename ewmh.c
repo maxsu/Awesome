@@ -142,7 +142,7 @@ ewmh_update_net_current_desktop(lua_State *L)
 }
 
 void
-ewmh_init(int phys_screen)
+ewmh_init_screen(int phys_screen)
 {
     xcb_window_t father;
     xcb_screen_t *xscreen = xutil_screen_get(globalconf.connection, phys_screen);
@@ -224,7 +224,11 @@ ewmh_init(int phys_screen)
                         father, _NET_WM_PID, CARDINAL, 32, 1, &i);
 
     ewmh_update_desktop_geometry(phys_screen);
+};
 
+void
+ewmh_init(void)
+{
     luaA_class_connect_signal(globalconf.L, &client_class, "focus", ewmh_update_net_active_window);
     luaA_class_connect_signal(globalconf.L, &client_class, "unfocus", ewmh_update_net_active_window);
     luaA_class_connect_signal(globalconf.L, &client_class, "manage", ewmh_update_net_client_list);
