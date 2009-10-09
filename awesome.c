@@ -543,6 +543,7 @@ main(int argc, char **argv)
     /* init spawn (sn) */
     spawn_init();
     banning_init();
+    stack_init();
 
     /* Parse and run configuration file */
     if (!luaA_parserc(&xdg, confpath, true))

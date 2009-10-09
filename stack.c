@@ -24,6 +24,8 @@
 #include "objects/client.h"
 #include "objects/wibox.h"
 
+static bool need_stack_refresh = false;
+
 void
 stack_client_remove(client_t *c)
 {
@@ -34,7 +36,7 @@ stack_client_remove(client_t *c)
             break;
         }
     ewmh_update_net_client_list_stacking(c->phys_screen);
-    stack_windows();
+    need_stack_refresh = true;
 }
 
 /** Push the client at the beginning of the client stack.
@@ -46,7 +48,7 @@ stack_client_push(client_t *c)
     stack_client_remove(c);
     client_array_push(&globalconf.stack, c);
     ewmh_update_net_client_list_stacking(c->phys_screen);
-    stack_windows();
+    need_stack_refresh = true;
 }
 
 /** Push the client at the end of the client stack.
@@ -58,14 +60,6 @@ stack_client_append(client_t *c)
     stack_client_remove(c);
     client_array_append(&globalconf.stack, c);
     ewmh_update_net_client_list_stacking(c->phys_screen);
-    stack_windows();
-}
-
-static bool need_stack_refresh = false;
-
-void
-stack_windows(void)
-{
     need_stack_refresh = true;
 }
 
@@ -187,5 +181,26 @@ stack_refresh()
     need_stack_refresh = false;
 }
 
+static int
+stack_need_update(lua_State *L)
+{
+    need_stack_refresh = true;
+    return 0;
+}
+
+void
+stack_init(void)
+{
+    luaA_class_connect_signal(globalconf.L, &client_class, "property::fullscreen", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &client_class, "property::maximized_vertical", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &client_class, "property::maximized_horizontal", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &client_class, "property::above", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &client_class, "property::below", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &client_class, "property::modal", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &client_class, "property::ontop", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &wibox_class, "property::ontop", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &wibox_class, "property::visible", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, &wibox_class, "property::screen", stack_need_update);
+}
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

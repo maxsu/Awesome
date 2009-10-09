@@ -101,6 +101,7 @@ DO_CLIENT_SET_PROPERTY(transient_for)
 DO_CLIENT_SET_PROPERTY(pid)
 DO_CLIENT_SET_PROPERTY(skip_taskbar)
 DO_CLIENT_SET_PROPERTY(sticky)
+DO_CLIENT_SET_PROPERTY(modal)
 #undef DO_CLIENT_SET_PROPERTY
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
@@ -678,7 +679,6 @@ client_set_fullscreen(lua_State *L, int cidx, bool s)
         lua_pushboolean(L, s);
         luaA_object_emit_signal(L, abs_cidx, "request::fullscreen", 1);
         c->fullscreen = s;
-        stack_windows();
         luaA_object_emit_signal(L, abs_cidx, "property::fullscreen", 0);
     }
 }
@@ -701,7 +701,6 @@ client_set_fullscreen(lua_State *L, int cidx, bool s)
             lua_pushboolean(L, s); \
             luaA_object_emit_signal(L, abs_cidx, "request::maximized_" #type, 1); \
             c->maximized_##type = s; \
-            stack_windows(); \
             luaA_object_emit_signal(L, abs_cidx, "property::maximized_" #type, 0); \
         } \
     }
@@ -729,7 +728,6 @@ client_set_above(lua_State *L, int cidx, bool s)
             client_set_fullscreen(L, cidx, false);
         }
         c->above = s;
-        stack_windows();
         luaA_object_emit_signal(L, cidx, "property::above", 0);
     }
 }
@@ -754,26 +752,7 @@ client_set_below(lua_State *L, int cidx, bool s)
             client_set_fullscreen(L, cidx, false);
         }
         c->below = s;
-        stack_windows();
         luaA_object_emit_signal(L, cidx, "property::below", 0);
-    }
-}
-
-/** Set a client modal, or not.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s Set or not the client modal attribute.
- */
-void
-client_set_modal(lua_State *L, int cidx, bool s)
-{
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
-
-    if(c->modal != s)
-    {
-        c->modal = s;
-        stack_windows();
-        luaA_object_emit_signal(L, cidx, "property::modal", 0);
     }
 }
 
@@ -797,7 +776,6 @@ client_set_ontop(lua_State *L, int cidx, bool s)
             client_set_fullscreen(L, cidx, false);
         }
         c->ontop = s;
-        stack_windows();
         luaA_object_emit_signal(L, cidx, "property::ontop", 0);
     }
 }
