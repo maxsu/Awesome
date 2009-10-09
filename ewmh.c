@@ -123,6 +123,16 @@ ewmh_update_net_client_list(lua_State *L)
     return 0;
 }
 
+static int
+ewmh_update_net_current_desktop(lua_State *L)
+{
+    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+                        globalconf.screen->root,
+                        _NET_CURRENT_DESKTOP, CARDINAL, 32, 1,
+                        (uint32_t[]) { tags_get_first_selected_index(&globalconf.screens.tab[0]) });
+    return 0;
+}
+
 void
 ewmh_init(void)
 {
@@ -220,6 +230,7 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, &client_class, "property::below" , ewmh_client_update_hints);
     luaA_class_connect_signal(globalconf.L, &client_class, "property::minimized" , ewmh_client_update_hints);
     luaA_class_connect_signal(globalconf.L, &client_class, "property::urgent" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", ewmh_update_net_current_desktop);
 }
 
 /** Set the client list in stacking order, bottom to top.
@@ -246,16 +257,6 @@ ewmh_update_net_numbers_of_desktop(void)
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
 			globalconf.screen->root,
 			_NET_NUMBER_OF_DESKTOPS, XCB_ATOM_CARDINAL, 32, 1, &count);
-}
-
-void
-ewmh_update_net_current_desktop(void)
-{
-    uint32_t idx = tags_get_first_selected_index(&globalconf.screens.tab[0]);
-
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
-                        _NET_CURRENT_DESKTOP, XCB_ATOM_CARDINAL, 32, 1, &idx);
 }
 
 void
