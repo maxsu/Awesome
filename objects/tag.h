@@ -1,7 +1,7 @@
 /*
  * tag.h - tag management header
  *
- * Copyright © 2007-2008 Julien Danjou <julien@danjou.info>
+ * Copyright © 2007-2009 Julien Danjou <julien@danjou.info>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,21 @@
 #ifndef AWESOME_OBJECTS_TAG_H
 #define AWESOME_OBJECTS_TAG_H
 
-#include "client.h"
+#include "objects/client.h"
+
+/** Tag type */
+struct tag
+{
+    LUA_OBJECT_HEADER
+    /** Tag name */
+    char *name;
+    /** Screen */
+    screen_t *screen;
+    /** true if selected */
+    bool selected;
+    /** clients in this tag */
+    client_array_t clients;
+};
 
 int tags_get_first_selected_index(screen_t *);
 void tag_client(client_t *);
@@ -39,6 +53,8 @@ void tag_class_setup(lua_State *);
 
 bool tag_get_selected(tag_t *);
 char *tag_get_name(tag_t *);
+
+lua_class_t tag_class;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
