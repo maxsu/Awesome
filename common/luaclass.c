@@ -277,7 +277,17 @@ void
 luaA_class_emit_signal(lua_State *L, lua_class_t *lua_class,
                        const char *name, int nargs)
 {
-    signal_object_emit(L, &lua_class->signals, name, nargs);
+    /* emit signal on parent classes */
+    for(; lua_class; lua_class = lua_class->parent)
+    {
+        /* duplicate arguments */
+        for(int i = 0; i < nargs; i++)
+            lua_pushvalue(L, - nargs);
+        /* emit signal on class */
+        signal_object_emit(L, &lua_class->signals, name, nargs);
+    }
+
+    lua_pop(L, nargs);
 }
 
 /** Try to use the metatable of an object.
