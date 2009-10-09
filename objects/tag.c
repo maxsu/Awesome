@@ -26,23 +26,7 @@
 #include "widget.h"
 #include "luaa.h"
 
-/** Tag type */
-struct tag
-{
-    LUA_OBJECT_HEADER
-    /** Tag name */
-    char *name;
-    /** Screen */
-    screen_t *screen;
-    /** true if selected */
-    bool selected;
-    /** clients in this tag */
-    client_array_t clients;
-};
-
-static lua_class_t tag_class;
 LUA_OBJECT_FUNCS(tag_class, tag_t, tag)
-
 
 void
 tag_unref_simplified(tag_t **tag)
@@ -76,9 +60,6 @@ tag_view(lua_State *L, int udx, bool view)
         if(tag->screen)
         {
             int screen_index = screen_array_indexof(&globalconf.screens, tag->screen);
-
-            banning_need_update(tag->screen);
-
             ewmh_update_net_current_desktop(screen_virttophys(screen_index));
         }
 
@@ -140,10 +121,6 @@ tag_remove_from_screen(tag_t *tag)
             break;
         }
 
-    /* tag was selected? If so, reban */
-    if(tag->selected)
-        banning_need_update(tag->screen);
-
     ewmh_update_net_numbers_of_desktop(phys_screen);
     ewmh_update_net_desktop_names(phys_screen);
     ewmh_update_workarea(phys_screen);
@@ -191,7 +168,6 @@ tag_client(client_t *c)
 
     client_array_append(&t->clients, c);
     ewmh_client_update_desktop(c);
-    banning_need_update((c)->screen);
 
     tag_client_emit_signal(globalconf.L, t, c, "tagged");
 }
@@ -207,7 +183,6 @@ untag_client(client_t *c, tag_t *t)
         if(t->clients.tab[i] == c)
         {
             client_array_take(&t->clients, i);
-            banning_need_update((c)->screen);
             ewmh_client_update_desktop(c);
             tag_client_emit_signal(globalconf.L, t, c, "untagged");
             luaA_object_unref(globalconf.L, t);

@@ -100,6 +100,7 @@ DO_CLIENT_SET_PROPERTY(type)
 DO_CLIENT_SET_PROPERTY(transient_for)
 DO_CLIENT_SET_PROPERTY(pid)
 DO_CLIENT_SET_PROPERTY(skip_taskbar)
+DO_CLIENT_SET_PROPERTY(sticky)
 #undef DO_CLIENT_SET_PROPERTY
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
@@ -640,7 +641,6 @@ client_set_minimized(lua_State *L, int cidx, bool s)
     if(c->minimized != s)
     {
         c->minimized = s;
-        banning_need_update((c)->screen);
         if(s)
             xwindow_set_state(c->window, XCB_WM_STATE_ICONIC);
         else
@@ -648,24 +648,6 @@ client_set_minimized(lua_State *L, int cidx, bool s)
         if(strut_has_value(&c->strut))
             screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
         luaA_object_emit_signal(L, cidx, "property::minimized", 0);
-    }
-}
-
-/** Set a client sticky, or not.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s Set or not the client sticky.
- */
-void
-client_set_sticky(lua_State *L, int cidx, bool s)
-{
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
-
-    if(c->sticky != s)
-    {
-        c->sticky = s;
-        banning_need_update((c)->screen);
-        luaA_object_emit_signal(L, cidx, "property::sticky", 0);
     }
 }
 
@@ -1164,7 +1146,6 @@ luaA_client_set_hidden(lua_State *L, client_t *c)
     if(b != c->hidden)
     {
         c->hidden = b;
-        banning_need_update((c)->screen);
         if(strut_has_value(&c->strut))
             screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
         luaA_object_emit_signal(L, -3, "property::hidden", 0);
