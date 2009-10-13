@@ -43,7 +43,9 @@
     /** Border width */ \
     uint16_t border_width; \
     /** Window tags */ \
-    tag_array_t tags;
+    tag_array_t tags; \
+    /** True if the window is sticky */ \
+    bool sticky;
 
 /** Window structure */
 typedef struct
@@ -57,6 +59,7 @@ void window_class_setup(lua_State *);
 
 void window_set_opacity(lua_State *, int, double);
 void window_set_border_width(lua_State *, int, int);
+void window_set_sticky(lua_State *, int, bool);
 
 DO_ARRAY(window_t *, window, DO_NOTHING)
 

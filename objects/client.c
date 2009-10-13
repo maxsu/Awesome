@@ -90,7 +90,6 @@ LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, type)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, transient_for)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, pid)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, skip_taskbar)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, sticky)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, modal)
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
@@ -1136,13 +1135,6 @@ luaA_client_set_icon(lua_State *L, client_t *c)
 }
 
 static int
-luaA_client_set_sticky(lua_State *L, client_t *c)
-{
-    client_set_sticky(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
 luaA_client_set_size_hints_honor(lua_State *L, client_t *c)
 {
     c->size_hints_honor = luaA_checkboolean(L, -1);
@@ -1216,7 +1208,6 @@ LUA_OBJECT_EXPORT_PROPERTY(client, client_t, ontop, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(client, client_t, above, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(client, client_t, below, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, sticky, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(client, client_t, size_hints_honor, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_horizontal, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_vertical, lua_pushboolean)
@@ -1646,10 +1637,6 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_client_set_below,
                             (lua_class_propfunc_t) luaA_client_get_below,
                             (lua_class_propfunc_t) luaA_client_set_below);
-    luaA_class_add_property(&client_class, A_TK_STICKY,
-                            (lua_class_propfunc_t) luaA_client_set_sticky,
-                            (lua_class_propfunc_t) luaA_client_get_sticky,
-                            (lua_class_propfunc_t) luaA_client_set_sticky);
     luaA_class_add_property(&client_class, A_TK_SIZE_HINTS_HONOR,
                             (lua_class_propfunc_t) luaA_client_set_size_hints_honor,
                             (lua_class_propfunc_t) luaA_client_get_size_hints_honor,
