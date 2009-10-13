@@ -153,7 +153,6 @@ tag_client(client_t *c)
     }
 
     client_array_append(&t->clients, c);
-    ewmh_client_update_desktop(c);
 
     tag_client_emit_signal(globalconf.L, t, c, "tagged");
 }
@@ -169,7 +168,6 @@ untag_client(client_t *c, tag_t *t)
         if(t->clients.tab[i] == c)
         {
             client_array_take(&t->clients, i);
-            ewmh_client_update_desktop(c);
             tag_client_emit_signal(globalconf.L, t, c, "untagged");
             luaA_object_unref(globalconf.L, t);
             return;
