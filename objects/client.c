@@ -221,9 +221,6 @@ client_set_focus(client_t *c, bool set_input_focus)
  */
 void client_ban_unfocus(client_t *c)
 {
-    if(globalconf.screens.tab[c->phys_screen].prev_client_focus == c)
-        globalconf.screens.tab[c->phys_screen].prev_client_focus = NULL;
-
     /* Wait until the last moment to take away the focus from the window. */
     if(globalconf.screens.tab[c->phys_screen].client_focus == c)
         client_unfocus(c);
@@ -275,11 +272,7 @@ void
 client_focus_update(client_t *c)
 {
     if(!client_maybevisible(c, c->screen))
-    {
-        /* Focus previously focused client */
-        client_focus(globalconf.screen_focus->prev_client_focus);
         return;
-    }
 
     if(globalconf.screen_focus
         && globalconf.screen_focus->client_focus)
@@ -297,7 +290,6 @@ client_focus_update(client_t *c)
     client_unban(c);
 
     globalconf.screen_focus = &globalconf.screens.tab[c->phys_screen];
-    globalconf.screen_focus->prev_client_focus = c;
     globalconf.screen_focus->client_focus = c;
 
     /* according to EWMH, we have to remove the urgent state from a client */
@@ -796,9 +788,6 @@ client_unmanage(client_t *c)
     foreach(tc, globalconf.clients)
         if((*tc)->transient_for == c)
             (*tc)->transient_for = NULL;
-
-    if(globalconf.screens.tab[c->phys_screen].prev_client_focus == c)
-        globalconf.screens.tab[c->phys_screen].prev_client_focus = NULL;
 
     if(globalconf.screens.tab[c->phys_screen].client_focus == c)
         client_unfocus(c);
