@@ -22,7 +22,7 @@
 #ifndef AWESOME_OBJECTS_TAG_H
 #define AWESOME_OBJECTS_TAG_H
 
-#include "objects/client.h"
+#include "objects/window.h"
 
 /** Tag type */
 struct tag
@@ -34,14 +34,14 @@ struct tag
     screen_t *screen;
     /** true if selected */
     bool selected;
-    /** clients in this tag */
-    client_array_t clients;
+    /** Windows in this tag */
+    window_array_t windows;
 };
 
 int tags_get_first_selected_index(screen_t *);
-void tag_client(client_t *);
-void untag_client(client_t *, tag_t *);
-bool is_client_tagged(client_t *, tag_t *);
+void tag_window(lua_State *, int, int);
+void untag_window(lua_State *, int, int);
+bool window_is_tagged(window_t *, tag_t *);
 void tag_view_only_byindex(screen_t *, int);
 void tag_append_to_screen(lua_State *, int, screen_t *);
 void tag_remove_from_screen(tag_t *);
