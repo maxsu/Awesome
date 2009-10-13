@@ -234,11 +234,11 @@ void client_ban_unfocus(client_t *c)
 void
 client_ban(client_t *c)
 {
-    if(!c->isbanned)
+    if(!c->banned)
     {
         xcb_unmap_window(globalconf.connection, c->frame_window);
 
-        c->isbanned = true;
+        c->banned = true;
 
         client_ban_unfocus(c);
     }
@@ -412,7 +412,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     xcb_screen_t *s = globalconf.screen;
 
     /* consider the window banned */
-    c->isbanned = true;
+    c->banned = true;
     /* Store window */
     c->window = w;
     c->frame_window = xcb_generate_id(globalconf.connection);
@@ -867,11 +867,11 @@ client_set_ontop(lua_State *L, int cidx, bool s)
 void
 client_unban(client_t *c)
 {
-    if(c->isbanned)
+    if(c->banned)
     {
         xcb_map_window(globalconf.connection, c->frame_window);
 
-        c->isbanned = false;
+        c->banned = false;
 
         /* An unbanned clients shouldn't be minimized */
         luaA_object_push(globalconf.L, c);
