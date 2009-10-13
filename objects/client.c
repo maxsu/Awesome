@@ -22,7 +22,6 @@
 #include <xcb/xcb_atom.h>
 #include <xcb/xcb_image.h>
 
-#include "objects/tag.h"
 #include "ewmh.h"
 #include "screen.h"
 #include "wibox.h"
@@ -31,6 +30,8 @@
 #include "spawn.h"
 #include "luaa.h"
 #include "xwindow.h"
+#include "objects/client.h"
+#include "objects/tag.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 
@@ -148,7 +149,7 @@ client_maybevisible(client_t *c, screen_t *screen)
             return true;
 
         foreach(tag, screen->tags)
-            if(tag_get_selected(*tag) && is_client_tagged(c, *tag))
+            if(tag_get_selected(*tag) && window_is_tagged((window_t *) c, *tag))
                 return true;
     }
     return false;
@@ -804,15 +805,10 @@ client_unban(client_t *c)
 void
 client_unmanage(client_t *c)
 {
-    tag_array_t *tags = &c->screen->tags;
-
-    /* Reset transient_for attributes of widows that maybe referring to us */
-    foreach(_tc, globalconf.clients)
-    {
-        client_t *tc = *_tc;
-        if(tc->transient_for == c)
-            tc->transient_for = NULL;
-    }
+    /* Reset transient_for attributes of windows that maybe referring to us */
+    foreach(tc, globalconf.clients)
+        if((*tc)->transient_for == c)
+            (*tc)->transient_for = NULL;
 
     if(globalconf.screens.tab[c->phys_screen].prev_client_focus == c)
         globalconf.screens.tab[c->phys_screen].prev_client_focus = NULL;
@@ -828,10 +824,18 @@ client_unmanage(client_t *c)
             break;
         }
     stack_client_remove(c);
-    for(int i = 0; i < tags->len; i++)
-        untag_client(c, tags->tab[i]);
 
+    /* Tag and window reference each other so there are tight forever.
+     * We don't want the tag the unmanaged client to be referenced forever in a
+     * tag so we untag it. */
     luaA_object_push(globalconf.L, c);
+    foreach(tag, c->tags)
+    {
+        luaA_object_push_item(globalconf.L, -1, *tag);
+        untag_window(globalconf.L, -2, -1);
+        lua_pop(globalconf.L, 1);
+    }
+
     luaA_object_emit_signal(globalconf.L, -1, "unmanage", 0);
     lua_pop(globalconf.L, 1);
 
@@ -991,41 +995,6 @@ luaA_client_swap(lua_State *L)
     }
 
     return 0;
-}
-
-/** Access or set the client tags.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \lparam A table with tags to set, or none to get the current tags table.
- * \return The clients tag.
- */
-static int
-luaA_client_tags(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, &client_class);
-    tag_array_t *tags = &c->screen->tags;
-    int j = 0;
-
-    if(lua_gettop(L) == 2)
-    {
-        luaA_checktable(L, 2);
-        for(int i = 0; i < tags->len; i++)
-            untag_client(c, tags->tab[i]);
-        lua_pushnil(L);
-        while(lua_next(L, 2))
-            tag_client(c);
-        lua_pop(L, 1);
-    }
-
-    lua_newtable(L);
-    foreach(tag, *tags)
-        if(is_client_tagged(c, *tag))
-        {
-            luaA_object_push(L, *tag);
-            lua_rawseti(L, -2, ++j);
-        }
-
-    return 1;
 }
 
 /** Raise a client on top of others which are on the same layer.
@@ -1579,7 +1548,6 @@ client_class_setup(lua_State *L)
         { "keys", luaA_client_keys },
         { "isvisible", luaA_client_isvisible },
         { "geometry", luaA_client_geometry },
-        { "tags", luaA_client_tags },
         { "kill", luaA_client_kill },
         { "swap", luaA_client_swap },
         { "raise", luaA_client_raise },

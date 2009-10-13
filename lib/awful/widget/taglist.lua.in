@@ -63,7 +63,7 @@ function taglist_label(t, args)
         end
     end
     if not is_selected then
-        local cls = t:clients()
+        local cls = t:windows()
         if #cls > 0 and taglist_squares_unsel then
             bg_image = capi.image(taglist_squares_unsel)
             bg_resize = taglist_squares_resize == "true"
@@ -197,7 +197,7 @@ end
 -- @param screen The screen we are drawing on.
 -- @return true if t is not empty, else false
 function filter.noempty(t, args)
-    if #t:clients() > 0 or t.selected then
+    if #t:windows() > 0 or t.selected then
         return true
     end
 
