@@ -68,8 +68,6 @@ struct client_t
     char *class, *instance;
     /** Window geometry */
     area_t geometry;
-    /** True if the client is sticky */
-    bool sticky;
     /** Has urgency hint */
     bool urgent;
     /** True if the client is hidden */
@@ -142,7 +140,6 @@ area_t client_geometry_hints(client_t *, area_t);
 bool client_resize(client_t *, area_t, bool);
 void client_unmanage(client_t *);
 void client_kill(client_t *);
-void client_set_sticky(lua_State *, int, bool);
 void client_set_above(lua_State *, int, bool);
 void client_set_below(lua_State *, int, bool);
 void client_set_modal(lua_State *, int, bool);
