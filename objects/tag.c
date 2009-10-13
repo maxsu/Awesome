@@ -21,7 +21,7 @@
 
 #include "screen.h"
 #include "tag.h"
-#include "client.h"
+#include "window.h"
 #include "ewmh.h"
 #include "widget.h"
 #include "luaa.h"
@@ -37,7 +37,7 @@ tag_unref_simplified(tag_t **tag)
 static void
 tag_wipe(tag_t *tag)
 {
-    client_array_wipe(&tag->clients);
+    window_array_wipe(&tag->windows);
     p_delete(&tag->name);
 }
 
@@ -94,7 +94,7 @@ tag_append_to_screen(lua_State *L, int udx, screen_t *s)
     screen_emit_signal(globalconf.L, s, "tag::attach", 1);
 }
 
-/** Remove a tag from screen. Tag must be on a screen and have no clients.
+/** Remove a tag from screen. Tag must be on a screen.
  * \param tag The tag to remove.
  */
 void
@@ -129,68 +129,86 @@ tag_remove_from_screen(tag_t *tag)
 }
 
 static void
-tag_client_emit_signal(lua_State *L, tag_t *t, client_t *c, const char *signame)
+tag_window_emit_signal(lua_State *L, int tidx, int widx, const char *signame)
 {
-    luaA_object_push(L, c);
-    luaA_object_push(L, t);
-    /* emit signal on client, with new tag as argument */
-    luaA_object_emit_signal(L, -2, signame, 1);
-    /* re push tag */
-    luaA_object_push(L, t);
-    /* move tag before client */
-    lua_insert(L, -2);
-    luaA_object_emit_signal(L, -2, signame, 1);
-    /* Remove tag */
-    lua_pop(L, 1);
+    /* transform indexes in absolute value */
+    tidx = luaA_absindex(L, tidx);
+    widx = luaA_absindex(L, widx);
+
+    /* emit signal on window, with new tag as argument */
+    lua_pushvalue(L, tidx);
+    luaA_object_emit_signal(L, widx, signame, 1);
+
+    /* now do the opposite! */
+    lua_pushvalue(L, widx);
+    luaA_object_emit_signal(L, tidx, signame, 1);
 }
 
-/** Tag a client with the tag on top of the stack.
- * \param c the client to tag
+/** Tag a window.
+ * \param L The Lua VM state.
+ * \param widx The window index on the stack.
+ * \param tidx The tag index on the stack.
  */
 void
-tag_client(client_t *c)
+tag_window(lua_State *L, int widx, int tidx)
 {
-    tag_t *t = luaA_object_ref_class(globalconf.L, -1, &tag_class);
+    tag_t *tag = luaA_checkudata(L, tidx, &tag_class);
+    window_t *window = luaA_checkudata(L, widx, &window_class);
 
     /* don't tag twice */
-    if(is_client_tagged(c, t))
-    {
-        luaA_object_unref(globalconf.L, t);
+    if(window_is_tagged(window, tag))
         return;
-    }
 
-    client_array_append(&t->clients, c);
+    /* Reference the window in the tag */
+    lua_pushvalue(L, widx);
+    window_array_append(&tag->windows, luaA_object_ref_item(L, tidx, -1));
+    /* Reference the tag in the window */
+    lua_pushvalue(L, tidx);
+    tag_array_append(&window->tags, luaA_object_ref_item(L, widx, -1));
 
-    tag_client_emit_signal(globalconf.L, t, c, "tagged");
+    tag_window_emit_signal(globalconf.L, tidx, widx, "tagged");
 }
 
-/** Untag a client with specified tag.
- * \param c the client to tag
- * \param t the tag to tag the client with
+/** Untag a window with specified tag.
+ * \param L The Lua VM state.
+ * \param widx The window index on the stack.
+ * \param tidx The tag index on the stack.
  */
 void
-untag_client(client_t *c, tag_t *t)
+untag_window(lua_State *L, int widx, int tidx)
 {
-    for(int i = 0; i < t->clients.len; i++)
-        if(t->clients.tab[i] == c)
+    tag_t *tag = luaA_checkudata(L, tidx, &tag_class);
+    window_t *window = luaA_checkudata(L, widx, &window_class);
+
+    foreach(item, tag->windows)
+        if(*item == window)
         {
-            client_array_take(&t->clients, i);
-            tag_client_emit_signal(globalconf.L, t, c, "untagged");
-            luaA_object_unref(globalconf.L, t);
-            return;
+            window_array_remove(&tag->windows, item);
+            /* Unref window from tag */
+            luaA_object_unref_item(L, tidx, window);
+            break;
         }
+    foreach(item, window->tags)
+        if(*item == tag)
+        {
+            tag_array_remove(&window->tags, item);
+            /* Unref tag from window */
+            luaA_object_unref_item(L, widx, tag);
+            break;
+        }
+    tag_window_emit_signal(L, tidx, widx, "untagged");
 }
 
-/** Check if a client is tagged with the specified tag.
- * \param c the client
- * \param t the tag
- * \return true if the client is tagged with the tag, false otherwise.
+/** Check if a window is tagged with the specified tag.
+ * \param window The window.
+ * \param tag The tag.
+ * \return True if the window is tagged with the tag, false otherwise.
  */
 bool
-is_client_tagged(client_t *c, tag_t *t)
+window_is_tagged(window_t *window, tag_t *tag)
 {
-    for(int i = 0; i < t->clients.len; i++)
-        if(t->clients.tab[i] == c)
+    foreach(w, tag->windows)
+        if(*w == window)
             return true;
 
     return false;
@@ -250,40 +268,37 @@ luaA_tag_new(lua_State *L)
     return luaA_class_new(L, &tag_class);
 }
 
-/** Get or set the clients attached to this tag.
+/** Get or set the windows attached to this tag.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lparam None or a table of clients to set.
- * \lreturn A table with the clients attached to this tags.
  */
 static int
-luaA_tag_clients(lua_State *L)
+luaA_tag_windows(lua_State *L)
 {
     tag_t *tag = luaA_checkudata(L, 1, &tag_class);
-    client_array_t *clients = &tag->clients;
-    int i;
 
     if(lua_gettop(L) == 2)
     {
         luaA_checktable(L, 2);
-        foreach(c, tag->clients)
-            untag_client(*c, tag);
+        foreach(window, tag->windows)
+        {
+            luaA_object_push_item(L, 1, *window);
+            untag_window(L, -1, 1);
+            /* remove pushed windows */
+            lua_pop(L, 1);
+        }
         lua_pushnil(L);
         while(lua_next(L, 2))
         {
-            client_t *c = luaA_checkudata(L, -1, &client_class);
-            /* push tag on top of the stack */
-            lua_pushvalue(L, 1);
-            tag_client(c);
+            tag_window(L, -1, 1);
             lua_pop(L, 1);
         }
     }
 
-    lua_createtable(L, clients->len, 0);
-    for(i = 0; i < clients->len; i++)
+    lua_createtable(L, tag->windows.len, 0);
+    for(int i = 0; i < tag->windows.len; i++)
     {
-        luaA_object_push(L, clients->tab[i]);
+        luaA_object_push(L, tag->windows.tab[i]);
         lua_rawseti(L, -2, i + 1);
     }
 
@@ -374,7 +389,7 @@ tag_class_setup(lua_State *L)
     {
         LUA_OBJECT_META(tag)
         LUA_CLASS_META
-        { "clients", luaA_tag_clients },
+        { "windows", luaA_tag_windows },
         { NULL, NULL },
     };
 
