@@ -235,11 +235,11 @@ void client_ban_unfocus(client_t *c)
 void
 client_ban(client_t *c)
 {
-    if(!c->isbanned)
+    if(!c->banned)
     {
         xcb_unmap_window(globalconf.connection, c->window);
 
-        c->isbanned = true;
+        c->banned = true;
 
         client_ban_unfocus(c);
     }
@@ -358,7 +358,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, int phys_screen, 
     /* This cannot change, ever. */
     c->phys_screen = phys_screen;
     /* consider the window banned */
-    c->isbanned = true;
+    c->banned = true;
     /* Store window */
     c->window = w;
     luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
@@ -778,11 +778,11 @@ client_set_ontop(lua_State *L, int cidx, bool s)
 void
 client_unban(client_t *c)
 {
-    if(c->isbanned)
+    if(c->banned)
     {
         xcb_map_window(globalconf.connection, c->window);
 
-        c->isbanned = false;
+        c->banned = false;
     }
 }
 

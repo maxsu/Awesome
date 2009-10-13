@@ -88,10 +88,6 @@ struct client_t
     bool modal;
     /** True if the client is on top */
     bool ontop;
-    /** True if a client is banned to a position outside the viewport.
-     * Note that the geometry remains unchanged and that the window is still mapped.
-     */
-    bool isbanned;
     /** true if the client must be skipped from task bar client list */
     bool skip_taskbar;
     /** True if the client cannot have focus */
