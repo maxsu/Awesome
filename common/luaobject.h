@@ -192,6 +192,18 @@ int luaA_object_emit_signal_simple(lua_State *);
         return 1; \
     }
 
+#define LUA_OBJECT_DO_SET_PROPERTY_FUNC(pfx, type, prop) \
+    void \
+    pfx##_set_##prop(lua_State *L, int idx, fieldtypeof(type, prop) value) \
+    { \
+        type *item = luaA_checkudata(L, idx, &pfx##_class); \
+        if(item->prop != value) \
+        { \
+            item->prop = value; \
+            luaA_object_emit_signal(L, idx, "property::" #prop, 0); \
+        } \
+    }
+
 int luaA_object_tostring(lua_State *);
 
 #define LUA_OBJECT_META(prefix) \

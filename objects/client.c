@@ -85,25 +85,13 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
     }
 }
 
-#define DO_CLIENT_SET_PROPERTY(prop) \
-    void \
-    client_set_##prop(lua_State *L, int cidx, fieldtypeof(client_t, prop) value) \
-    { \
-        client_t *c = luaA_checkudata(L, cidx, &client_class); \
-        if(c->prop != value) \
-        { \
-            c->prop = value; \
-            luaA_object_emit_signal(L, cidx, "property::" #prop, 0); \
-        } \
-    }
-DO_CLIENT_SET_PROPERTY(group_window)
-DO_CLIENT_SET_PROPERTY(type)
-DO_CLIENT_SET_PROPERTY(transient_for)
-DO_CLIENT_SET_PROPERTY(pid)
-DO_CLIENT_SET_PROPERTY(skip_taskbar)
-DO_CLIENT_SET_PROPERTY(sticky)
-DO_CLIENT_SET_PROPERTY(modal)
-#undef DO_CLIENT_SET_PROPERTY
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, group_window)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, type)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, transient_for)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, pid)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, skip_taskbar)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, sticky)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, modal)
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
     void \
