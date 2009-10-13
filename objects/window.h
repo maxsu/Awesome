@@ -45,7 +45,9 @@
     /** Window tags */ \
     tag_array_t tags; \
     /** True if the window is sticky */ \
-    bool sticky;
+    bool sticky; \
+    /** True if the window is banned from the view */ \
+    bool banned;
 
 /** Window structure */
 typedef struct
