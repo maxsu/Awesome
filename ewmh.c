@@ -226,6 +226,27 @@ ewmh_init_screen(int phys_screen)
     ewmh_update_desktop_geometry(phys_screen);
 };
 
+/** Update the client active desktop.
+ * This is "wrong" since it can be on several tags, but EWMH has a strict view
+ * of desktop system so just take the first tag.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+ewmh_client_update_desktop(lua_State *L)
+{
+    client_t *c = luaA_checkudata(L, 1, &client_class);
+
+    for(int i = 0; i < c->screen->tags.len; i++)
+        if(is_client_tagged(c, c->screen->tags.tab[i]))
+        {
+            xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+                                c->window, _NET_WM_DESKTOP, CARDINAL, 32, 1, &i);
+            break;
+        }
+    return 0;
+}
+
 void
 ewmh_init(void)
 {
@@ -243,6 +264,8 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, &client_class, "property::below" , ewmh_client_update_hints);
     luaA_class_connect_signal(globalconf.L, &client_class, "property::minimized" , ewmh_client_update_hints);
     luaA_class_connect_signal(globalconf.L, &client_class, "property::urgent" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, &client_class, "tagged", ewmh_client_update_desktop);
+    luaA_class_connect_signal(globalconf.L, &client_class, "untagged", ewmh_client_update_desktop);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", ewmh_update_net_current_desktop);
 }
 
@@ -468,26 +491,6 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
     }
 
     return 0;
-}
-
-/** Update the client active desktop.
- * This is "wrong" since it can be on several tags, but EWMH has a strict view
- * of desktop system so just take the first tag.
- * \param c The client.
- */
-void
-ewmh_client_update_desktop(client_t *c)
-{
-    int i;
-    tag_array_t *tags = &c->screen->tags;
-
-    for(i = 0; i < tags->len; i++)
-        if(is_client_tagged(c, tags->tab[i]))
-        {
-            xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                                c->window, _NET_WM_DESKTOP, CARDINAL, 32, 1, &i);
-            return;
-        }
 }
 
 /** Update the client struts.
