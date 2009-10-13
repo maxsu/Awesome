@@ -159,7 +159,7 @@ client_getbywin(xcb_window_t w)
 /** Record that a client lost focus.
  * \param c Client being unfocused
  */
-void
+static void
 client_unfocus_update(client_t *c)
 {
     globalconf.screens.tab[c->phys_screen].client_focus = NULL;
