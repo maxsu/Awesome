@@ -347,11 +347,11 @@ ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
     if(state == _NET_WM_STATE_STICKY)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_sticky(globalconf.L, -1, false);
+            window_set_sticky(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_sticky(globalconf.L, -1, true);
+            window_set_sticky(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_sticky(globalconf.L, -1, !c->sticky);
+            window_set_sticky(globalconf.L, -1, !c->sticky);
     }
     else if(state == _NET_WM_STATE_SKIP_TASKBAR)
     {

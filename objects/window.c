@@ -219,9 +219,19 @@ luaA_window_tags(lua_State *L)
     return 1;
 }
 
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, window_t, sticky)
+
+static int
+luaA_window_set_sticky(lua_State *L, window_t *c)
+{
+    window_set_sticky(L, -3, luaA_checkboolean(L, -1));
+    return 0;
+}
+
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_color, luaA_pushxcolor)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_width, lua_pushnumber)
+LUA_OBJECT_EXPORT_PROPERTY(window, window_t, sticky, lua_pushboolean)
 
 void
 window_class_setup(lua_State *L)
@@ -260,6 +270,10 @@ window_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_set_border_width,
                             (lua_class_propfunc_t) luaA_window_get_border_width,
                             (lua_class_propfunc_t) luaA_window_set_border_width);
+    luaA_class_add_property(&window_class, A_TK_STICKY,
+                            (lua_class_propfunc_t) luaA_window_set_sticky,
+                            (lua_class_propfunc_t) luaA_window_get_sticky,
+                            (lua_class_propfunc_t) luaA_window_set_sticky);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
