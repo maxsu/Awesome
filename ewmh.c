@@ -238,7 +238,7 @@ ewmh_client_update_desktop(lua_State *L)
     client_t *c = luaA_checkudata(L, 1, &client_class);
 
     for(int i = 0; i < c->screen->tags.len; i++)
-        if(is_client_tagged(c, c->screen->tags.tab[i]))
+        if(window_is_tagged((window_t *) c, c->screen->tags.tab[i]))
         {
             xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
                                 c->window, _NET_WM_DESKTOP, CARDINAL, 32, 1, &i);
@@ -465,13 +465,15 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
                 c->sticky = true;
             else
                 for(int i = 0; i < tags->len; i++)
-                    if((int)ev->data.data32[0] == i)
-                    {
-                        luaA_object_push(globalconf.L, tags->tab[i]);
-                        tag_client(c);
-                    }
+                {
+                    luaA_object_push(globalconf.L, c);
+                    luaA_object_push(globalconf.L, tags->tab[i]);
+                    if((int) ev->data.data32[0] == i)
+                        tag_window(globalconf.L, -2, -1);
                     else
-                        untag_client(c, tags->tab[i]);
+                        untag_window(globalconf.L, -2, -1);
+                    lua_pop(globalconf.L, 2);
+                }
         }
     }
     else if(ev->type == _NET_WM_STATE)
@@ -551,14 +553,19 @@ ewmh_client_check_hints(client_t *c)
         if(desktop == -1)
             c->sticky = true;
         else
+        {
+            luaA_object_push(globalconf.L, c);
             for(int i = 0; i < tags->len; i++)
+            {
+                luaA_object_push(globalconf.L, tags->tab[i]);
                 if(desktop == i)
-                {
-                    luaA_object_push(globalconf.L, tags->tab[i]);
-                    tag_client(c);
-                }
+                    tag_window(globalconf.L, -2, -1);
                 else
-                    untag_client(c, tags->tab[i]);
+                    untag_window(globalconf.L, -2, -1);
+                lua_pop(globalconf.L, 1);
+            }
+            lua_pop(globalconf.L, 1);
+        }
     }
 
     p_delete(&reply);

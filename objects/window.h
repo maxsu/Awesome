@@ -41,7 +41,9 @@
     /** Border color */ \
     xcolor_t border_color; \
     /** Border width */ \
-    uint16_t border_width;
+    uint16_t border_width; \
+    /** Window tags */ \
+    tag_array_t tags;
 
 /** Window structure */
 typedef struct
@@ -55,6 +57,8 @@ void window_class_setup(lua_State *);
 
 void window_set_opacity(lua_State *, int, double);
 void window_set_border_width(lua_State *, int, int);
+
+DO_ARRAY(window_t *, window, DO_NOTHING)
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

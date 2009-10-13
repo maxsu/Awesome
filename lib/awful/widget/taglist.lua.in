@@ -143,7 +143,7 @@ function label.all(t, args)
         end
     end
     if not is_selected then
-        local cls = t:clients()
+        local cls = t:windows()
         if #cls > 0 and taglist_squares_unsel then
             bg_image = capi.image(taglist_squares_unsel)
             bg_resize = taglist_squares_resize == "true"
@@ -186,7 +186,7 @@ end
 -- @return A string to print, a background color, a background image and a
 -- background resize value.
 function label.noempty(t, args)
-    if #t:clients() > 0 or t.selected then
+    if #t:windows() > 0 or t.selected then
         return label.all(t, args)
     end
 end

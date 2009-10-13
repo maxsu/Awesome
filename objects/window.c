@@ -24,6 +24,7 @@
 #include "ewmh.h"
 #include "screen.h"
 #include "objects/window.h"
+#include "objects/tag.h"
 #include "common/luaobject.h"
 
 LUA_CLASS_FUNCS(window, window_class)
@@ -177,6 +178,47 @@ luaA_window_set_border_width(lua_State *L, window_t *c)
     return 0;
 }
 
+/** Access or set the window tags.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ * \lparam A table with tags to set, or none to get the current tags table.
+ * \return The window tag.
+ */
+static int
+luaA_window_tags(lua_State *L)
+{
+    window_t *c = luaA_checkudata(L, 1, &window_class);
+
+    if(lua_gettop(L) == 2)
+    {
+        luaA_checktable(L, 2);
+        foreach(tag, c->tags)
+        {
+            luaA_object_push_item(L, 1, *tag);
+            untag_window(L, 1, -1);
+            /* remove tag */
+            lua_pop(L, 1);
+        }
+        lua_pushnil(L);
+        while(lua_next(L, 2))
+        {
+            tag_window(L, 1, -1);
+            /* remove value (tag) */
+            lua_pop(L, 1);
+        }
+    }
+
+    int i = 0;
+    lua_createtable(L, c->tags.len, 0);
+    foreach(tag, c->tags)
+    {
+        luaA_object_push_item(L, 1, *tag);
+        lua_rawseti(L, -2, ++i);
+    }
+
+    return 1;
+}
+
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_color, luaA_pushxcolor)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_width, lua_pushnumber)
@@ -193,6 +235,7 @@ window_class_setup(lua_State *L)
     {
         { "struts", luaA_window_struts },
         { "buttons", luaA_window_buttons },
+        { "tags", luaA_window_tags },
         { NULL, NULL }
     };
 
