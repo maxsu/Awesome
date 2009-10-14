@@ -280,7 +280,7 @@ function clients(menu, keygrabber)
                                   if not c:isvisible() then
                                       tags.viewmore(c:tags(), c.screen)
                                   end
-                                  capi.client.focus = c
+                                  c:focus()
                               end,
                               c.icon }
     end

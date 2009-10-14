@@ -1438,6 +1438,17 @@ luaA_client_keys(lua_State *L)
     return luaA_key_array_get(L, 1, keys);
 }
 
+/** Give the focus to a client.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_client_focus(lua_State *L)
+{
+    client_focus(luaA_checkudata(L, 1, &client_class));
+    return 0;
+}
+
 /* Client module.
  * \param L The Lua VM state.
  * \return The number of pushed elements.
@@ -1458,30 +1469,6 @@ luaA_client_module_index(lua_State *L)
     }
 }
 
-/* Client module new index.
- * \param L The Lua VM state.
- * \return The number of pushed elements.
- */
-static int
-luaA_client_module_newindex(lua_State *L)
-{
-    size_t len;
-    const char *buf = luaL_checklstring(L, 2, &len);
-    client_t *c;
-
-    switch(a_tokenize(buf, len))
-    {
-      case A_TK_FOCUS:
-        c = luaA_checkudata(L, 3, &client_class);
-        client_focus(c);
-        break;
-      default:
-        break;
-    }
-
-    return 0;
-}
-
 static bool
 client_checker(client_t *c)
 {
@@ -1496,7 +1483,6 @@ client_class_setup(lua_State *L)
         LUA_CLASS_METHODS(client)
         { "get", luaA_client_get },
         { "__index", luaA_client_module_index },
-        { "__newindex", luaA_client_module_newindex },
         { NULL, NULL }
     };
 
@@ -1506,6 +1492,7 @@ client_class_setup(lua_State *L)
         LUA_CLASS_META
         { "keys", luaA_client_keys },
         { "isvisible", luaA_client_isvisible },
+        { "focus", luaA_client_focus },
         { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
         { "swap", luaA_client_swap },

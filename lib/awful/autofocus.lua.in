@@ -18,7 +18,7 @@ module("awful.autofocus")
 local function check_focus(obj)
     if not client.focus or not client.focus:isvisible() then
         local c = aclient.focus.history.get(obj.screen, 0)
-        if c then client.focus = c end
+        if c then c:focus() end
     end
 end
 

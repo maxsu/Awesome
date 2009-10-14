@@ -135,7 +135,7 @@ function apply(c)
     -- Do this at last so we do not erase things done by the focus
     -- signal.
     if props.focus then
-        client.focus = c
+        c:focus()
     end
 end
 
