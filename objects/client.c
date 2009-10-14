@@ -246,18 +246,15 @@ client_focus_update(client_t *c)
     if(!client_maybevisible(c, c->screen))
         return;
 
-    luaA_object_push(globalconf.L, c);
-    client_set_minimized(globalconf.L, -1, false);
-
     /* unban the client before focusing for consistency */
     client_unban(c);
 
     globalconf.screen_focus = &globalconf.screens.tab[c->phys_screen];
     globalconf.screen_focus->focused_window = (window_t *) c;
 
+    luaA_object_push(globalconf.L, c);
     /* according to EWMH, we have to remove the urgent state from a client */
     client_set_urgent(globalconf.L, -1, false);
-
     luaA_object_emit_signal(globalconf.L, -1, "focus", 0);
     lua_pop(globalconf.L, 1);
 }
