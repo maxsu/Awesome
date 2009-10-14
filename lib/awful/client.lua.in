@@ -69,7 +69,7 @@ function urgent.jumpto()
            tag.viewonly(c:tags()[1])
         end
         -- focus the client
-        capi.client.focus = c
+        c:focus()
         c:raise()
     end
 end
@@ -174,7 +174,7 @@ function focus.history.previous()
         s = capi.mouse.screen
     end
     local c = focus.history.get(s, 1)
-    if c then capi.client.focus = c end
+    if c then c:focus() end
 end
 
 --- Get visible clients from a screen.
@@ -322,9 +322,7 @@ function focus.bydirection(dir, c)
         local target = get_client_in_direction(dir, sel)
 
         -- If we found a client to focus, then do it.
-        if target then
-            capi.client.focus = target
-        end
+        if target then target:focus() end
     end
 end
 
@@ -333,9 +331,7 @@ end
 -- @param c Optional client.
 function focus.byidx(i, c)
     local target = next(i, c)
-    if target then
-        capi.client.focus = target
-    end
+    if target then c:focus() end
 end
 
 --- Swap a client with another client in the given direction
@@ -469,7 +465,7 @@ function movetoscreen(c, s)
         if s > sc then s = 1 elseif s < 1 then s = sc end
         sel.screen = s
         capi.mouse.coords(capi.screen[s].geometry)
-        capi.client.focus = sel
+        sel:focus()
     end
 end
 

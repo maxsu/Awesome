@@ -25,7 +25,6 @@ module("client")
 -- @field border_color The client border color.
 -- @field urgent The client urgent state.
 -- @field content An image representing the client window content (screenshot).
--- @field focus The focused client.
 -- @field opacity The client opacity between 0 and 1.
 -- @field ontop The client is on top of every other windows.
 -- @field above The client is above normal windows.
@@ -108,6 +107,11 @@ module("client")
 --- Stop managing a client.
 -- @param -
 -- @name unmanage
+-- @class function
+
+--- Give focus to a cliet.
+-- @param -
+-- @name focus
 -- @class function
 
 --- Add a signal.

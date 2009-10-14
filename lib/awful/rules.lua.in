@@ -105,7 +105,7 @@ function apply(c)
             -- Do this at last so we do not erase things done by the focus
             -- signal.
             if entry.properties.focus then
-                client.focus = c
+                c:focus()
             end
         end
     end

@@ -94,7 +94,7 @@ mytasklist.buttons = awful.util.table.join(
                                               if not c:isvisible() then
                                                   awful.tag.viewonly(c:tags()[1])
                                               end
-                                              client.focus = c
+                                              c:focus()
                                               c:raise()
                                           end),
                      awful.button({ }, 3, function ()
@@ -272,7 +272,7 @@ for i = 1, keynumber do
 end
 
 clientbuttons = awful.util.table.join(
-    awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
+    awful.button({ }, 1, function (c) c:focus(); c:raise() end),
     awful.button({ modkey }, 1, awful.mouse.client.move),
     awful.button({ modkey }, 3, awful.mouse.client.resize))
 
@@ -308,7 +308,7 @@ client.connect_signal("manage", function (c, startup)
     c:connect_signal("mouse::enter", function(c)
         if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
             and awful.client.focus.filter(c) then
-            client.focus = c
+            c:focus()
         end
     end)
 
