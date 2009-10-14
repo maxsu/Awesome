@@ -25,7 +25,7 @@ data.padding = {}
 function focus(screen)
     if screen > capi.screen.count() then screen = capi.mouse.screen end
     local c = client.focus.history.get(screen, 0)
-    if c then capi.client.focus = c end
+    if c then c:focus() end
     -- Move the mouse on the screen
     capi.mouse.screen = screen
 end
