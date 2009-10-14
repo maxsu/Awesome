@@ -24,6 +24,7 @@
 
 #include "globalconf.h"
 #include "draw.h"
+#include "objects/window.h"
 
 typedef struct screen_output_t screen_output_t;
 ARRAY_TYPE(screen_output_t, screen_output)
@@ -41,8 +42,8 @@ struct a_screen
         /** Systray window parent */
         xcb_window_t parent;
     } systray;
-    /** Focused client */
-    client_t *client_focus;
+    /** Focused window */
+    window_t *focused_window;
     /** The monitor of startup notifications */
     SnMonitorContext *snmonitor;
     /** The default visual, used to draw */
