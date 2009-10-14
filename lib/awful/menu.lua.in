@@ -282,7 +282,7 @@ function clients(menu, args)
                                   if not c:isvisible() then
                                       tags.viewmore(c:tags(), c.screen)
                                   end
-                                  capi.client.focus = c
+                                  c:focus()
                                   c:raise()
                               end,
                               c.icon }
