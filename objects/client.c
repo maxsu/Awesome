@@ -159,32 +159,13 @@ client_getbywin(xcb_window_t w)
 /** Record that a client lost focus.
  * \param c Client being unfocused
  */
-static void
+void
 client_unfocus_update(client_t *c)
 {
     globalconf.screens.tab[c->phys_screen].client_focus = NULL;
-
     luaA_object_push(globalconf.L, c);
     luaA_object_emit_signal(globalconf.L, -1, "unfocus", 0);
     lua_pop(globalconf.L, 1);
-}
-
-/** Unfocus a client.
- * \param c The client.
- */
-static void
-client_unfocus(client_t *c)
-{
-
-    xcb_window_t root_win = xutil_screen_get(globalconf.connection, c->phys_screen)->root;
-    /* Set focus on root window, so no events leak to the current window.
-     * This kind of inlines client_set_focus(), but a root window will never have
-     * the WM_TAKE_FOCUS protocol.
-     */
-    xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
-                        root_win, XCB_CURRENT_TIME);
-
-    client_unfocus_update(c);
 }
 
 /** Check if client supports atom a protocol in WM_PROTOCOL.
@@ -201,14 +182,22 @@ client_hasproto(client_t *c, xcb_atom_t atom)
     return false;
 }
 
-/** Prepare banning a client by running all needed lua events.
+/** Prepare banning a client by running all needed Lua events.
  * \param c The client.
  */
-void client_ban_unfocus(client_t *c)
+void
+client_ban_unfocus(client_t *c)
 {
     /* Wait until the last moment to take away the focus from the window. */
     if(globalconf.screens.tab[c->phys_screen].client_focus == c)
-        client_unfocus(c);
+    {
+        xcb_window_t root_win = xutil_screen_get(globalconf.connection, c->phys_screen)->root;
+        /* Set focus on root window, so no events leak to the current window.
+         * This kind of inlines client_set_focus(), but a root window will never have
+         * the WM_TAKE_FOCUS protocol. */
+        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
+                            root_win, XCB_CURRENT_TIME);
+    }
 }
 
 /** Ban client and move it out of the viewport.
@@ -220,9 +209,7 @@ client_ban(client_t *c)
     if(!c->banned)
     {
         xcb_unmap_window(globalconf.connection, c->window);
-
         c->banned = true;
-
         client_ban_unfocus(c);
     }
 }
@@ -259,15 +246,6 @@ client_focus_update(client_t *c)
     if(!client_maybevisible(c, c->screen))
         return;
 
-    if(globalconf.screen_focus
-        && globalconf.screen_focus->client_focus)
-    {
-        if (globalconf.screen_focus->client_focus != c)
-            client_unfocus_update(globalconf.screen_focus->client_focus);
-        else
-            /* Already focused */
-            return;
-    }
     luaA_object_push(globalconf.L, c);
     client_set_minimized(globalconf.L, -1, false);
 
@@ -779,9 +757,6 @@ client_unmanage(client_t *c)
     foreach(tc, globalconf.clients)
         if((*tc)->transient_for == c)
             (*tc)->transient_for = NULL;
-
-    if(globalconf.screens.tab[c->phys_screen].client_focus == c)
-        client_unfocus(c);
 
     /* remove client from global list and everywhere else */
     foreach(elem, globalconf.clients)
