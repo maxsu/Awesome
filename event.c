@@ -511,6 +511,40 @@ event_handle_focusin(xcb_focus_in_event_t *ev)
     }
 }
 
+/** The focus out event handler.
+ * \param data currently unused.
+ * \param connection The connection to the X server.
+ * \param ev The event.
+ */
+static int
+event_handle_focusout(xcb_focus_in_event_t *ev)
+{
+    /* Events that we are interested in: */
+    switch(ev->detail)
+    {
+        /* These are events that jump between root windows.
+         */
+        case XCB_NOTIFY_DETAIL_ANCESTOR:
+        case XCB_NOTIFY_DETAIL_INFERIOR:
+
+        /* These are events that jump between clients.
+         * Virtual events ensure we always get an event on our top-level window.
+         */
+        case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
+        case XCB_NOTIFY_DETAIL_NONLINEAR:
+          {
+            client_t *c;
+
+            if((c = client_getbywin(ev->event)))
+                client_unfocus_update(c);
+          }
+        /* all other events are ignored */
+        default:
+            break;
+    }
+    return 0;
+}
+
 /** The expose event handler.
  * \param ev The event.
  */
@@ -797,6 +831,7 @@ void event_handle(xcb_generic_event_t *event)
         EVENT(XCB_CLIENT_MESSAGE, event_handle_clientmessage);
         EVENT(XCB_EXPOSE, event_handle_expose);
         EVENT(XCB_FOCUS_IN, event_handle_focusin);
+        EVENT(XCB_FOCUS_OUT, event_handle_focusout);
         EVENT(XCB_KEY_PRESS, event_handle_key);
         EVENT(XCB_KEY_RELEASE, event_handle_key);
         EVENT(XCB_LEAVE_NOTIFY, event_handle_leavenotify);
