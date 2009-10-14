@@ -268,10 +268,6 @@ client_focus_update(client_t *c)
 void
 client_focus(client_t *c)
 {
-    /* We have to set focus on first client */
-    if(!c && globalconf.clients.len && !(c = globalconf.clients.tab[0]))
-        return;
-
     if(!client_maybevisible(c, c->screen))
         return;
 
