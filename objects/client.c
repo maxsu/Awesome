@@ -162,7 +162,7 @@ client_getbywin(xcb_window_t w)
 void
 client_unfocus_update(client_t *c)
 {
-    globalconf.screens.tab[c->phys_screen].client_focus = NULL;
+    globalconf.screens.tab[c->phys_screen].focused_window = NULL;
     luaA_object_push(globalconf.L, c);
     luaA_object_emit_signal(globalconf.L, -1, "unfocus", 0);
     lua_pop(globalconf.L, 1);
@@ -189,7 +189,7 @@ void
 client_ban_unfocus(client_t *c)
 {
     /* Wait until the last moment to take away the focus from the window. */
-    if(globalconf.screens.tab[c->phys_screen].client_focus == c)
+    if(globalconf.screens.tab[c->phys_screen].focused_window == (window_t *) c)
     {
         xcb_window_t root_win = xutil_screen_get(globalconf.connection, c->phys_screen)->root;
         /* Set focus on root window, so no events leak to the current window.
@@ -253,7 +253,7 @@ client_focus_update(client_t *c)
     client_unban(c);
 
     globalconf.screen_focus = &globalconf.screens.tab[c->phys_screen];
-    globalconf.screen_focus->client_focus = c;
+    globalconf.screen_focus->focused_window = (window_t *) c;
 
     /* according to EWMH, we have to remove the urgent state from a client */
     client_set_urgent(globalconf.L, -1, false);
@@ -1437,7 +1437,7 @@ luaA_client_module_index(lua_State *L)
     switch(a_tokenize(buf, len))
     {
       case A_TK_FOCUS:
-        return luaA_object_push(globalconf.L, globalconf.screen_focus->client_focus);
+        return luaA_object_push(globalconf.L, globalconf.screen_focus->focused_window);
         break;
       default:
         return 0;
