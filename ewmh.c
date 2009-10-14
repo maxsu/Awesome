@@ -93,17 +93,20 @@ ewmh_update_desktop_geometry(void)
 static int
 ewmh_update_net_active_window(lua_State *L)
 {
-    xcb_window_t win;
-
-    if(globalconf.client_focus)
-        win = globalconf.client_focus->window;
-    else
-        win = XCB_NONE;
+    client_t *c = luaA_checkudata(L, 1, &client_class);
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			globalconf.screen->root,
-			_NET_ACTIVE_WINDOW, XCB_ATOM_WINDOW, 32, 1, &win);
+                        globalconf.screen->root,
+                        _NET_ACTIVE_WINDOW, XCB_ATOM_WINDOW, 32, 1, (xcb_window_t[]) { c->window });
+    return 0;
+}
 
+static int
+ewmh_reset_net_active_window(lua_State *L)
+{
+    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+                        globalconf.screen->root,
+			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { XCB_NONE });
     return 0;
 }
 
@@ -238,7 +241,7 @@ ewmh_init(void)
     ewmh_update_desktop_geometry();
 
     luaA_class_connect_signal(globalconf.L, &client_class, "focus", ewmh_update_net_active_window);
-    luaA_class_connect_signal(globalconf.L, &client_class, "unfocus", ewmh_update_net_active_window);
+    luaA_class_connect_signal(globalconf.L, &client_class, "unfocus", ewmh_reset_net_active_window);
     luaA_class_connect_signal(globalconf.L, &client_class, "manage", ewmh_update_net_client_list);
     luaA_class_connect_signal(globalconf.L, &client_class, "unmanage", ewmh_update_net_client_list);
     luaA_class_connect_signal(globalconf.L, &client_class, "property::modal" , ewmh_client_update_hints);

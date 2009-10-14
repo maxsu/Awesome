@@ -176,7 +176,7 @@ client_getbyframewin(xcb_window_t w)
 void
 client_unfocus_update(client_t *c)
 {
-    globalconf.client_focus = NULL;
+    globalconf.focused_window = NULL;
     luaA_object_push(globalconf.L, c);
     luaA_object_emit_signal(globalconf.L, -1, "unfocus", 0);
     lua_pop(globalconf.L, 1);
@@ -203,18 +203,14 @@ void
 client_ban_unfocus(client_t *c)
 {
     /* Wait until the last moment to take away the focus from the window. */
-    if(globalconf.client_focus != c)
-        return;
-
-    xcb_window_t root_win = globalconf.screen->root;
-    /* Set focus on root window, so no events leak to the current window.
-     * This kind of inlines client_set_focus(), but a root window will never have
-     * the WM_TAKE_FOCUS protocol.
-     */
-    xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
-                        root_win, globalconf.timestamp);
-
-    client_unfocus_update(c);
+    if(globalconf.focused_window == (window_t *) c)
+    {
+        /* Set focus on root window, so no events leak to the current window.
+         * This kind of inlines client_set_focus(), but a root window will never have
+         * the WM_TAKE_FOCUS protocol. */
+        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
+                            globalconf.screen->root, XCB_CURRENT_TIME);
+    }
 }
 
 /** Ban client and move it out of the viewport.
@@ -276,7 +272,7 @@ client_focus_update(client_t *c)
     if(!client_maybevisible(c, c->screen))
         return;
 
-    globalconf.client_focus = c;
+    globalconf.focused_window = (window_t *) c;
 
     /* according to EWMH, we have to remove the urgent state from a client */
     luaA_object_push(globalconf.L, c);
@@ -1580,7 +1576,7 @@ luaA_client_module_index(lua_State *L)
     switch(a_tokenize(buf, len))
     {
       case A_TK_FOCUS:
-        return luaA_object_push(globalconf.L, globalconf.client_focus);
+        return luaA_object_push(globalconf.L, globalconf.focused_window);
         break;
       default:
         return 0;

@@ -40,6 +40,7 @@ typedef struct a_screen screen_t;
 typedef struct button_t button_t;
 typedef struct widget_t widget_t;
 typedef struct client_t client_t;
+typedef struct window_t window_t;
 typedef struct tag tag_t;
 
 ARRAY_TYPE(button_t *, button)
@@ -88,8 +89,8 @@ typedef struct
     int keygrabber;
     /** The mouse pointer grabber function */
     int mousegrabber;
-    /** Focused client */
-    client_t *client_focus;
+    /** Focused window */
+    window_t *focused_window;
     /** Wiboxes */
     wibox_array_t wiboxes;
     /** The startup notification display struct */

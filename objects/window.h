@@ -52,10 +52,10 @@
     bool banned;
 
 /** Window structure */
-typedef struct
+struct window_t
 {
     WINDOW_OBJECT_HEADER
-} window_t;
+};
 
 lua_class_t window_class;
 
