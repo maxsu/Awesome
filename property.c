@@ -185,7 +185,7 @@ property_update_wm_hints(client_t *c, xcb_get_property_cookie_t cookie)
     client_set_urgent(globalconf.L, -1, xcb_wm_hints_get_urgency(&wmh));
 
     if(wmh.flags & XCB_WM_HINT_INPUT)
-        c->nofocus = !wmh.input;
+        c->focusable = wmh.input;
 
     if(wmh.flags & XCB_WM_HINT_WINDOW_GROUP)
         client_set_group_window(globalconf.L, -1, wmh.window_group);

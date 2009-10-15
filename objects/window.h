@@ -49,7 +49,9 @@
     /** True if the window is sticky */ \
     bool sticky; \
     /** True if the window is banned from the view */ \
-    bool banned;
+    bool banned; \
+    /** True if the window can have focus */ \
+    bool focusable;
 
 /** Window structure */
 struct window_t

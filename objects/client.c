@@ -298,14 +298,14 @@ client_focus(client_t *c)
     client_unban(c);
 
     /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
-    if(!c->nofocus)
+    if(c->focusable)
         xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
                             c->window, globalconf.timestamp);
 
     if(client_hasproto(c, WM_TAKE_FOCUS))
         xwindow_takefocus(c->window);
 
-    if (!c->nofocus)
+    if (c->focusable)
         client_focus_update(c);
 }
 
@@ -1392,7 +1392,7 @@ luaA_client_get_focusable(lua_State *L, client_t *c)
     bool ret;
 
     /* A client can be focused if it doesnt have the "nofocus" hint...*/
-    if (!c->nofocus)
+    if (c->focusable)
         ret = true;
     else
         /* ...or if it knows the WM_TAKE_FOCUS protocol */
