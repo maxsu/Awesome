@@ -371,6 +371,7 @@ window_class_setup(lua_State *L)
 {
     static const struct luaL_reg window_methods[] =
     {
+        LUA_CLASS_METHODS(window)
         { NULL, NULL }
     };
 
