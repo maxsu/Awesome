@@ -26,6 +26,7 @@
 #include "objects/window.h"
 #include "objects/tag.h"
 #include "common/luaobject.h"
+#include "common/xutil.h"
 
 LUA_CLASS_FUNCS(window, window_class)
 
@@ -34,6 +35,37 @@ window_wipe(window_t *window)
 {
     button_array_wipe(&window->buttons);
 }
+
+/** Prepare banning a window by running all needed Lua events.
+ * \param window The window.
+ */
+void
+window_ban_unfocus(window_t *window)
+{
+    /* Wait until the last moment to take away the focus from the window. */
+    if(globalconf.screens.tab[window->screen->phys_screen].focused_window == window)
+    {
+        xcb_window_t root_win = xutil_screen_get(globalconf.connection, window->screen->phys_screen)->root;
+        /* Set focus on root window, so no events leak to the current window. */
+        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
+                            root_win, XCB_CURRENT_TIME);
+    }
+}
+
+/** Ban window.
+ * \param window The window.
+ */
+void
+window_ban(window_t *window)
+{
+    if(!window->banned)
+    {
+        xcb_unmap_window(globalconf.connection, window->window);
+        window->banned = true;
+        window_ban_unfocus(window);
+    }
+}
+
 
 /** Unban a window.
  * \param window The window.

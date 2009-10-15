@@ -61,6 +61,8 @@ lua_class_t window_class;
 
 void window_class_setup(lua_State *);
 
+void window_ban(window_t *);
+void window_ban_unfocus(window_t *);
 void window_unban(window_t *);
 
 void window_set_opacity(lua_State *, int, double);
