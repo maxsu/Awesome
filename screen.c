@@ -307,8 +307,7 @@ screen_area_get(screen_t *screen, bool strut)
         if((*c)->screen == screen)
         {
             luaA_object_push(globalconf.L, *c);
-            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
-            if(interface->isvisible((window_t *) *c))
+            if(window_isvisible(globalconf.L, -1))
                 COMPUTE_STRUT(*c)
             lua_pop(globalconf.L, 1);
         }
