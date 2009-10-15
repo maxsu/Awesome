@@ -112,7 +112,7 @@ luaA_checkudataornil(lua_State *L, int udx, lua_class_t *class)
     static inline int                                                          \
     luaA_##prefix##_class_connect_signal(lua_State *L)                         \
     {                                                                          \
-        luaA_class_connect_signal_from_stack(L, &(lua_class),                  \
+        luaA_class_connect_signal_from_stack(L, (lua_class),                   \
                                              luaL_checkstring(L, 1), 2);       \
         return 0;                                                              \
     }                                                                          \
@@ -120,7 +120,7 @@ luaA_checkudataornil(lua_State *L, int udx, lua_class_t *class)
     static inline int                                                          \
     luaA_##prefix##_class_disconnect_signal(lua_State *L)                      \
     {                                                                          \
-        luaA_class_disconnect_signal_from_stack(L, &(lua_class),               \
+        luaA_class_disconnect_signal_from_stack(L, (lua_class),                \
                                                 luaL_checkstring(L, 1), 2);    \
         return 0;                                                              \
     }                                                                          \
@@ -128,7 +128,7 @@ luaA_checkudataornil(lua_State *L, int udx, lua_class_t *class)
     static inline int                                                          \
     luaA_##prefix##_class_emit_signal(lua_State *L)                            \
     {                                                                          \
-        luaA_class_emit_signal(L, &(lua_class), luaL_checkstring(L, 1),        \
+        luaA_class_emit_signal(L, (lua_class), luaL_checkstring(L, 1),         \
                                lua_gettop(L) - 1);                             \
         return 0;                                                              \
     }

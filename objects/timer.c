@@ -34,7 +34,7 @@ typedef struct
 } atimer_t;
 
 static lua_class_t timer_class;
-LUA_OBJECT_FUNCS(timer_class, atimer_t, timer)
+LUA_OBJECT_FUNCS(&timer_class, atimer_t, timer)
 
 static void
 ev_timer_emit_signal(struct ev_loop *loop, struct ev_timer *w, int revents)
