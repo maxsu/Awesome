@@ -1267,26 +1267,26 @@ luaA_client_get_icon_name(lua_State *L, client_t *c)
     return 1;
 }
 
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, class, lua_pushstring)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, instance, lua_pushstring)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, machine, lua_pushstring)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, role, lua_pushstring)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, transient_for, luaA_object_push)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, skip_taskbar, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, leader_window, lua_pushnumber)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, hidden, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, minimized, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, fullscreen, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, modal, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, ontop, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, above, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, below, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, size_hints_honor, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_horizontal, lua_pushboolean)
-LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_vertical, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, class, lua_pushstring)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, instance, lua_pushstring)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, machine, lua_pushstring)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, role, lua_pushstring)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, transient_for, luaA_object_push)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, skip_taskbar, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, leader_window, lua_pushnumber)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, hidden, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, minimized, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, fullscreen, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, modal, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, ontop, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, above, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, below, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, size_hints_honor, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_horizontal, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_vertical, lua_pushboolean)
 
 static int
 luaA_client_get_content(lua_State *L, client_t *c)
@@ -1384,22 +1384,6 @@ static int
 luaA_client_get_icon(lua_State *L, client_t *c)
 {
     return luaA_object_push_item(L, -2, c->icon);
-}
-
-static int
-luaA_client_get_focusable(lua_State *L, client_t *c)
-{
-    bool ret;
-
-    /* A client can be focused if it doesnt have the "nofocus" hint...*/
-    if (c->focusable)
-        ret = true;
-    else
-        /* ...or if it knows the WM_TAKE_FOCUS protocol */
-        ret = client_hasproto(c, WM_TAKE_FOCUS);
-
-    lua_pushboolean(L, ret);
-    return 1;
 }
 
 static int
@@ -1727,10 +1711,6 @@ client_class_setup(lua_State *L)
     luaA_class_add_property(&client_class, A_TK_SIZE_HINTS,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_size_hints,
-                            NULL);
-    luaA_class_add_property(&client_class, A_TK_FOCUSABLE,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_focusable,
                             NULL);
 }
 

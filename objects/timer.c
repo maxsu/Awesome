@@ -100,7 +100,7 @@ luaA_timer_stop(lua_State *L)
     return 0;
 }
 
-LUA_OBJECT_EXPORT_PROPERTY(timer, atimer_t, started, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(timer, atimer_t, started, lua_pushboolean)
 
 void
 timer_class_setup(lua_State *L)

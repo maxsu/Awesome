@@ -67,6 +67,8 @@ void window_set_opacity(lua_State *, int, double);
 void window_set_border_width(lua_State *, int, int);
 void window_set_sticky(lua_State *, int, bool);
 
+int luaA_window_get_focusable(lua_State *, window_t *);
+
 DO_ARRAY(window_t *, window, DO_NOTHING)
 
 #endif
