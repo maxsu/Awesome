@@ -40,7 +40,7 @@ struct image
     bool isupdated;
 };
 
-LUA_OBJECT_FUNCS(image_class, image_t, image)
+LUA_OBJECT_FUNCS(&image_class, image_t, image)
 
 static void
 image_wipe(image_t *image)

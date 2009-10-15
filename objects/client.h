@@ -118,9 +118,9 @@ struct client_t
 ARRAY_FUNCS(client_t *, client, DO_NOTHING)
 
 /** Client class */
-lua_class_t client_class;
+lua_interface_window_t client_class;
 
-LUA_OBJECT_FUNCS(client_class, client_t, client)
+LUA_OBJECT_FUNCS((lua_class_t *) &client_class, client_t, client)
 
 bool client_maybevisible(client_t *, screen_t *);
 client_t * client_getbywin(xcb_window_t);

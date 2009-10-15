@@ -46,7 +46,7 @@
 static int
 ewmh_client_update_hints(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_atom_t state[10]; /* number of defined state atoms */
     int i = 0;
 
@@ -94,7 +94,7 @@ ewmh_update_desktop_geometry(int phys_screen)
 static int
 ewmh_update_net_active_window(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
 			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { c->window });
@@ -104,7 +104,7 @@ ewmh_update_net_active_window(lua_State *L)
 static int
 ewmh_reset_net_active_window(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
 			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { XCB_NONE });
@@ -114,7 +114,7 @@ ewmh_reset_net_active_window(lua_State *L)
 static int
 ewmh_update_net_client_list(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_window_t *wins = p_alloca(xcb_window_t, globalconf.clients.len);
 
     int n = 0;
@@ -236,7 +236,7 @@ ewmh_init_screen(int phys_screen)
 static int
 ewmh_client_update_desktop(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
 
     for(int i = 0; i < c->screen->tags.len; i++)
         if(window_is_tagged((window_t *) c, c->screen->tags.tab[i]))
@@ -260,24 +260,24 @@ ewmh_client_reset_urgent(lua_State *L)
 void
 ewmh_init(void)
 {
-    luaA_class_connect_signal(globalconf.L, &client_class, "focus", ewmh_update_net_active_window);
-    luaA_class_connect_signal(globalconf.L, &client_class, "unfocus", ewmh_reset_net_active_window);
-    luaA_class_connect_signal(globalconf.L, &client_class, "manage", ewmh_update_net_client_list);
-    luaA_class_connect_signal(globalconf.L, &client_class, "unmanage", ewmh_update_net_client_list);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::modal" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::fullscreen" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::maximized_horizontal" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::maximized_vertical" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::sticky" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::skip_taskbar" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::above" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::below" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::minimized" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::urgent" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, &client_class, "tagged", ewmh_client_update_desktop);
-    luaA_class_connect_signal(globalconf.L, &client_class, "untagged", ewmh_client_update_desktop);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "focus", ewmh_update_net_active_window);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "unfocus", ewmh_reset_net_active_window);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "manage", ewmh_update_net_client_list);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "unmanage", ewmh_update_net_client_list);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::modal" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::fullscreen" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::maximized_horizontal" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::maximized_vertical" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::sticky" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::skip_taskbar" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::above" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::below" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::minimized" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::urgent" , ewmh_client_update_hints);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "tagged", ewmh_client_update_desktop);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "untagged", ewmh_client_update_desktop);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", ewmh_update_net_current_desktop);
-    luaA_class_connect_signal(globalconf.L, &client_class, "focus", ewmh_client_reset_urgent);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "focus", ewmh_client_reset_urgent);
 }
 
 /** Set the client list in stacking order, bottom to top.
