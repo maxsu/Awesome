@@ -242,9 +242,7 @@ client_focus_update(client_t *c)
 
     globalconf.focused_window = (window_t *) c;
 
-    /* according to EWMH, we have to remove the urgent state from a client */
     luaA_object_push(globalconf.L, c);
-    client_set_urgent(globalconf.L, -1, false);
     luaA_object_emit_signal(globalconf.L, -1, "focus", 0);
     lua_pop(globalconf.L, 1);
 }
