@@ -248,6 +248,15 @@ ewmh_client_update_desktop(lua_State *L)
     return 0;
 }
 
+static int
+ewmh_client_reset_urgent(lua_State *L)
+{
+    /* EWMH indicates that the WM must reset urgent when client gets attention,
+     * i.e. focus. */
+    client_set_urgent(L, 1, false);
+    return 0;
+}
+
 void
 ewmh_init(void)
 {
@@ -268,6 +277,7 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, &client_class, "tagged", ewmh_client_update_desktop);
     luaA_class_connect_signal(globalconf.L, &client_class, "untagged", ewmh_client_update_desktop);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", ewmh_update_net_current_desktop);
+    luaA_class_connect_signal(globalconf.L, &client_class, "focus", ewmh_client_reset_urgent);
 }
 
 /** Set the client list in stacking order, bottom to top.
