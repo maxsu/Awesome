@@ -61,7 +61,7 @@ client_wipe(client_t *c)
 void
 client_set_urgent(lua_State *L, int cidx, bool urgent)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
 
     if(c->urgent != urgent)
     {
@@ -85,18 +85,18 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
     }
 }
 
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, group_window)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, type)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, transient_for)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, pid)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, skip_taskbar)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, modal)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, group_window)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, type)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, transient_for)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, pid)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, skip_taskbar)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, modal)
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
     void \
     client_set_##prop(lua_State *L, int cidx, char *value) \
     { \
-        client_t *c = luaA_checkudata(L, cidx, &client_class); \
+        client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class); \
         p_delete(&c->prop); \
         c->prop = value; \
         luaA_object_emit_signal(L, cidx, "property::" #prop, 0); \
@@ -112,7 +112,7 @@ DO_CLIENT_SET_STRING_PROPERTY(machine)
 void
 client_set_class_instance(lua_State *L, int cidx, const char *class, const char *instance)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
     p_delete(&c->class);
     p_delete(&c->instance);
     c->class = a_strdup(class);
@@ -435,7 +435,7 @@ HANDLE_GEOM(height)
         p_delete(&startup_id);
     }
 
-    luaA_class_emit_signal(globalconf.L, &client_class, "list", 0);
+    luaA_class_emit_signal(globalconf.L, (lua_class_t *) &client_class, "list", 0);
 
     /* client is still on top of the stack; push startup value,
      * and emit signals with one arg */
@@ -635,7 +635,7 @@ client_resize(client_t *c, area_t geometry, bool hints)
 void
 client_set_minimized(lua_State *L, int cidx, bool s)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
 
     if(c->minimized != s)
     {
@@ -658,7 +658,7 @@ client_set_minimized(lua_State *L, int cidx, bool s)
 void
 client_set_fullscreen(lua_State *L, int cidx, bool s)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
 
     if(c->fullscreen != s)
     {
@@ -690,7 +690,7 @@ client_set_fullscreen(lua_State *L, int cidx, bool s)
     void \
     client_set_maximized_##type(lua_State *L, int cidx, bool s) \
     { \
-        client_t *c = luaA_checkudata(L, cidx, &client_class); \
+        client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class); \
         if(c->maximized_##type != s) \
         { \
             int abs_cidx = luaA_absindex(L, cidx); \
@@ -714,7 +714,7 @@ DO_FUNCTION_CLIENT_MAXIMIZED(horizontal)
 void
 client_set_above(lua_State *L, int cidx, bool s)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
 
     if(c->above != s)
     {
@@ -738,7 +738,7 @@ client_set_above(lua_State *L, int cidx, bool s)
 void
 client_set_below(lua_State *L, int cidx, bool s)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
 
     if(c->below != s)
     {
@@ -762,7 +762,7 @@ client_set_below(lua_State *L, int cidx, bool s)
 void
 client_set_ontop(lua_State *L, int cidx, bool s)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
 
     if(c->ontop != s)
     {
@@ -812,7 +812,7 @@ client_unmanage(client_t *c)
     luaA_object_emit_signal(globalconf.L, -1, "unmanage", 0);
     lua_pop(globalconf.L, 1);
 
-    luaA_class_emit_signal(globalconf.L, &client_class, "list", 0);
+    luaA_class_emit_signal(globalconf.L, (lua_class_t *) &client_class, "list", 0);
 
     if(strut_has_value(&c->strut))
         screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
@@ -921,7 +921,7 @@ luaA_client_get(lua_State *L)
 static int
 luaA_client_isvisible(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     lua_pushboolean(L, client_isvisible(c, c->screen));
     return 1;
 }
@@ -934,7 +934,7 @@ luaA_client_isvisible(lua_State *L)
 void
 client_set_icon(lua_State *L, int cidx, int iidx)
 {
-    client_t *c = luaA_checkudata(L, cidx, &client_class);
+    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
     /* convert index to absolute */
     cidx = luaA_absindex(L, cidx);
     iidx = luaA_absindex(L, iidx);
@@ -953,7 +953,7 @@ client_set_icon(lua_State *L, int cidx, int iidx)
 static int
 luaA_client_kill(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     client_kill(c);
     return 0;
 }
@@ -967,8 +967,8 @@ luaA_client_kill(lua_State *L)
 static int
 luaA_client_swap(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
-    client_t *swap = luaA_checkudata(L, 2, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
+    client_t *swap = luaA_checkudata(L, 2, (lua_class_t *) &client_class);
 
     if(c != swap)
     {
@@ -986,7 +986,7 @@ luaA_client_swap(lua_State *L)
         *ref_c = swap;
         *ref_swap = c;
 
-        luaA_class_emit_signal(globalconf.L, &client_class, "list", 0);
+        luaA_class_emit_signal(globalconf.L, (lua_class_t *) &client_class, "list", 0);
     }
 
     return 0;
@@ -1000,7 +1000,7 @@ luaA_client_swap(lua_State *L)
 static int
 luaA_client_raise(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     client_raise(c);
     return 0;
 }
@@ -1013,7 +1013,7 @@ luaA_client_raise(lua_State *L)
 static int
 luaA_client_lower(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
 
     stack_client_push(c);
 
@@ -1033,7 +1033,7 @@ luaA_client_lower(lua_State *L)
 static int
 luaA_client_unmanage(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     client_unmanage(c);
     return 0;
 }
@@ -1048,7 +1048,7 @@ luaA_client_unmanage(lua_State *L)
 static int
 luaA_client_geometry(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
 
     if(lua_gettop(L) == 2 && !lua_isnil(L, 2))
     {
@@ -1450,7 +1450,7 @@ luaA_client_get_size_hints(lua_State *L, client_t *c)
 static int
 luaA_client_keys(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, &client_class);
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     key_array_t *keys = &c->keys;
 
     if(lua_gettop(L) == 2)
@@ -1471,7 +1471,7 @@ luaA_client_keys(lua_State *L)
 static int
 luaA_client_focus(lua_State *L)
 {
-    client_focus(luaA_checkudata(L, 1, &client_class));
+    client_focus(luaA_checkudata(L, 1, (lua_class_t *) &client_class));
     return 0;
 }
 
@@ -1528,117 +1528,117 @@ client_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
-    luaA_class_setup(L, &client_class, "client", &window_class,
+    luaA_class_setup(L, (lua_class_t *) &client_class, "client", &window_class,
                      (lua_class_allocator_t) client_new,
                      (lua_class_collector_t) client_wipe,
                      (lua_class_checker_t) client_checker,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      client_methods, client_meta);
-    luaA_class_add_property(&client_class, A_TK_NAME,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_NAME,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_name,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_TRANSIENT_FOR,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TRANSIENT_FOR,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_transient_for,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_SKIP_TASKBAR,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_SKIP_TASKBAR,
                             (lua_class_propfunc_t) luaA_client_set_skip_taskbar,
                             (lua_class_propfunc_t) luaA_client_get_skip_taskbar,
                             (lua_class_propfunc_t) luaA_client_set_skip_taskbar);
-    luaA_class_add_property(&client_class, A_TK_CONTENT,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_CONTENT,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_content,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_TYPE,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TYPE,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_type,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_CLASS,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_CLASS,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_class,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_INSTANCE,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_INSTANCE,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_instance,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_ROLE,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_ROLE,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_role,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_PID,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_PID,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_pid,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_LEADER_WINDOW,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_LEADER_WINDOW,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_leader_window,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_MACHINE,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MACHINE,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_machine,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_ICON_NAME,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_ICON_NAME,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_icon_name,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_SCREEN,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_SCREEN,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_screen,
                             (lua_class_propfunc_t) luaA_client_set_screen);
-    luaA_class_add_property(&client_class, A_TK_HIDDEN,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_HIDDEN,
                             (lua_class_propfunc_t) luaA_client_set_hidden,
                             (lua_class_propfunc_t) luaA_client_get_hidden,
                             (lua_class_propfunc_t) luaA_client_set_hidden);
-    luaA_class_add_property(&client_class, A_TK_MINIMIZED,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MINIMIZED,
                             (lua_class_propfunc_t) luaA_client_set_minimized,
                             (lua_class_propfunc_t) luaA_client_get_minimized,
                             (lua_class_propfunc_t) luaA_client_set_minimized);
-    luaA_class_add_property(&client_class, A_TK_FULLSCREEN,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_FULLSCREEN,
                             (lua_class_propfunc_t) luaA_client_set_fullscreen,
                             (lua_class_propfunc_t) luaA_client_get_fullscreen,
                             (lua_class_propfunc_t) luaA_client_set_fullscreen);
-    luaA_class_add_property(&client_class, A_TK_MODAL,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MODAL,
                             (lua_class_propfunc_t) luaA_client_set_modal,
                             (lua_class_propfunc_t) luaA_client_get_modal,
                             (lua_class_propfunc_t) luaA_client_set_modal);
-    luaA_class_add_property(&client_class, A_TK_GROUP_WINDOW,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_GROUP_WINDOW,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_group_window,
                             NULL);
-    luaA_class_add_property(&client_class, A_TK_MAXIMIZED_HORIZONTAL,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MAXIMIZED_HORIZONTAL,
                             (lua_class_propfunc_t) luaA_client_set_maximized_horizontal,
                             (lua_class_propfunc_t) luaA_client_get_maximized_horizontal,
                             (lua_class_propfunc_t) luaA_client_set_maximized_horizontal);
-    luaA_class_add_property(&client_class, A_TK_MAXIMIZED_VERTICAL,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MAXIMIZED_VERTICAL,
                             (lua_class_propfunc_t) luaA_client_set_maximized_vertical,
                             (lua_class_propfunc_t) luaA_client_get_maximized_vertical,
                             (lua_class_propfunc_t) luaA_client_set_maximized_vertical);
-    luaA_class_add_property(&client_class, A_TK_ICON,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_ICON,
                             (lua_class_propfunc_t) luaA_client_set_icon,
                             (lua_class_propfunc_t) luaA_client_get_icon,
                             (lua_class_propfunc_t) luaA_client_set_icon);
-    luaA_class_add_property(&client_class, A_TK_ONTOP,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_ONTOP,
                             (lua_class_propfunc_t) luaA_client_set_ontop,
                             (lua_class_propfunc_t) luaA_client_get_ontop,
                             (lua_class_propfunc_t) luaA_client_set_ontop);
-    luaA_class_add_property(&client_class, A_TK_ABOVE,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_ABOVE,
                             (lua_class_propfunc_t) luaA_client_set_above,
                             (lua_class_propfunc_t) luaA_client_get_above,
                             (lua_class_propfunc_t) luaA_client_set_above);
-    luaA_class_add_property(&client_class, A_TK_BELOW,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_BELOW,
                             (lua_class_propfunc_t) luaA_client_set_below,
                             (lua_class_propfunc_t) luaA_client_get_below,
                             (lua_class_propfunc_t) luaA_client_set_below);
-    luaA_class_add_property(&client_class, A_TK_SIZE_HINTS_HONOR,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_SIZE_HINTS_HONOR,
                             (lua_class_propfunc_t) luaA_client_set_size_hints_honor,
                             (lua_class_propfunc_t) luaA_client_get_size_hints_honor,
                             (lua_class_propfunc_t) luaA_client_set_size_hints_honor);
-    luaA_class_add_property(&client_class, A_TK_URGENT,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_URGENT,
                             (lua_class_propfunc_t) luaA_client_set_urgent,
                             (lua_class_propfunc_t) luaA_client_get_urgent,
                             (lua_class_propfunc_t) luaA_client_set_urgent);
-    luaA_class_add_property(&client_class, A_TK_SIZE_HINTS,
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_SIZE_HINTS,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_size_hints,
                             NULL);

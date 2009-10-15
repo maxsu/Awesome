@@ -33,7 +33,7 @@
 #include "common/atoms.h"
 #include "common/xutil.h"
 
-LUA_OBJECT_FUNCS(widget_class, widget_t, widget);
+LUA_OBJECT_FUNCS(&widget_class, widget_t, widget);
 
 static void
 widget_wipe(widget_t *widget)

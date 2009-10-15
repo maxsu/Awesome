@@ -31,7 +31,7 @@
 #include "common/xcursor.h"
 #include "common/xutil.h"
 
-LUA_OBJECT_FUNCS(wibox_class, wibox_t, wibox)
+LUA_OBJECT_FUNCS((lua_class_t *) &wibox_class, wibox_t, wibox)
 
 /** Kick out systray windows.
  */
@@ -94,7 +94,7 @@ wibox_wipe(wibox_t *wibox)
 void
 wibox_widget_node_array_wipe(lua_State *L, int idx)
 {
-    wibox_t *wibox = luaA_checkudata(L, idx, &wibox_class);
+    wibox_t *wibox = luaA_checkudata(L, idx, (lua_class_t *) &wibox_class);
     foreach(widget_node, wibox->widgets)
         luaA_object_unref_item(globalconf.L, idx, widget_node);
     widget_node_array_wipe(&wibox->widgets);
@@ -260,7 +260,7 @@ wibox_refresh_pixmap(wibox_t *w)
 static void
 wibox_moveresize(lua_State *L, int udx, area_t geometry)
 {
-    wibox_t *w = luaA_checkudata(L, udx, &wibox_class);
+    wibox_t *w = luaA_checkudata(L, udx, (lua_class_t *) &wibox_class);
     if(w->window)
     {
         int number_of_vals = 0;
@@ -366,7 +366,7 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
 static void
 wibox_set_orientation(lua_State *L, int udx, orientation_t o)
 {
-    wibox_t *w = luaA_checkudata(L, udx, &wibox_class);
+    wibox_t *w = luaA_checkudata(L, udx, (lua_class_t *) &wibox_class);
     if(o != w->orientation)
     {
         w->orientation = o;
@@ -610,7 +610,7 @@ wibox_clear_mouse_over(wibox_t *wibox)
 static void
 wibox_set_visible(lua_State *L, int udx, bool v)
 {
-    wibox_t *wibox = luaA_checkudata(L, udx, &wibox_class);
+    wibox_t *wibox = luaA_checkudata(L, udx, (lua_class_t *) &wibox_class);
     if(v != wibox->visible)
     {
         wibox->visible = v;
@@ -645,7 +645,7 @@ wibox_set_visible(lua_State *L, int udx, bool v)
 static void
 wibox_detach(lua_State *L, int udx)
 {
-    wibox_t *wibox = luaA_checkudata(L, udx, &wibox_class);
+    wibox_t *wibox = luaA_checkudata(L, udx, (lua_class_t *) &wibox_class);
     if(wibox->screen)
     {
         bool v;
@@ -689,7 +689,7 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
     /* duplicate wibox */
     lua_pushvalue(L, udx);
     /* ref it */
-    wibox_t *wibox = luaA_object_ref_class(globalconf.L, -1, &wibox_class);
+    wibox_t *wibox = luaA_object_ref_class(globalconf.L, -1, (lua_class_t *) &wibox_class);
 
     wibox_detach(L, udx);
 
@@ -733,7 +733,7 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
 static int
 luaA_wibox_need_update(lua_State *L)
 {
-    wibox_need_update(luaA_checkudata(L, 1, &wibox_class));
+    wibox_need_update(luaA_checkudata(L, 1, (lua_class_t *) &wibox_class));
     return 0;
 }
 
@@ -744,9 +744,9 @@ luaA_wibox_need_update(lua_State *L)
 static int
 luaA_wibox_new(lua_State *L)
 {
-    luaA_class_new(L, &wibox_class);
+    luaA_class_new(L, (lua_class_t *) &wibox_class);
 
-    wibox_t *w = luaA_checkudata(L, -1, &wibox_class);
+    wibox_t *w = luaA_checkudata(L, -1, (lua_class_t *) &wibox_class);
 
     if(!w->ctx.fg.initialized)
         w->ctx.fg = globalconf.colors.fg;
@@ -820,7 +820,7 @@ luaA_wibox_invalidate_byitem(lua_State *L, const void *item)
 static int
 luaA_wibox_geometry(lua_State *L)
 {
-    wibox_t *wibox = luaA_checkudata(L, 1, &wibox_class);
+    wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
 
     if(lua_gettop(L) == 2)
     {
@@ -1211,74 +1211,74 @@ wibox_class_setup(lua_State *L)
         { NULL, NULL },
     };
 
-    luaA_class_setup(L, &wibox_class, "wibox", &window_class,
+    luaA_class_setup(L, (lua_class_t *) &wibox_class, "wibox", &window_class,
                      (lua_class_allocator_t) wibox_new,
                      (lua_class_collector_t) wibox_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      wibox_methods, wibox_meta);
-    luaA_class_add_property(&wibox_class, A_TK_WIDGETS,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_WIDGETS,
                             (lua_class_propfunc_t) luaA_wibox_set_widgets,
                             (lua_class_propfunc_t) luaA_wibox_get_widgets,
                             (lua_class_propfunc_t) luaA_wibox_set_widgets);
-    luaA_class_add_property(&wibox_class, A_TK_VISIBLE,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_VISIBLE,
                             (lua_class_propfunc_t) luaA_wibox_set_visible,
                             (lua_class_propfunc_t) luaA_wibox_get_visible,
                             (lua_class_propfunc_t) luaA_wibox_set_visible);
-    luaA_class_add_property(&wibox_class, A_TK_ORIENTATION,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ORIENTATION,
                             (lua_class_propfunc_t) luaA_wibox_set_orientation,
                             (lua_class_propfunc_t) luaA_wibox_get_orientation,
                             (lua_class_propfunc_t) luaA_wibox_set_orientation);
-    luaA_class_add_property(&wibox_class, A_TK_ONTOP,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ONTOP,
                             (lua_class_propfunc_t) luaA_wibox_set_ontop,
                             (lua_class_propfunc_t) luaA_wibox_get_ontop,
                             (lua_class_propfunc_t) luaA_wibox_set_ontop);
-    luaA_class_add_property(&wibox_class, A_TK_SCREEN,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SCREEN,
                             NULL,
                             (lua_class_propfunc_t) luaA_wibox_get_screen,
                             (lua_class_propfunc_t) luaA_wibox_set_screen);
-    luaA_class_add_property(&wibox_class, A_TK_CURSOR,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_CURSOR,
                             (lua_class_propfunc_t) luaA_wibox_set_cursor,
                             (lua_class_propfunc_t) luaA_wibox_get_cursor,
                             (lua_class_propfunc_t) luaA_wibox_set_cursor);
-    luaA_class_add_property(&wibox_class, A_TK_FG,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_FG,
                             (lua_class_propfunc_t) luaA_wibox_set_fg,
                             (lua_class_propfunc_t) luaA_wibox_get_fg,
                             (lua_class_propfunc_t) luaA_wibox_set_fg);
-    luaA_class_add_property(&wibox_class, A_TK_BG,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_BG,
                             (lua_class_propfunc_t) luaA_wibox_set_bg,
                             (lua_class_propfunc_t) luaA_wibox_get_bg,
                             (lua_class_propfunc_t) luaA_wibox_set_bg);
-    luaA_class_add_property(&wibox_class, A_TK_BG_IMAGE,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_BG_IMAGE,
                             (lua_class_propfunc_t) luaA_wibox_set_bg_image,
                             (lua_class_propfunc_t) luaA_wibox_get_bg_image,
                             (lua_class_propfunc_t) luaA_wibox_set_bg_image);
-    luaA_class_add_property(&wibox_class, A_TK_X,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_X,
                             (lua_class_propfunc_t) luaA_wibox_set_x,
                             (lua_class_propfunc_t) luaA_wibox_get_x,
                             (lua_class_propfunc_t) luaA_wibox_set_x);
-    luaA_class_add_property(&wibox_class, A_TK_Y,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_Y,
                             (lua_class_propfunc_t) luaA_wibox_set_y,
                             (lua_class_propfunc_t) luaA_wibox_get_y,
                             (lua_class_propfunc_t) luaA_wibox_set_y);
-    luaA_class_add_property(&wibox_class, A_TK_WIDTH,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_WIDTH,
                             (lua_class_propfunc_t) luaA_wibox_set_width,
                             (lua_class_propfunc_t) luaA_wibox_get_width,
                             (lua_class_propfunc_t) luaA_wibox_set_width);
-    luaA_class_add_property(&wibox_class, A_TK_HEIGHT,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_HEIGHT,
                             (lua_class_propfunc_t) luaA_wibox_set_height,
                             (lua_class_propfunc_t) luaA_wibox_get_height,
                             (lua_class_propfunc_t) luaA_wibox_set_height);
-    luaA_class_add_property(&wibox_class, A_TK_SHAPE_BOUNDING,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SHAPE_BOUNDING,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_bounding,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_bounding,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_bounding);
-    luaA_class_add_property(&wibox_class, A_TK_SHAPE_CLIP,
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SHAPE_CLIP,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip);
 
-    luaA_class_connect_signal(L, &wibox_class, "property::border_width", luaA_wibox_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
