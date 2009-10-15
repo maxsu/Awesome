@@ -237,9 +237,6 @@ client_restore_enterleave_events(void)
 void
 client_focus_update(client_t *c)
 {
-    if(!client_maybevisible(c, c->screen))
-        return;
-
     globalconf.focused_window = (window_t *) c;
 
     luaA_object_push(globalconf.L, c);
