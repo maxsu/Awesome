@@ -162,7 +162,7 @@ client_getbywin(xcb_window_t w)
 void
 client_unfocus_update(client_t *c)
 {
-    globalconf.screens.tab[c->phys_screen].focused_window = NULL;
+    globalconf.screens.tab[c->screen->phys_screen].focused_window = NULL;
     luaA_object_push(globalconf.L, c);
     luaA_object_emit_signal(globalconf.L, -1, "unfocus", 0);
     lua_pop(globalconf.L, 1);
@@ -189,9 +189,9 @@ void
 client_ban_unfocus(client_t *c)
 {
     /* Wait until the last moment to take away the focus from the window. */
-    if(globalconf.screens.tab[c->phys_screen].focused_window == (window_t *) c)
+    if(globalconf.screens.tab[c->screen->phys_screen].focused_window == (window_t *) c)
     {
-        xcb_window_t root_win = xutil_screen_get(globalconf.connection, c->phys_screen)->root;
+        xcb_window_t root_win = xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root;
         /* Set focus on root window, so no events leak to the current window.
          * This kind of inlines client_set_focus(), but a root window will never have
          * the WM_TAKE_FOCUS protocol. */
@@ -246,7 +246,7 @@ client_focus_update(client_t *c)
     if(!client_maybevisible(c, c->screen))
         return;
 
-    globalconf.screen_focus = &globalconf.screens.tab[c->phys_screen];
+    globalconf.screen_focus = &globalconf.screens.tab[c->screen->phys_screen];
     globalconf.screen_focus->focused_window = (window_t *) c;
 
     luaA_object_push(globalconf.L, c);
@@ -306,8 +306,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, int phys_screen, 
 
     client_t *c = client_new(globalconf.L);
 
-    /* This cannot change, ever. */
-    c->phys_screen = phys_screen;
+    /* Set initial screen */
+    c->screen = &globalconf.screens.tab[phys_screen];
     /* consider the window banned */
     c->banned = true;
     /* Store window */
@@ -517,7 +517,7 @@ client_resize(client_t *c, area_t geometry, bool hints)
     area_t area;
 
     /* offscreen appearance fixes */
-    area = display_area_get(c->phys_screen);
+    area = display_area_get(c->screen->phys_screen);
 
     if(geometry.x > area.width)
         geometry.x = area.width - geometry.width;

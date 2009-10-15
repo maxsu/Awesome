@@ -96,7 +96,7 @@ ewmh_update_net_active_window(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, &client_class);
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(globalconf.connection, c->phys_screen)->root,
+			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { c->window });
     return 0;
 }
@@ -106,7 +106,7 @@ ewmh_reset_net_active_window(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, &client_class);
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(globalconf.connection, c->phys_screen)->root,
+			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { XCB_NONE });
     return 0;
 }
@@ -119,11 +119,11 @@ ewmh_update_net_client_list(lua_State *L)
 
     int n = 0;
     foreach(client, globalconf.clients)
-        if((*client)->phys_screen == c->phys_screen)
+        if((*client)->screen->phys_screen == c->screen->phys_screen)
             wins[n++] = c->window;
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(globalconf.connection, c->phys_screen)->root,
+			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
 			_NET_CLIENT_LIST, WINDOW, 32, n, wins);
 
     return 0;
@@ -280,7 +280,7 @@ ewmh_update_net_client_list_stacking(int phys_screen)
     xcb_window_t *wins = p_alloca(xcb_window_t, globalconf.stack.len);
 
     foreach(client, globalconf.stack)
-        if((*client)->phys_screen == phys_screen)
+        if((*client)->screen->phys_screen == phys_screen)
             wins[n++] = (*client)->window;
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
