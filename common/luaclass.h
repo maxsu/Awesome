@@ -48,26 +48,30 @@ typedef int (*lua_class_propfunc_t)(lua_State *, lua_object_t *);
 typedef bool (*lua_class_checker_t)(lua_object_t *);
 
 typedef struct lua_class_t lua_class_t;
+
+#define LUA_CLASS_HEADER \
+    /** Class name */ \
+    const char *name; \
+    /** Class signals */ \
+    signal_array_t signals; \
+    /** Parent class */ \
+    lua_class_t *parent; \
+    /** Allocator for creating new objects of that class */\
+    lua_class_allocator_t allocator; \
+    /** Garbage collection function */ \
+    lua_class_collector_t collector; \
+    /** Class properties */ \
+    lua_class_property_array_t properties; \
+    /** Function to call when a indexing an unknown property */ \
+    lua_class_propfunc_t index_miss_property; \
+    /** Function to call when a indexing an unknown property */ \
+    lua_class_propfunc_t newindex_miss_property; \
+    /** Function to call to check if an object is valid */ \
+    lua_class_checker_t checker;
+
 struct lua_class_t
 {
-    /** Class name */
-    const char *name;
-    /** Class signals */
-    signal_array_t signals;
-    /** Parent class */
-    lua_class_t *parent;
-    /** Allocator for creating new objects of that class */
-    lua_class_allocator_t allocator;
-    /** Garbage collection function */
-    lua_class_collector_t collector;
-    /** Class properties */
-    lua_class_property_array_t properties;
-    /** Function to call when a indexing an unknown property */
-    lua_class_propfunc_t index_miss_property;
-    /** Function to call when a indexing an unknown property */
-    lua_class_propfunc_t newindex_miss_property;
-    /** Function to call to check if an object is valid */
-    lua_class_checker_t checker;
+    LUA_CLASS_HEADER
 };
 
 const char * luaA_typename(lua_State *, int);
