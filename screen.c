@@ -304,8 +304,14 @@ screen_area_get(screen_t *screen, bool strut)
     }
 
     foreach(c, globalconf.clients)
-        if(client_isvisible(*c, screen))
-            COMPUTE_STRUT(*c)
+        if((*c)->screen == screen)
+        {
+            luaA_object_push(globalconf.L, *c);
+            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
+            if(interface->isvisible((window_t *) *c))
+                COMPUTE_STRUT(*c)
+            lua_pop(globalconf.L, 1);
+        }
 
     foreach(wibox, globalconf.wiboxes)
         if((*wibox)->visible

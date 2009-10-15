@@ -59,11 +59,13 @@ struct window_t
     WINDOW_OBJECT_HEADER
 };
 
+typedef bool (*lua_interface_window_isvisible_t)(window_t *);
+
 typedef struct
 {
     LUA_CLASS_HEADER
     /** The function to call to know if a window is visible */
-    bool (*isvisible)(window_t *);
+    lua_interface_window_isvisible_t isvisible;
 } lua_interface_window_t;
 
 lua_class_t window_class;

@@ -125,7 +125,7 @@ lua_interface_window_t client_class;
 
 LUA_OBJECT_FUNCS((lua_class_t *) &client_class, client_t, client)
 
-bool client_maybevisible(client_t *, screen_t *);
+bool client_maybevisible(client_t *);
 client_t * client_getbywin(xcb_window_t);
 client_t * client_getbyframewin(xcb_window_t);
 
@@ -205,18 +205,6 @@ client_isfixed(client_t *c)
             && c->size_hints.max_width
             && c->size_hints.max_height
             && c->size_hints_honor);
-}
-
-/** Returns true if a client is tagged with one of the tags of the 
- * specified screen and is not hidden. Note that "banned" clients are included.
- * \param c The client to check.
- * \param screen Virtual screen number.
- * \return true if the client is visible, false otherwise.
- */
-static inline bool
-client_isvisible(client_t *c, screen_t *screen)
-{
-    return (!c->hidden && !c->minimized && client_maybevisible(c, screen));
 }
 
 #endif
