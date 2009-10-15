@@ -502,7 +502,7 @@ event_handle_focusin(void *data __attribute__ ((unused)),
             client_t *c;
 
             if((c = client_getbywin(ev->event)))
-                client_focus_update(c);
+                window_focus_update((window_t *) c);
           }
         /* all other events are ignored */
         default:

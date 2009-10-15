@@ -205,20 +205,6 @@ client_restore_enterleave_events(void)
                                      (const uint32_t []) { CLIENT_SELECT_INPUT_EVENT_MASK });
 }
 
-/** Record that a client got focus.
- * \param c The client.
- */
-void
-client_focus_update(client_t *c)
-{
-    globalconf.screen_focus = &globalconf.screens.tab[c->screen->phys_screen];
-    globalconf.screen_focus->focused_window = (window_t *) c;
-
-    luaA_object_push(globalconf.L, c);
-    luaA_object_emit_signal(globalconf.L, -1, "focus", 0);
-    lua_pop(globalconf.L, 1);
-}
-
 /** Give focus to client, or to first client if client is NULL.
  * \param c The client.
  */
