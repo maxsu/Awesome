@@ -52,7 +52,7 @@ banning_need_update(lua_State *L)
     foreach(c, globalconf.clients)
         /* we don't touch other screens windows */
         if(!client_isvisible(*c, screen) && (*c)->screen == screen)
-            client_ban_unfocus(*c);
+            window_ban_unfocus((window_t *) *c);
 
     return 0;
 }
@@ -88,7 +88,7 @@ reban(screen_t *screen)
     foreach(c, globalconf.clients)
         /* we don't touch other screens windows */
         if(!client_isvisible(*c, screen) && (*c)->screen == screen)
-            client_ban(*c);
+            window_ban((window_t *) *c);
 
     client_restore_enterleave_events();
 }
