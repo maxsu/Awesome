@@ -24,6 +24,7 @@
 #include "stack.h"
 #include "objects/client.h"
 #include "objects/wibox.h"
+#include "screen.h"
 
 static bool need_stack_refresh = false;
 

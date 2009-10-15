@@ -30,6 +30,8 @@ ARRAY_TYPE(screen_output_t, screen_output)
 
 struct a_screen
 {
+    /** Physical screen index */
+    int phys_screen;
     /** Screen geometry */
     area_t geometry;
     /** Tag list */

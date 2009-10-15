@@ -376,6 +376,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     client_t *c = client_new(globalconf.L);
     xcb_screen_t *s = globalconf.screen;
 
+    /* Set initial screen */
+    c->screen = &globalconf.screens.tab[0];
     /* consider the window banned */
     c->banned = true;
     /* Store window */

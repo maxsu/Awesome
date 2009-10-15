@@ -117,6 +117,7 @@ screen_scan_randr(void)
                 new_screen.geometry.y = crtc_info_r->y;
                 new_screen.geometry.width= crtc_info_r->width;
                 new_screen.geometry.height= crtc_info_r->height;
+                new_screen.phys_screen = globalconf.default_screen;
 
                 xcb_randr_output_t *randr_outputs = xcb_randr_get_crtc_info_outputs(crtc_info_r);
 
@@ -201,6 +202,7 @@ screen_scan_xinerama(void)
                 screen_t s;
                 p_clear(&s, 1);
                 s.geometry = screen_xsitoarea(xsi[screen]);
+                s.phys_screen = screen;
                 screen_array_append(&globalconf.screens, s);
             }
         }
