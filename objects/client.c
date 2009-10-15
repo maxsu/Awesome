@@ -182,38 +182,6 @@ client_hasproto(client_t *c, xcb_atom_t atom)
     return false;
 }
 
-/** Prepare banning a client by running all needed Lua events.
- * \param c The client.
- */
-void
-client_ban_unfocus(client_t *c)
-{
-    /* Wait until the last moment to take away the focus from the window. */
-    if(globalconf.screens.tab[c->screen->phys_screen].focused_window == (window_t *) c)
-    {
-        xcb_window_t root_win = xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root;
-        /* Set focus on root window, so no events leak to the current window.
-         * This kind of inlines client_set_focus(), but a root window will never have
-         * the WM_TAKE_FOCUS protocol. */
-        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
-                            root_win, XCB_CURRENT_TIME);
-    }
-}
-
-/** Ban client and move it out of the viewport.
- * \param c The client.
- */
-void
-client_ban(client_t *c)
-{
-    if(!c->banned)
-    {
-        xcb_unmap_window(globalconf.connection, c->window);
-        c->banned = true;
-        client_ban_unfocus(c);
-    }
-}
-
 /** This is part of The Bob Marley Algorithm: we ignore enter and leave window
  * in certain cases, like map/unmap or move, so we don't get spurious events.
  */
