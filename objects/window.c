@@ -35,6 +35,19 @@ window_wipe(window_t *window)
     button_array_wipe(&window->buttons);
 }
 
+/** Unban a window.
+ * \param window The window.
+ */
+void
+window_unban(window_t *window)
+{
+    if(window->banned)
+    {
+        xcb_map_window(globalconf.connection, window->window);
+        window->banned = false;
+    }
+}
+
 /** Get or set mouse buttons bindings on a window.
  * \param L The Lua VM state.
  * \return The number of elements pushed on the stack.
