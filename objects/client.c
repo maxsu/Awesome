@@ -265,7 +265,11 @@ client_focus_update(client_t *c)
 void
 client_focus(client_t *c)
 {
-    if(!client_maybevisible(c, c->screen))
+    /* If the client is banned but isvisible, unban it right now because you
+     * can't set focus on unmapped window */
+    if(client_isvisible(c, c->screen))
+        client_unban(c);
+    else
         return;
 
     /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
