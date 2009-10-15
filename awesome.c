@@ -86,7 +86,7 @@ awesome_atexit(void)
 
     /* remap all clients since some WM won't handle them otherwise */
     foreach(c, globalconf.clients)
-        client_unban(*c);
+        window_unban((window_t *) *c);
 
     /* Close Lua */
     lua_close(globalconf.L);
