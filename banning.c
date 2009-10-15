@@ -81,7 +81,7 @@ reban(screen_t *screen)
 
     foreach(c, globalconf.clients)
         if(client_isvisible(*c, screen))
-            client_unban(*c);
+            window_unban((window_t *) *c);
 
     /* Some people disliked the short flicker of background, so we first unban everything.
      * Afterwards we ban everything we don't want. This should avoid that. */

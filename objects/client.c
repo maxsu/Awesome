@@ -290,12 +290,9 @@ client_focus(client_t *c)
     /* If the client is banned but isvisible, unban it right now because you
      * can't set focus on unmapped window */
     if(client_isvisible(c, c->screen))
-        client_unban(c);
+        window_unban((window_t *) c);
     else
         return;
-
-    /* X11 doesn't let you focus a window that isn't viewable */
-    client_unban(c);
 
     /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
     if(c->focusable)
@@ -826,25 +823,6 @@ client_set_ontop(lua_State *L, int cidx, bool s)
         }
         c->ontop = s;
         luaA_object_emit_signal(L, cidx, "property::ontop", 0);
-    }
-}
-
-/** Unban a client and move it back into the viewport.
- * \param c The client.
- */
-void
-client_unban(client_t *c)
-{
-    if(c->banned)
-    {
-        xcb_map_window(globalconf.connection, c->frame_window);
-
-        c->banned = false;
-
-        /* An unbanned clients shouldn't be minimized */
-        luaA_object_push(globalconf.L, c);
-        client_set_minimized(globalconf.L, -1, false);
-        lua_pop(globalconf.L, 1);
     }
 }
 

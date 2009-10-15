@@ -63,6 +63,8 @@ lua_class_t window_class;
 
 void window_class_setup(lua_State *);
 
+void window_unban(window_t *);
+
 void window_set_opacity(lua_State *, int, double);
 void window_set_border_width(lua_State *, int, int);
 void window_set_sticky(lua_State *, int, bool);
