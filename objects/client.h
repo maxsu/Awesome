@@ -129,8 +129,6 @@ bool client_maybevisible(client_t *, screen_t *);
 client_t * client_getbywin(xcb_window_t);
 client_t * client_getbyframewin(xcb_window_t);
 
-void client_ban(client_t *);
-void client_ban_unfocus(client_t *);
 void client_manage(xcb_window_t, xcb_get_geometry_reply_t *, bool);
 area_t client_geometry_hints(client_t *, area_t);
 bool client_resize(client_t *, area_t, bool);
