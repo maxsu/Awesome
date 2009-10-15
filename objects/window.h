@@ -74,6 +74,7 @@ void window_ban(window_t *);
 void window_ban_unfocus(window_t *);
 void window_unban(window_t *);
 void window_focus_update(window_t *);
+void window_focus(lua_State *, int);
 
 void window_set_opacity(lua_State *, int, double);
 void window_set_border_width(lua_State *, int, int);
