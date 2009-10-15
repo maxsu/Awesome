@@ -51,8 +51,14 @@ banning_need_update(lua_State *L)
     /* But if a client will be banned in our next update we unfocus it now. */
     foreach(c, globalconf.clients)
         /* we don't touch other screens windows */
-        if(!client_isvisible(*c, screen) && (*c)->screen == screen)
-            window_ban_unfocus((window_t *) *c);
+        if((*c)->screen == screen)
+        {
+            luaA_object_push(globalconf.L, *c);
+            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
+            if(interface->isvisible((window_t *) *c))
+                window_ban_unfocus((window_t *) *c);
+            lua_pop(globalconf.L, 1);
+        }
 
     return 0;
 }
@@ -80,15 +86,28 @@ reban(screen_t *screen)
     client_ignore_enterleave_events();
 
     foreach(c, globalconf.clients)
-        if(client_isvisible(*c, screen))
-            window_unban((window_t *) *c);
+        if((*c)->screen == screen)
+        {
+            luaA_object_push(globalconf.L, *c);
+            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
+            if(interface->isvisible((window_t *) *c))
+                window_unban((window_t *) *c);
+            lua_pop(globalconf.L, 1);
+        }
 
     /* Some people disliked the short flicker of background, so we first unban everything.
      * Afterwards we ban everything we don't want. This should avoid that. */
     foreach(c, globalconf.clients)
         /* we don't touch other screens windows */
-        if(!client_isvisible(*c, screen) && (*c)->screen == screen)
-            window_ban((window_t *) *c);
+        if((*c)->screen == screen)
+        {
+            luaA_object_push(globalconf.L, *c);
+            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
+            if(!interface->isvisible((window_t *) *c))
+                window_ban((window_t *) *c);
+            lua_pop(globalconf.L, 1);
+        }
+        /* we don't touch other screens windows */
 
     client_restore_enterleave_events();
 }

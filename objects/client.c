@@ -53,6 +53,18 @@ client_wipe(client_t *c)
     p_delete(&c->alt_name);
 }
 
+/** Returns true if a client is visible.
+ * Banned client are considered as visible even if they are not (yet) mapped.
+ * \param c The client to check.
+ * \param screen Virtual screen number.
+ * \return True if the client is visible, false otherwise.
+ */
+static bool
+client_isvisible(client_t *c)
+{
+    return (!c->hidden && !c->minimized && client_maybevisible(c));
+}
+
 /** Change the clients urgency flag.
  * \param L The Lua VM state.
  * \param cidx The client index on the stack.
@@ -128,17 +140,15 @@ client_set_class_instance(lua_State *L, int cidx, const char *class, const char 
  * \return true if the client is visible, false otherwise.
  */
 bool
-client_maybevisible(client_t *c, screen_t *screen)
+client_maybevisible(client_t *c)
 {
-    if(screen && c->screen == screen)
-    {
-        if(c->sticky || c->type == WINDOW_TYPE_DESKTOP)
+    if(c->sticky || c->type == WINDOW_TYPE_DESKTOP)
+        return true;
+
+    foreach(tag, c->screen->tags)
+        if(tag_get_selected(*tag) && window_is_tagged((window_t *) c, *tag))
             return true;
 
-        foreach(tag, screen->tags)
-            if(tag_get_selected(*tag) && window_is_tagged((window_t *) c, *tag))
-                return true;
-    }
     return false;
 }
 
@@ -213,7 +223,7 @@ client_focus(client_t *c)
 {
     /* If the client is banned but isvisible, unban it right now because you
      * can't set focus on unmapped window */
-    if(client_isvisible(c, c->screen))
+    if(client_isvisible(c))
         window_unban((window_t *) c);
     else
         return;
@@ -794,7 +804,7 @@ static int
 luaA_client_isvisible(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-    lua_pushboolean(L, client_isvisible(c, c->screen));
+    lua_pushboolean(L, client_isvisible(c));
     return 1;
 }
 
@@ -1520,6 +1530,8 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_focusable,
                             NULL);
+
+    client_class.isvisible = (lua_interface_window_isvisible_t) client_isvisible;
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
