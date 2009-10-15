@@ -81,7 +81,7 @@ void wibox_refresh_pixmap_partial(wibox_t *, int16_t, int16_t, uint16_t, uint16_
 
 void wibox_class_setup(lua_State *);
 
-lua_class_t wibox_class;
+lua_interface_window_t wibox_class;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

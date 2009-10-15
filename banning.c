@@ -32,7 +32,7 @@ banning_need_update(lua_State *L)
     screen_t *screen = NULL;
 
     /** \todo add a common class for object with a screen? */
-    client_t *client = luaA_toudata(L, 1, &client_class);
+    client_t *client = luaA_toudata(L, 1, (lua_class_t *) &client_class);
     if(client)
         screen = client->screen;
     else
@@ -60,11 +60,11 @@ banning_need_update(lua_State *L)
 void
 banning_init(void)
 {
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::minimized", banning_need_update);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::hidden", banning_need_update);
-    luaA_class_connect_signal(globalconf.L, &client_class, "property::sticky", banning_need_update);
-    luaA_class_connect_signal(globalconf.L, &client_class, "tagged", banning_need_update);
-    luaA_class_connect_signal(globalconf.L, &client_class, "untagged", banning_need_update);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::minimized", banning_need_update);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::hidden", banning_need_update);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::sticky", banning_need_update);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "tagged", banning_need_update);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "untagged", banning_need_update);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", banning_need_update);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::screen", banning_need_update);
 }

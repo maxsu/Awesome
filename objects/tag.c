@@ -26,7 +26,7 @@
 #include "widget.h"
 #include "luaa.h"
 
-LUA_OBJECT_FUNCS(tag_class, tag_t, tag)
+LUA_OBJECT_FUNCS(&tag_class, tag_t, tag)
 
 void
 tag_unref_simplified(tag_t **tag)

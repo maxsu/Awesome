@@ -167,13 +167,13 @@ int luaA_object_emit_signal_simple(lua_State *);
     {                                                                          \
         type *p = lua_newuserdata(L, sizeof(type));                            \
         p_clear(p, 1);                                                         \
-        luaA_settype(L, &(lua_class));                                         \
+        luaA_settype(L, (lua_class));                                          \
         lua_newtable(L);                                                       \
         lua_newtable(L);                                                       \
         lua_setmetatable(L, -2);                                               \
         lua_setfenv(L, -2);                                                    \
         lua_pushvalue(L, -1);                                                  \
-        luaA_class_emit_signal(L, &(lua_class), "new", 1);                     \
+        luaA_class_emit_signal(L, (lua_class), "new", 1);                      \
         return p;                                                              \
     }
 
@@ -192,11 +192,11 @@ int luaA_object_emit_signal_simple(lua_State *);
         return 1; \
     }
 
-#define LUA_OBJECT_DO_SET_PROPERTY_FUNC(pfx, type, prop) \
+#define LUA_OBJECT_DO_SET_PROPERTY_FUNC(pfx, lua_class, type, prop) \
     void \
     pfx##_set_##prop(lua_State *L, int idx, fieldtypeof(type, prop) value) \
     { \
-        type *item = luaA_checkudata(L, idx, &pfx##_class); \
+        type *item = luaA_checkudata(L, idx, lua_class); \
         if(item->prop != value) \
         { \
             item->prop = value; \

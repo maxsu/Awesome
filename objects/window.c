@@ -28,7 +28,7 @@
 #include "common/luaobject.h"
 #include "common/xutil.h"
 
-LUA_CLASS_FUNCS(window, window_class)
+LUA_CLASS_FUNCS(window, &window_class)
 
 static void
 window_wipe(window_t *window)
@@ -278,8 +278,8 @@ luaA_window_tags(lua_State *L)
     return 1;
 }
 
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, window_t, sticky)
-static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, window_t, focusable)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, sticky)
+static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, focusable)
 
 static int
 luaA_window_set_sticky(lua_State *L, window_t *c)
