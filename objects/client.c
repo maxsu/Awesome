@@ -233,8 +233,6 @@ client_focus(client_t *c)
         xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
                             c->window, XCB_CURRENT_TIME);
 
-    if(client_hasproto(c, WM_TAKE_FOCUS))
-        xwindow_takefocus(c->window);
 }
 
 /** Manage a new client.
@@ -1385,6 +1383,15 @@ client_checker(client_t *c)
     return c->window != XCB_NONE;
 }
 
+static int
+client_take_focus(lua_State *L)
+{
+    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
+    if(client_hasproto(c, WM_TAKE_FOCUS))
+        xwindow_takefocus(c->window);
+    return 0;
+}
+
 void
 client_class_setup(lua_State *L)
 {
@@ -1532,6 +1539,7 @@ client_class_setup(lua_State *L)
                             NULL);
 
     client_class.isvisible = (lua_interface_window_isvisible_t) client_isvisible;
+    luaA_class_connect_signal(L, (lua_class_t *) &client_class, "focus", client_take_focus);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
