@@ -98,8 +98,6 @@ struct client_t
     xcb_window_t leader_window;
     /** Client's WM_PROTOCOLS property */
     xcb_get_wm_protocols_reply_t protocols;
-    /** Client physical screen */
-    int phys_screen;
     /** Key bindings */
     key_array_t keys;
     /** Icon */
