@@ -80,6 +80,19 @@ window_unban(window_t *window)
     }
 }
 
+/** Record that a window got focus.
+ * \param window The window that got focus.
+ */
+void
+window_focus_update(window_t *window)
+{
+    globalconf.screen_focus = &globalconf.screens.tab[window->screen->phys_screen];
+    globalconf.screen_focus->focused_window = window;
+    luaA_object_push(globalconf.L, window);
+    luaA_object_emit_signal(globalconf.L, -1, "focus", 0);
+    lua_pop(globalconf.L, 1);
+}
+
 /** Get or set mouse buttons bindings on a window.
  * \param L The Lua VM state.
  * \return The number of elements pushed on the stack.
