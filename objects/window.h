@@ -49,7 +49,9 @@
     /** True if the window is banned from the view */ \
     bool banned; \
     /** True if the window can have focus */ \
-    bool focusable;
+    bool focusable; \
+    /** Key bindings */ \
+    key_array_t keys;
 
 /** Window structure */
 typedef struct
