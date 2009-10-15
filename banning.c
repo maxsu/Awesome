@@ -54,8 +54,7 @@ banning_need_update(lua_State *L)
         if((*c)->screen == screen)
         {
             luaA_object_push(globalconf.L, *c);
-            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
-            if(interface->isvisible((window_t *) *c))
+            if(window_isvisible(L, -1))
                 window_ban_unfocus((window_t *) *c);
             lua_pop(globalconf.L, 1);
         }
@@ -89,8 +88,7 @@ reban(screen_t *screen)
         if((*c)->screen == screen)
         {
             luaA_object_push(globalconf.L, *c);
-            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
-            if(interface->isvisible((window_t *) *c))
+            if(window_isvisible(globalconf.L, -1))
                 window_unban((window_t *) *c);
             lua_pop(globalconf.L, 1);
         }
@@ -102,8 +100,7 @@ reban(screen_t *screen)
         if((*c)->screen == screen)
         {
             luaA_object_push(globalconf.L, *c);
-            lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(globalconf.L, -1);
-            if(!interface->isvisible((window_t *) *c))
+            if(!window_isvisible(globalconf.L, -1))
                 window_ban((window_t *) *c);
             lua_pop(globalconf.L, 1);
         }

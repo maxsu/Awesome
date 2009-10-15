@@ -36,6 +36,16 @@ window_wipe(window_t *window)
     button_array_wipe(&window->buttons);
 }
 
+bool
+window_isvisible(lua_State *L, int idx)
+{
+    window_t *window = luaA_checkudata(L, idx, (lua_class_t *) &window_class);
+    lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(L, idx);
+    if(interface->isvisible)
+        return interface->isvisible(window);
+    return true;
+}
+
 /** Prepare banning a window by running all needed Lua events.
  * \param window The window.
  */
