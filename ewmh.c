@@ -458,7 +458,11 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
     else if(ev->type == _NET_ACTIVE_WINDOW)
     {
         if((c = client_getbywin(ev->window)))
-            client_focus(c);
+        {
+            luaA_object_push(globalconf.L, c);
+            window_focus(globalconf.L, -1);
+            lua_pop(globalconf.L, 1);
+        }
     }
 
     return 0;

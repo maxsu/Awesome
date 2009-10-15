@@ -109,6 +109,28 @@ window_focus_update(window_t *window)
     lua_pop(globalconf.L, 1);
 }
 
+/** Give focus to window.
+ * \param L The Lua VM state.
+ * \param idx The window index on the stack.
+ */
+void
+window_focus(lua_State *L, int idx)
+{
+    window_t *window = luaA_checkudata(L, idx, (lua_class_t *) &window_class);
+    /* If the window is banned but isvisible, unban it right now because you
+     * can't set focus on unmapped window */
+    if(window_isvisible(L, idx))
+        window_unban(window);
+    else
+        return;
+
+    /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
+    if(window->focusable)
+        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
+                            window->window, XCB_CURRENT_TIME);
+
+}
+
 /** Get or set mouse buttons bindings on a window.
  * \param L The Lua VM state.
  * \return The number of elements pushed on the stack.
@@ -311,6 +333,17 @@ luaA_window_set_focusable(lua_State *L, window_t *c)
     return 0;
 }
 
+/** Give the focus to a window.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_focus(lua_State *L)
+{
+    window_focus(L, 1);
+    return 0;
+}
+
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_color, luaA_pushxcolor)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_width, lua_pushnumber)
@@ -330,6 +363,7 @@ window_class_setup(lua_State *L)
         { "struts", luaA_window_struts },
         { "buttons", luaA_window_buttons },
         { "tags", luaA_window_tags },
+        { "focus", luaA_window_focus },
         { NULL, NULL }
     };
 

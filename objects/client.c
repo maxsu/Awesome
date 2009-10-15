@@ -241,25 +241,6 @@ client_restore_enterleave_events(void)
     }
 }
 
-/** Give focus to client, or to first client if client is NULL.
- * \param c The client.
- */
-void
-client_focus(client_t *c)
-{
-    /* If the client is banned but isvisible, unban it right now because you
-     * can't set focus on unmapped window */
-    if(client_isvisible(c))
-        window_unban((window_t *) c);
-    else
-        return;
-
-    /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
-    if(c->focusable)
-        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
-                            c->window, globalconf.timestamp);
-}
-
 static void
 client_update_properties(client_t *c)
 {
@@ -1468,17 +1449,6 @@ luaA_client_keys(lua_State *L)
     return luaA_key_array_get(L, 1, keys);
 }
 
-/** Give the focus to a client.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_client_focus(lua_State *L)
-{
-    client_focus(luaA_checkudata(L, 1, (lua_class_t *) &client_class));
-    return 0;
-}
-
 /* Client module.
  * \param L The Lua VM state.
  * \return The number of pushed elements.
@@ -1531,7 +1501,6 @@ client_class_setup(lua_State *L)
         LUA_CLASS_META
         { "keys", luaA_client_keys },
         { "isvisible", luaA_client_isvisible },
-        { "focus", luaA_client_focus },
         { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
         { "swap", luaA_client_swap },
