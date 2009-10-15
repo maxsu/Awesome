@@ -211,9 +211,6 @@ client_restore_enterleave_events(void)
 void
 client_focus_update(client_t *c)
 {
-    if(!client_maybevisible(c, c->screen))
-        return;
-
     globalconf.screen_focus = &globalconf.screens.tab[c->screen->phys_screen];
     globalconf.screen_focus->focused_window = (window_t *) c;
 
