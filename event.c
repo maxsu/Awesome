@@ -503,7 +503,7 @@ event_handle_focusin(xcb_focus_in_event_t *ev)
             client_t *c;
 
             if((c = client_getbywin(ev->event)))
-                client_focus_update(c);
+                window_focus_update((window_t *) c);
           }
         /* all other events are ignored */
         default:

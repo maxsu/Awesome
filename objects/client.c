@@ -231,19 +231,6 @@ client_restore_enterleave_events(void)
     }
 }
 
-/** Record that a client got focus.
- * \param c The client.
- */
-void
-client_focus_update(client_t *c)
-{
-    globalconf.focused_window = (window_t *) c;
-
-    luaA_object_push(globalconf.L, c);
-    luaA_object_emit_signal(globalconf.L, -1, "focus", 0);
-    lua_pop(globalconf.L, 1);
-}
-
 /** Give focus to client, or to first client if client is NULL.
  * \param c The client.
  */
@@ -266,7 +253,7 @@ client_focus(client_t *c)
         xwindow_takefocus(c->window);
 
     if (c->focusable)
-        client_focus_update(c);
+        window_focus_update((window_t *)c);
 }
 
 static void
