@@ -22,7 +22,6 @@
 #ifndef AWESOME_SCREEN_H
 #define AWESOME_SCREEN_H
 
-#include "globalconf.h"
 #include "draw.h"
 #include "objects/window.h"
 
