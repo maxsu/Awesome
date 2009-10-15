@@ -101,8 +101,6 @@ struct client_t
     xcb_window_t leader_window;
     /** Client's WM_PROTOCOLS property */
     xcb_get_wm_protocols_reply_t protocols;
-    /** Key bindings */
-    key_array_t keys;
     /** Icon */
     image_t *icon;
     /** Size hints */

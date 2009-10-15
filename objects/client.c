@@ -42,7 +42,6 @@
 static void
 client_wipe(client_t *c)
 {
-    key_array_wipe(&c->keys);
     xcb_get_wm_protocols_reply_wipe(&c->protocols);
     p_delete(&c->machine);
     p_delete(&c->class);
@@ -1424,31 +1423,6 @@ luaA_client_get_size_hints(lua_State *L, client_t *c)
     return 1;
 }
 
-/** Get or set keys bindings for a client.
- * \param L The Lua VM state.
- * \return The number of element pushed on stack.
- * \luastack
- * \lvalue A client.
- * \lparam An array of key bindings objects, or nothing.
- * \return The array of key bindings objects of this client.
- */
-static int
-luaA_client_keys(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-    key_array_t *keys = &c->keys;
-
-    if(lua_gettop(L) == 2)
-    {
-        luaA_key_array_set(L, 1, 2, keys);
-        luaA_object_emit_signal(L, 1, "property::keys", 0);
-        xcb_ungrab_key(globalconf.connection, XCB_GRAB_ANY, c->frame_window, XCB_BUTTON_MASK_ANY);
-        xwindow_grabkeys(c->frame_window, keys);
-    }
-
-    return luaA_key_array_get(L, 1, keys);
-}
-
 /* Client module.
  * \param L The Lua VM state.
  * \return The number of pushed elements.
@@ -1499,7 +1473,6 @@ client_class_setup(lua_State *L)
     {
         LUA_OBJECT_META(client)
         LUA_CLASS_META
-        { "keys", luaA_client_keys },
         { "isvisible", luaA_client_isvisible },
         { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
