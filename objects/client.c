@@ -273,7 +273,7 @@ client_focus(client_t *c)
         return;
 
     /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
-    if(!c->nofocus)
+    if(c->focusable)
         xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
                             c->window, XCB_CURRENT_TIME);
 
