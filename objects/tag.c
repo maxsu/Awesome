@@ -305,8 +305,8 @@ luaA_tag_windows(lua_State *L)
     return 1;
 }
 
-LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, name, lua_pushstring)
-LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, selected, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, name, lua_pushstring)
+static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, selected, lua_pushboolean)
 
 /** Set the tag name.
  * \param L The Lua VM state.

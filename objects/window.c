@@ -221,6 +221,7 @@ luaA_window_tags(lua_State *L)
 }
 
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, window_t, sticky)
+static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, window_t, focusable)
 
 static int
 luaA_window_set_sticky(lua_State *L, window_t *c)
@@ -229,10 +230,18 @@ luaA_window_set_sticky(lua_State *L, window_t *c)
     return 0;
 }
 
-LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
-LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_color, luaA_pushxcolor)
-LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_width, lua_pushnumber)
-LUA_OBJECT_EXPORT_PROPERTY(window, window_t, sticky, lua_pushboolean)
+static int
+luaA_window_set_focusable(lua_State *L, window_t *c)
+{
+    window_set_focusable(L, -3, luaA_checkboolean(L, -1));
+    return 0;
+}
+
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_color, luaA_pushxcolor)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, border_width, lua_pushnumber)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, sticky, lua_pushboolean)
+LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
 
 void
 window_class_setup(lua_State *L)
@@ -275,6 +284,10 @@ window_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_set_sticky,
                             (lua_class_propfunc_t) luaA_window_get_sticky,
                             (lua_class_propfunc_t) luaA_window_set_sticky);
+    luaA_class_add_property(&window_class, A_TK_FOCUSABLE,
+                            (lua_class_propfunc_t) luaA_window_set_focusable,
+                            (lua_class_propfunc_t) luaA_window_get_focusable,
+                            (lua_class_propfunc_t) luaA_window_set_focusable);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

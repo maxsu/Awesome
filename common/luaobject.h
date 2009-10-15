@@ -185,7 +185,7 @@ int luaA_object_emit_signal_simple(lua_State *);
     }
 
 #define LUA_OBJECT_EXPORT_PROPERTY(pfx, type, field, pusher) \
-    static int \
+    int \
     luaA_##pfx##_get_##field(lua_State *L, type *object) \
     { \
         pusher(L, object->field); \

@@ -163,7 +163,7 @@ luaA_key_set_modifiers(lua_State *L, keyb_t *k)
     return 0;
 }
 
-LUA_OBJECT_EXPORT_PROPERTY(key, keyb_t, modifiers, luaA_pushmodifiers)
+static LUA_OBJECT_EXPORT_PROPERTY(key, keyb_t, modifiers, luaA_pushmodifiers)
 
 static int
 luaA_key_get_key(lua_State *L, keyb_t *k)
