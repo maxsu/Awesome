@@ -146,10 +146,7 @@ for s = 1, capi.screen.count() do
 end
 
 capi.client.connect_signal("focus", function(c) arrange(c.screen) end)
-capi.client.connect_signal("list", function()
-                                   for screen = 1, capi.screen.count() do
-                                       arrange(screen)
-                                   end
-                               end)
+capi.client.connect_signal("manage", function(c) arrange(c.screen) end)
+capi.client.connect_signal("unmanage", function(c) arrange(c.screen) end)
 
 -- vim: filetype=lua:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
