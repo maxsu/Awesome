@@ -55,6 +55,19 @@ window_isvisible(lua_State *L, int idx)
     return true;
 }
 
+bool
+window_common_isvisible(window_t *window)
+{
+    if(window->sticky)
+        return true;
+
+    foreach(tag, window->screen->tags)
+        if(tag_get_selected(*tag) && window_is_tagged(window, *tag))
+            return true;
+
+    return false;
+}
+
 /** Prepare banning a window by running all needed Lua events.
  * \param window The window.
  */
