@@ -196,6 +196,7 @@ wibox_init(wibox_t *w, int phys_screen)
                           XCB_GRAVITY_NORTH_WEST,
                           1,
                           XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
+                          | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE
                           | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_ENTER_WINDOW
                           | XCB_EVENT_MASK_LEAVE_WINDOW | XCB_EVENT_MASK_STRUCTURE_NOTIFY
                           | XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_EXPOSURE
