@@ -588,11 +588,13 @@ event_handle_key(void *data __attribute__ ((unused)),
     {
         /* get keysym ignoring all modifiers */
         xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, 0);
-        client_t *c;
-        if((c = client_getbywin(ev->event)))
+        window_t *window = (window_t *) client_getbywin(ev->event);
+        if(!window)
+            window = (window_t *) wibox_getbywin(ev->event);
+        if(window)
         {
-            luaA_object_push(globalconf.L, c);
-            event_key_callback(ev, &c->keys, -1, 1, &keysym);
+            luaA_object_push(globalconf.L, window);
+            event_key_callback(ev, &window->keys, -1, 1, &keysym);
         }
         else
             event_key_callback(ev, &globalconf.keys, 0, 0, &keysym);
