@@ -890,21 +890,6 @@ luaA_client_get(lua_State *L)
     return 1;
 }
 
-/** Check if a client is visible on its screen.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue A client.
- * \lreturn A boolean value, true if the client is visible, false otherwise.
- */
-static int
-luaA_client_isvisible(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-    lua_pushboolean(L, client_isvisible(c));
-    return 1;
-}
-
 /** Set a client icon.
  * \param L The Lua VM state.
  * \param cidx The client index on the stack.
@@ -1468,7 +1453,6 @@ client_class_setup(lua_State *L)
     {
         LUA_OBJECT_META(client)
         LUA_CLASS_META
-        { "isvisible", luaA_client_isvisible },
         { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
         { "swap", luaA_client_swap },
