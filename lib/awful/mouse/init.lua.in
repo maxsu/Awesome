@@ -193,14 +193,6 @@ function client.move(c, snap)
                                           else
                                               c.screen = capi.mouse.screen
                                           end
-                                          if layout.get(c.screen) ~= layout.suit.floating then
-                                              local c_u_m = client_under_pointer()
-                                              if c_u_m and not aclient.floating.get(c_u_m) then
-                                                  if c_u_m ~= c then
-                                                      c:swap(c_u_m)
-                                                  end
-                                              end
-                                          end
                                       end
                                       return true
                                   end

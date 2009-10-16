@@ -123,10 +123,6 @@ Navigation
 
 Layout modification
 ~~~~~~~~~~~~~~~~~~~
-*Mod4 + Shift + j*::
-    Switch client with next client.
-*Mod4 + Shift + k*::
-    Switch client with previous client.
 *Mod4 + o*::
     Send client to next screen.
 *Mod4 + h*::
@@ -147,8 +143,6 @@ Layout modification
     Switch to previous layout.
 *Mod4 + Control + space*::
     Toggle client floating status.
-*Mod4 + Control + Return*::
-    Swap focused client with master.
 *Mod4 + Control + 1-9*::
     Toggle tag view.
 *Mod4 + Shift + 1-9*::
