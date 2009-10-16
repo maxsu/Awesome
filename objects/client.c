@@ -330,8 +330,6 @@ HANDLE_GEOM(height)
         p_delete(&startup_id);
     }
 
-    luaA_class_emit_signal(globalconf.L, (lua_class_t *) &client_class, "list", 0);
-
     /* client is still on top of the stack; push startup value,
      * and emit signals with one arg */
     lua_pushboolean(globalconf.L, startup);
@@ -682,8 +680,6 @@ client_unmanage(client_t *c)
     luaA_object_emit_signal(globalconf.L, -1, "unmanage", 0);
     lua_pop(globalconf.L, 1);
 
-    luaA_class_emit_signal(globalconf.L, (lua_class_t *) &client_class, "list", 0);
-
     if(strut_has_value(&c->strut))
         screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
 
@@ -785,40 +781,6 @@ luaA_client_kill(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     client_kill(c);
-    return 0;
-}
-
-/** Swap a client with another one.
- * \param L The Lua VM state.
- * \luastack
- * \lvalue A client.
- * \lparam A client to swap with.
- */
-static int
-luaA_client_swap(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-    client_t *swap = luaA_checkudata(L, 2, (lua_class_t *) &client_class);
-
-    if(c != swap)
-    {
-        client_t **ref_c = NULL, **ref_swap = NULL;
-        foreach(item, globalconf.clients)
-        {
-            if(*item == c)
-                ref_c = item;
-            else if(*item == swap)
-                ref_swap = item;
-            if(ref_c && ref_swap)
-                break;
-        }
-        /* swap ! */
-        *ref_c = swap;
-        *ref_swap = c;
-
-        luaA_class_emit_signal(globalconf.L, (lua_class_t *) &client_class, "list", 0);
-    }
-
     return 0;
 }
 
@@ -1328,7 +1290,6 @@ client_class_setup(lua_State *L)
         LUA_CLASS_META
         { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
-        { "swap", luaA_client_swap },
         { "raise", luaA_client_raise },
         { "lower", luaA_client_lower },
         { "unmanage", luaA_client_unmanage },
