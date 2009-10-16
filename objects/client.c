@@ -98,7 +98,6 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
 
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, group_window)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, type)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, transient_for)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, pid)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, skip_taskbar)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, modal)
@@ -660,11 +659,6 @@ client_set_ontop(lua_State *L, int cidx, bool s)
 void
 client_unmanage(client_t *c)
 {
-    /* Reset transient_for attributes of windows that maybe referring to us */
-    foreach(tc, globalconf.clients)
-        if((*tc)->transient_for == c)
-            (*tc)->transient_for = NULL;
-
     /* remove client from global list and everywhere else */
     foreach(elem, globalconf.clients)
         if(*elem == c)
@@ -765,23 +759,20 @@ luaA_client_get(lua_State *L)
     return 1;
 }
 
-/** Set a client icon.
- * \param L The Lua VM state.
- * \param cidx The client index on the stack.
- * \param iidx The image index on the stack.
- */
-void
-client_set_icon(lua_State *L, int cidx, int iidx)
-{
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
-    /* convert index to absolute */
-    cidx = luaA_absindex(L, cidx);
-    iidx = luaA_absindex(L, iidx);
-    luaA_checkudata(L, iidx, &image_class);
-    luaA_object_unref_item(L, cidx, c->icon);
-    c->icon = luaA_object_ref_item(L, cidx, iidx);
-    luaA_object_emit_signal(L, cidx < iidx ? cidx : cidx - 1, "property::icon", 0);
-}
+#define LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(prefix, lua_class, target_class, type, prop) \
+    void \
+    prefix##_set_##prop(lua_State *L, int idx, int vidx) \
+    { \
+        type *item = luaA_checkudata(L, idx, (lua_class)); \
+        idx = luaA_absindex(L, idx); \
+        vidx = luaA_absindex(L, vidx); \
+        luaA_checkudata(L, vidx, (target_class)); \
+        item->prop = luaA_object_ref_item(L, idx, vidx); \
+        luaA_object_emit_signal(L, idx < vidx ? idx : idx - 1, "property::" #prop, 0); \
+    }
+LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, &image_class, client_t, icon)
+LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, (lua_class_t *) &client_class, client_t, transient_for)
+#undef LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC
 
 /** Kill a client.
  * \param L The Lua VM state.
@@ -1042,7 +1033,6 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, class, lua_pushstring)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, instance, lua_pushstring)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, machine, lua_pushstring)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, role, lua_pushstring)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, transient_for, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, skip_taskbar, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, leader_window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber)
@@ -1155,6 +1145,12 @@ static int
 luaA_client_get_icon(lua_State *L, client_t *c)
 {
     return luaA_object_push_item(L, -2, c->icon);
+}
+
+static int
+luaA_client_get_transient_for(lua_State *L, client_t *c)
+{
+    return luaA_object_push_item(L, -2, c->transient_for);
 }
 
 static int
