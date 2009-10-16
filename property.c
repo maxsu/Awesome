@@ -122,8 +122,9 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_reply_t *reply)
     luaA_object_push(globalconf.L, c);
     client_set_type(globalconf.L, -1, WINDOW_TYPE_DIALOG);
     client_set_above(globalconf.L, -1, false);
-    client_set_transient_for(globalconf.L, -1, client_getbywin(trans));
-    lua_pop(globalconf.L, 1);
+    luaA_object_push(globalconf.L, client_getbywin(trans));
+    client_set_transient_for(globalconf.L, -2, -1);
+    lua_pop(globalconf.L, 2);
 }
 
 /** Update leader hint of a client.
