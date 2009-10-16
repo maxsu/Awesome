@@ -604,8 +604,28 @@ event_handle_key(void *data __attribute__ ((unused)),
             window = (window_t *) wibox_getbywin(ev->event);
         if(window)
         {
+            /* first emit key bindings */
             luaA_object_push(globalconf.L, window);
             event_key_callback(ev, &window->keys, -1, 1, &keysym);
+            /* transfer event (keycode + modifiers) to keysym and then convert
+             * keysym to string */
+            char buf[MAX(MB_LEN_MAX, 32)];
+            if(keyresolv_keysym_to_string(keyresolv_get_keysym(ev->detail, ev->state), buf, countof(buf)))
+            {
+                luaA_object_push(globalconf.L, window);
+                luaA_pushmodifiers(globalconf.L, ev->state);
+                lua_pushstring(globalconf.L, buf);
+                switch(ev->response_type)
+                {
+                  case XCB_KEY_PRESS:
+                    luaA_object_emit_signal(globalconf.L, -3, "key::press", 2);
+                    break;
+                  case XCB_KEY_RELEASE:
+                    luaA_object_emit_signal(globalconf.L, -3, "key::release", 2);
+                    break;
+                }
+                lua_pop(globalconf.L, 1);
+            }
         }
         else
             event_key_callback(ev, &globalconf.keys, 0, 0, &keysym);
