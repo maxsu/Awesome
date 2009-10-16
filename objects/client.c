@@ -141,14 +141,9 @@ client_set_class_instance(lua_State *L, int cidx, const char *class, const char 
 bool
 client_maybevisible(client_t *c)
 {
-    if(c->sticky || c->type == WINDOW_TYPE_DESKTOP)
+    if(c->type == WINDOW_TYPE_DESKTOP)
         return true;
-
-    foreach(tag, c->screen->tags)
-        if(tag_get_selected(*tag) && window_is_tagged((window_t *) c, *tag))
-            return true;
-
-    return false;
+    return window_common_isvisible((window_t *) c);
 }
 
 /** Get a client by its window.
