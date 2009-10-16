@@ -83,6 +83,7 @@ void window_set_border_width(lua_State *, int, int);
 void window_set_sticky(lua_State *, int, bool);
 
 bool window_isvisible(lua_State *, int);
+bool window_common_isvisible(window_t *);
 
 int luaA_window_get_focusable(lua_State *, window_t *);
 
