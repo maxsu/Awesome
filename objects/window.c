@@ -178,6 +178,16 @@ luaA_window_keys(lua_State *L)
     return luaA_key_array_get(L, 1, &window->keys);
 }
 
+/** Check if a window is visible.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_isvisible(lua_State *L)
+{
+    lua_pushboolean(L, window_isvisible(L, 1));
+    return 1;
+}
 
 /** Return window struts (reserved space at the edge of the screen).
  * \param L The Lua VM state.
@@ -395,6 +405,7 @@ window_class_setup(lua_State *L)
         { "tags", luaA_window_tags },
         { "focus", luaA_window_focus },
         { "keys", luaA_window_keys },
+        { "isvisible", luaA_window_isvisible },
         { NULL, NULL }
     };
 
