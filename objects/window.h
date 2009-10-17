@@ -32,6 +32,8 @@
     xcb_window_t window; \
     /** The frame window, might be XCB_NONE */ \
     xcb_window_t frame_window; \
+    /** Cursor */ \
+    char *cursor; \
     /** Client logical screen */ \
     screen_t *screen; \
     /** Button bindings */ \

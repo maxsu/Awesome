@@ -27,6 +27,7 @@
 #include "objects/tag.h"
 #include "common/luaobject.h"
 #include "common/xutil.h"
+#include "common/xcursor.h"
 
 /** Focused window */
 window_t *window_focused;
@@ -34,6 +35,7 @@ window_t *window_focused;
 static void
 window_wipe(window_t *window)
 {
+    p_delete(&window->cursor);
     button_array_wipe(&window->buttons);
     key_array_wipe(&window->keys);
 }
@@ -190,6 +192,25 @@ luaA_window_isvisible(lua_State *L)
 static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, focusable)
 
 static int
+luaA_window_set_cursor(lua_State *L, window_t *window)
+{
+    const char *buf = luaL_checkstring(L, -1);
+    if(buf)
+    {
+        uint16_t cursor_font = xcursor_font_fromstr(buf);
+        if(cursor_font)
+        {
+            xcb_cursor_t cursor = xcursor_new(globalconf.connection, cursor_font);
+            p_delete(&window->cursor);
+            window->cursor = a_strdup(buf);
+            xwindow_set_cursor(window->window, cursor);
+            luaA_object_emit_signal(L, -3, "property::cursor", 0);
+        }
+    }
+    return 0;
+}
+
+static int
 luaA_window_set_focusable(lua_State *L, window_t *c)
 {
     window_set_focusable(L, -3, luaA_checkboolean(L, -1));
@@ -208,6 +229,7 @@ luaA_window_focus(lua_State *L)
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, cursor, lua_pushstring)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
 
 void
@@ -241,6 +263,10 @@ window_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_set_focusable,
                             (lua_class_propfunc_t) luaA_window_get_focusable,
                             (lua_class_propfunc_t) luaA_window_set_focusable);
+    luaA_class_add_property(&window_class, A_TK_CURSOR,
+                            (lua_class_propfunc_t) luaA_window_set_cursor,
+                            (lua_class_propfunc_t) luaA_window_get_cursor,
+                            (lua_class_propfunc_t) luaA_window_set_cursor);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
