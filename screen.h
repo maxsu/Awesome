@@ -43,8 +43,6 @@ struct a_screen
         /** Systray window parent */
         xcb_window_t parent;
     } systray;
-    /** Focused window */
-    window_t *focused_window;
     /** Screen's root window */
     window_t *root;
     /** The monitor of startup notifications */

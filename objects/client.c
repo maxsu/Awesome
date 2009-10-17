@@ -35,6 +35,8 @@
 #include "common/atoms.h"
 #include "common/xutil.h"
 
+extern window_t *window_focused;
+
 /** Collect a client.
  * \param L The Lua VM state.
  * \return The number of element pushed on stack.
@@ -157,18 +159,6 @@ client_getbywin(xcb_window_t w)
             return *c;
 
     return NULL;
-}
-
-/** Record that a client lost focus.
- * \param c Client being unfocused
- */
-void
-client_unfocus_update(client_t *c)
-{
-    globalconf.screens.tab[c->screen->phys_screen].focused_window = NULL;
-    luaA_object_push(globalconf.L, c);
-    luaA_object_emit_signal(globalconf.L, -1, "unfocus", 0);
-    lua_pop(globalconf.L, 1);
 }
 
 /** Check if client supports atom a protocol in WM_PROTOCOL.
@@ -1251,7 +1241,7 @@ luaA_client_module_index(lua_State *L)
     switch(a_tokenize(buf, len))
     {
       case A_TK_FOCUS:
-        return luaA_object_push(globalconf.L, globalconf.screen_focus->focused_window);
+        return luaA_object_push(globalconf.L, window_focused);
         break;
       default:
         return 0;
