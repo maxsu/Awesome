@@ -109,7 +109,7 @@ xwindow_buttons_grab(xcb_window_t win, button_array_t *buttons)
 
     foreach(b, *buttons)
         xcb_grab_button(globalconf.connection, false, win, BUTTONMASK,
-                        XCB_GRAB_MODE_SYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE,
+                        XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE,
                         (*b)->button, (*b)->modifiers);
 }
 
