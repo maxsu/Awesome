@@ -771,6 +771,9 @@ luaA_init(xdgHandle* xdg)
     /* Export window */
     window_class_setup(L);
 
+    /* Export window */
+    ewindow_class_setup(L);
+
     /* Export wibox */
     wibox_class_setup(L);
 

@@ -70,6 +70,7 @@ set(AWE_SRCS
     ${SOURCE_DIR}/mousegrabber.c
     ${SOURCE_DIR}/objects/button.c
     ${SOURCE_DIR}/objects/client.c
+    ${SOURCE_DIR}/objects/ewindow.c
     ${SOURCE_DIR}/objects/image.c
     ${SOURCE_DIR}/objects/key.c
     ${SOURCE_DIR}/objects/tag.c

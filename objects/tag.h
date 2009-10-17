@@ -22,7 +22,7 @@
 #ifndef AWESOME_OBJECTS_TAG_H
 #define AWESOME_OBJECTS_TAG_H
 
-#include "objects/window.h"
+#include "objects/ewindow.h"
 
 /** Tag type */
 struct tag
@@ -35,13 +35,13 @@ struct tag
     /** true if selected */
     bool selected;
     /** Windows in this tag */
-    window_array_t windows;
+    ewindow_array_t windows;
 };
 
 int tags_get_first_selected_index(screen_t *);
-void tag_window(lua_State *, int, int);
-void untag_window(lua_State *, int, int);
-bool window_is_tagged(window_t *, tag_t *);
+void tag_ewindow(lua_State *, int, int);
+void untag_ewindow(lua_State *, int, int);
+bool ewindow_is_tagged(ewindow_t *, tag_t *);
 void tag_view_only_byindex(screen_t *, int);
 void tag_append_to_screen(lua_State *, int, screen_t *);
 void tag_remove_from_screen(tag_t *);
