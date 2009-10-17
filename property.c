@@ -388,7 +388,7 @@ property_handle_net_wm_opacity(void *data __attribute__ ((unused)),
     if(wibox)
     {
         luaA_object_push(globalconf.L, wibox);
-        window_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_reply(reply));
+        ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_reply(reply));
         lua_pop(globalconf.L, -1);
     }
     else
@@ -397,7 +397,7 @@ property_handle_net_wm_opacity(void *data __attribute__ ((unused)),
         if(c)
         {
             luaA_object_push(globalconf.L, c);
-            window_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_reply(reply));
+            ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_reply(reply));
             lua_pop(globalconf.L, 1);
         }
     }

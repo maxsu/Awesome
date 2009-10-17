@@ -21,7 +21,7 @@
 
 #include "screen.h"
 #include "tag.h"
-#include "window.h"
+#include "objects/ewindow.h"
 #include "ewmh.h"
 #include "widget.h"
 #include "luaa.h"
@@ -37,7 +37,7 @@ tag_unref_simplified(tag_t **tag)
 static void
 tag_wipe(tag_t *tag)
 {
-    window_array_wipe(&tag->windows);
+    ewindow_array_wipe(&tag->windows);
     p_delete(&tag->name);
 }
 
@@ -129,7 +129,7 @@ tag_remove_from_screen(tag_t *tag)
 }
 
 static void
-tag_window_emit_signal(lua_State *L, int tidx, int widx, const char *signame)
+tag_ewindow_emit_signal(lua_State *L, int tidx, int widx, const char *signame)
 {
     /* transform indexes in absolute value */
     tidx = luaA_absindex(L, tidx);
@@ -144,29 +144,29 @@ tag_window_emit_signal(lua_State *L, int tidx, int widx, const char *signame)
     luaA_object_emit_signal(L, tidx, signame, 1);
 }
 
-/** Tag a window.
+/** Tag an ewindow.
  * \param L The Lua VM state.
- * \param widx The window index on the stack.
+ * \param widx The ewindow index on the stack.
  * \param tidx The tag index on the stack.
  */
 void
-tag_window(lua_State *L, int widx, int tidx)
+tag_ewindow(lua_State *L, int widx, int tidx)
 {
     tag_t *tag = luaA_checkudata(L, tidx, &tag_class);
-    window_t *window = luaA_checkudata(L, widx, &window_class);
+    ewindow_t *ewindow = luaA_checkudata(L, widx, (lua_class_t *) &ewindow_class);
 
     /* don't tag twice */
-    if(window_is_tagged(window, tag))
+    if(ewindow_is_tagged(ewindow, tag))
         return;
 
-    /* Reference the window in the tag */
+    /* Reference the ewindow in the tag */
     lua_pushvalue(L, widx);
-    window_array_append(&tag->windows, luaA_object_ref_item(L, tidx, -1));
+    ewindow_array_append(&tag->windows, luaA_object_ref_item(L, tidx, -1));
     /* Reference the tag in the window */
     lua_pushvalue(L, tidx);
-    tag_array_append(&window->tags, luaA_object_ref_item(L, widx, -1));
+    tag_array_append(&ewindow->tags, luaA_object_ref_item(L, widx, -1));
 
-    tag_window_emit_signal(globalconf.L, tidx, widx, "tagged");
+    tag_ewindow_emit_signal(globalconf.L, tidx, widx, "tagged");
 }
 
 /** Untag a window with specified tag.
@@ -175,40 +175,40 @@ tag_window(lua_State *L, int widx, int tidx)
  * \param tidx The tag index on the stack.
  */
 void
-untag_window(lua_State *L, int widx, int tidx)
+untag_ewindow(lua_State *L, int widx, int tidx)
 {
     tag_t *tag = luaA_checkudata(L, tidx, &tag_class);
-    window_t *window = luaA_checkudata(L, widx, &window_class);
+    ewindow_t *ewindow = luaA_checkudata(L, widx, (lua_class_t *) &ewindow_class);
 
     foreach(item, tag->windows)
-        if(*item == window)
+        if(*item == ewindow)
         {
-            window_array_remove(&tag->windows, item);
-            /* Unref window from tag */
-            luaA_object_unref_item(L, tidx, window);
+            ewindow_array_remove(&tag->windows, item);
+            /* Unref ewindow from tag */
+            luaA_object_unref_item(L, tidx, ewindow);
             break;
         }
-    foreach(item, window->tags)
+    foreach(item, ewindow->tags)
         if(*item == tag)
         {
-            tag_array_remove(&window->tags, item);
-            /* Unref tag from window */
+            tag_array_remove(&ewindow->tags, item);
+            /* Unref tag from ewindow */
             luaA_object_unref_item(L, widx, tag);
             break;
         }
-    tag_window_emit_signal(L, tidx, widx, "untagged");
+    tag_ewindow_emit_signal(L, tidx, widx, "untagged");
 }
 
-/** Check if a window is tagged with the specified tag.
- * \param window The window.
+/** Check if an ewindow is tagged with the specified tag.
+ * \param ewindow The ewindow.
  * \param tag The tag.
- * \return True if the window is tagged with the tag, false otherwise.
+ * \return True if the ewindow is tagged with the tag, false otherwise.
  */
 bool
-window_is_tagged(window_t *window, tag_t *tag)
+ewindow_is_tagged(ewindow_t *ewindow, tag_t *tag)
 {
     foreach(w, tag->windows)
-        if(*w == window)
+        if(*w == ewindow)
             return true;
 
     return false;
@@ -283,14 +283,14 @@ luaA_tag_windows(lua_State *L)
         foreach(window, tag->windows)
         {
             luaA_object_push_item(L, 1, *window);
-            untag_window(L, -1, 1);
+            untag_ewindow(L, -1, 1);
             /* remove pushed windows */
             lua_pop(L, 1);
         }
         lua_pushnil(L);
         while(lua_next(L, 2))
         {
-            tag_window(L, -1, 1);
+            tag_ewindow(L, -1, 1);
             lua_pop(L, 1);
         }
     }

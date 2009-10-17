@@ -30,22 +30,10 @@
     LUA_OBJECT_HEADER \
     /** The X window number */ \
     xcb_window_t window; \
-    /** Opacity */ \
-    double opacity; \
-    /** Strut */ \
-    strut_t strut; \
     /** Client logical screen */ \
     screen_t *screen; \
     /** Button bindings */ \
     button_array_t buttons; \
-    /** Border color */ \
-    xcolor_t border_color; \
-    /** Border width */ \
-    uint16_t border_width; \
-    /** Window tags */ \
-    tag_array_t tags; \
-    /** True if the window is sticky */ \
-    bool sticky; \
     /** True if the window is banned from the view */ \
     bool banned; \
     /** True if the window can have focus */ \
@@ -83,11 +71,8 @@ void window_set_border_width(lua_State *, int, int);
 void window_set_sticky(lua_State *, int, bool);
 
 bool window_isvisible(lua_State *, int);
-bool window_common_isvisible(window_t *);
 
 int luaA_window_get_focusable(lua_State *, window_t *);
-
-DO_ARRAY(window_t *, window, DO_NOTHING)
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
