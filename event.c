@@ -134,8 +134,6 @@ event_handle_mousegrabber(int x, int y, uint16_t mask)
 static int
 event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_event_t *ev)
 {
-    int screen;
-    const int nb_screen = xcb_setup_roots_length(xcb_get_setup(connection));
     client_t *c;
     wibox_t *wibox;
 
@@ -183,10 +181,11 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
                          XCB_CURRENT_TIME);
     }
     else if(ev->child == XCB_NONE)
-        for(screen = 0; screen < nb_screen; screen++)
-            if(xutil_screen_get(connection, screen)->root == ev->event)
+        foreach(screen, globalconf.screens)
+            if(screen->root->window == ev->event)
             {
-                event_button_callback(ev, &globalconf.buttons, 0, 0, NULL);
+                luaA_object_push(globalconf.L, screen->root);
+                event_button_callback(ev, &screen->root->buttons, -1, 1, NULL);
                 return 0;
             }
 
@@ -617,7 +616,13 @@ event_handle_key(void *data __attribute__ ((unused)),
             }
         }
         else
-            event_key_callback(ev, &globalconf.keys, 0, 0, &keysym);
+            foreach(screen, globalconf.screens)
+                if(screen->root->window == ev->event)
+                {
+                    luaA_object_push(globalconf.L, screen->root);
+                    event_key_callback(ev, &screen->root->keys, -1, 1, &keysym);
+                    return 0;
+                }
     }
 
     return 0;
@@ -806,22 +811,17 @@ event_handle_mappingnotify(void *data,
                             &globalconf.shiftlockmask, &globalconf.capslockmask,
                             &globalconf.modeswitchmask);
 
-        int nscreen = xcb_setup_roots_length(xcb_get_setup(connection));
-
         /* regrab everything */
-        for(int phys_screen = 0; phys_screen < nscreen; phys_screen++)
+        foreach(screen, globalconf.screens)
         {
-            xcb_screen_t *s = xutil_screen_get(globalconf.connection, phys_screen);
-            /* yes XCB_BUTTON_MASK_ANY is also for grab_key even if it's look weird */
-            xcb_ungrab_key(connection, XCB_GRAB_ANY, s->root, XCB_BUTTON_MASK_ANY);
-            xwindow_grabkeys(s->root, &globalconf.keys);
+            xcb_ungrab_key(connection, XCB_GRAB_ANY, screen->root->window, XCB_MOD_MASK_ANY);
+            xwindow_grabkeys(screen->root->window, &screen->root->keys);
         }
 
-        foreach(_c, globalconf.clients)
+        foreach(c, globalconf.clients)
         {
-            client_t *c = *_c;
-            xcb_ungrab_key(connection, XCB_GRAB_ANY, c->window, XCB_BUTTON_MASK_ANY);
-            xwindow_grabkeys(c->window, &c->keys);
+            xcb_ungrab_key(connection, XCB_GRAB_ANY, (*c)->window, XCB_MOD_MASK_ANY);
+            xwindow_grabkeys((*c)->window, &(*c)->keys);
         }
     }
 

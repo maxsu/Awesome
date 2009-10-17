@@ -37,12 +37,10 @@
 
 typedef struct wibox_t wibox_t;
 typedef struct a_screen screen_t;
-typedef struct button_t button_t;
 typedef struct widget_t widget_t;
 typedef struct client_t client_t;
 typedef struct tag tag_t;
 
-ARRAY_TYPE(button_t *, button)
 ARRAY_TYPE(tag_t *, tag)
 ARRAY_TYPE(screen_t, screen)
 ARRAY_TYPE(client_t *, client)
@@ -65,10 +63,6 @@ typedef struct
     screen_array_t screens;
     /** True if xinerama is active */
     bool xinerama_is_active;
-    /** Root window key bindings */
-    key_array_t keys;
-    /** Root window mouse bindings */
-    button_array_t buttons;
     /** Modifiers masks */
     uint16_t numlockmask, shiftlockmask, capslockmask, modeswitchmask;
     /** Check for XTest extension */
