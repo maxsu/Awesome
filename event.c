@@ -269,7 +269,7 @@ event_handle_configurerequest(xcb_configure_request_event_t *ev)
         if(ev->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH)
         {
             luaA_object_push(globalconf.L, c);
-            window_set_border_width(globalconf.L, -1, ev->border_width);
+            ewindow_set_border_width(globalconf.L, -1, ev->border_width);
             lua_pop(globalconf.L, 1);
         }
 

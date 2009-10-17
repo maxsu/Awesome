@@ -348,7 +348,7 @@ property_handle_net_wm_opacity(uint8_t state,
     if(wibox)
     {
         luaA_object_push(globalconf.L, wibox);
-        window_set_opacity(globalconf.L, -1, xwindow_get_opacity(wibox->window));
+        ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(wibox->window));
         lua_pop(globalconf.L, -1);
     }
     else
@@ -357,7 +357,7 @@ property_handle_net_wm_opacity(uint8_t state,
         if(c)
         {
             luaA_object_push(globalconf.L, c);
-            window_set_opacity(globalconf.L, -1, xwindow_get_opacity(c->window));
+            ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(c->window));
             lua_pop(globalconf.L, 1);
         }
     }

@@ -147,7 +147,7 @@ ewmh_client_update_desktop(lua_State *L)
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
 
     for(int i = 0; i < c->screen->tags.len; i++)
-        if(window_is_tagged((window_t *) c, c->screen->tags.tab[i]))
+        if(ewindow_is_tagged((ewindow_t *) c, c->screen->tags.tab[i]))
         {
             xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
                                 c->window, _NET_WM_DESKTOP, CARDINAL, 32, 1, &i);
@@ -321,11 +321,11 @@ ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
     if(state == _NET_WM_STATE_STICKY)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            window_set_sticky(globalconf.L, -1, false);
+            ewindow_set_sticky(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            window_set_sticky(globalconf.L, -1, true);
+            ewindow_set_sticky(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            window_set_sticky(globalconf.L, -1, !c->sticky);
+            ewindow_set_sticky(globalconf.L, -1, !c->sticky);
     }
     else if(state == _NET_WM_STATE_SKIP_TASKBAR)
     {
@@ -438,9 +438,9 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
                     luaA_object_push(globalconf.L, c);
                     luaA_object_push(globalconf.L, tags->tab[i]);
                     if((int) ev->data.data32[0] == i)
-                        tag_window(globalconf.L, -2, -1);
+                        tag_ewindow(globalconf.L, -2, -1);
                     else
-                        untag_window(globalconf.L, -2, -1);
+                        untag_ewindow(globalconf.L, -2, -1);
                     lua_pop(globalconf.L, 2);
                 }
         }
@@ -532,9 +532,9 @@ ewmh_client_check_hints(client_t *c)
             {
                 luaA_object_push(globalconf.L, tags->tab[i]);
                 if(desktop == i)
-                    tag_window(globalconf.L, -2, -1);
+                    tag_ewindow(globalconf.L, -2, -1);
                 else
-                    untag_window(globalconf.L, -2, -1);
+                    untag_ewindow(globalconf.L, -2, -1);
                 lua_pop(globalconf.L, 1);
             }
             lua_pop(globalconf.L, 1);
@@ -545,7 +545,7 @@ ewmh_client_check_hints(client_t *c)
             {
                 luaA_object_push(globalconf.L, c);
                 luaA_object_push(globalconf.L, tags->tab[0]);
-                tag_window(globalconf.L, -2, -1);
+                tag_ewindow(globalconf.L, -2, -1);
                 lua_pop(globalconf.L, 1);
             }
     }

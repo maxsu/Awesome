@@ -26,7 +26,7 @@
 #include "stack.h"
 #include "draw.h"
 #include "banning.h"
-#include "objects/window.h"
+#include "objects/ewindow.h"
 #include "common/luaobject.h"
 
 #define CLIENT_SELECT_INPUT_EVENT_MASK (XCB_EVENT_MASK_STRUCTURE_NOTIFY \
@@ -64,7 +64,7 @@ typedef enum
 /** client_t type */
 struct client_t
 {
-    WINDOW_OBJECT_HEADER
+    EWINDOW_OBJECT_HEADER
     /** Client name */
     char *name, *alt_name, *icon_name, *alt_icon_name;
     /** WM_CLASS stuff */

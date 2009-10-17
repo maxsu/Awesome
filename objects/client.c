@@ -142,7 +142,7 @@ client_maybevisible(client_t *c)
 {
     if(c->type == WINDOW_TYPE_DESKTOP)
         return true;
-    return window_common_isvisible((window_t *) c);
+    return ewindow_isvisible((ewindow_t *) c);
 }
 
 /** Get a client by its window.
@@ -272,7 +272,7 @@ client_update_properties(client_t *c)
     property_update_net_wm_icon_name(c, net_wm_icon_name);
     property_update_wm_class(c, wm_class);
     property_update_wm_protocols(c, wm_protocols);
-    window_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_cookie(opacity));
+    ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_cookie(opacity));
 }
 
 /** Manage a new client.
@@ -368,7 +368,7 @@ HANDLE_GEOM(height)
     luaA_object_emit_signal(globalconf.L, -1, "property::geometry", 0);
 
     /* Set border width */
-    window_set_border_width(globalconf.L, -1, wgeom->border_width);
+    ewindow_set_border_width(globalconf.L, -1, wgeom->border_width);
 
     /* we honor size hints by default */
     c->size_hints_honor = true;
@@ -776,7 +776,7 @@ client_unmanage(client_t *c)
     foreach(tag, c->tags)
     {
         luaA_object_push_item(globalconf.L, -1, *tag);
-        untag_window(globalconf.L, -2, -1);
+        untag_ewindow(globalconf.L, -2, -1);
         lua_pop(globalconf.L, 1);
     }
 
@@ -1419,7 +1419,7 @@ client_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
-    luaA_class_setup(L, (lua_class_t *) &client_class, "client", &window_class,
+    luaA_class_setup(L, (lua_class_t *) &client_class, "client", (lua_class_t *) &ewindow_class,
                      (lua_class_allocator_t) client_new,
                      (lua_class_collector_t) client_wipe,
                      (lua_class_checker_t) client_checker,
