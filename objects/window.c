@@ -28,8 +28,6 @@
 #include "common/luaobject.h"
 #include "common/xutil.h"
 
-LUA_CLASS_FUNCS(window, &window_class)
-
 static void
 window_wipe(window_t *window)
 {

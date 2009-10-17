@@ -45,6 +45,8 @@ struct a_screen
     } systray;
     /** Focused window */
     window_t *focused_window;
+    /** Screen's root window */
+    window_t *root;
     /** The monitor of startup notifications */
     SnMonitorContext *snmonitor;
     /** The default visual, used to draw */
