@@ -525,6 +525,8 @@ luaA_screen_index(lua_State *L)
       case A_TK_INDEX:
         lua_pushinteger(L, screen_array_indexof(&globalconf.screens, s) + 1);
         break;
+      case A_TK_ROOT:
+        return luaA_object_push(L, s->root);
       case A_TK_GEOMETRY:
         luaA_pusharea(L, s->geometry);
         break;

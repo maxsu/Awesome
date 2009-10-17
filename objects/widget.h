@@ -23,6 +23,7 @@
 #define AWESOME_OBJECTS_WIDGET_H
 
 #include "button.h"
+#include "globalconf.h"
 #include "draw.h"
 #include "common/tokenize.h"
 

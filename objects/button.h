@@ -22,21 +22,23 @@
 #ifndef AWESOME_OBJECTS_BUTTON_H
 #define AWESOME_OBJECTS_BUTTON_H
 
-#include "globalconf.h"
+#include <xcb/xcb.h>
+
+#include "common/luaobject.h"
 
 /** Mouse buttons bindings */
-struct button_t
+typedef struct
 {
     LUA_OBJECT_HEADER
     /** Key modifiers */
     uint16_t modifiers;
     /** Mouse button number */
     xcb_button_t button;
-};
+} button_t;
 
 lua_class_t button_class;
 LUA_OBJECT_FUNCS(&button_class, button_t, button)
-ARRAY_FUNCS(button_t *, button, DO_NOTHING)
+DO_ARRAY(button_t *, button, DO_NOTHING)
 
 int luaA_button_array_get(lua_State *, int, button_array_t *);
 void luaA_button_array_set(lua_State *, int, int, button_array_t *);

@@ -22,9 +22,9 @@ cursor_waiting = "watch"
 
 local function update_cursor()
     if #app_starting > 0 then
-        capi.root.cursor(cursor_waiting)
+        -- capi.root.cursor(cursor_waiting)
     else
-        capi.root.cursor("left_ptr")
+        -- capi.root.cursor("left_ptr")
     end
 end
 
