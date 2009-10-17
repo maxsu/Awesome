@@ -36,6 +36,8 @@ struct a_screen
     area_t geometry;
     /** Tag list */
     tag_array_t tags;
+    /** Screen's root window */
+    window_t *root;
     /** The signals emitted by screen objects */
     signal_array_t signals;
     /** True if the banning on this screen needs to be updated */

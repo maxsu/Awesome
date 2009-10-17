@@ -28,16 +28,6 @@
 #include "common/luaobject.h"
 #include "common/xutil.h"
 
-LUA_CLASS_FUNCS(window, &window_class)
-
-static xcb_window_t
-window_get(window_t *window)
-{
-    if (window->frame_window != XCB_NONE)
-        return window->frame_window;
-    return window->window;
-}
-
 static void
 window_wipe(window_t *window)
 {
@@ -145,7 +135,7 @@ luaA_window_buttons(lua_State *L)
     {
         luaA_button_array_set(L, 1, 2, &window->buttons);
         luaA_object_emit_signal(L, 1, "property::buttons", 0);
-        xwindow_buttons_grab(window_get(window), &window->buttons);
+        xwindow_buttons_grab(window->window, &window->buttons);
     }
 
     return luaA_button_array_get(L, 1, &window->buttons);
