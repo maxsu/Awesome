@@ -89,8 +89,6 @@ typedef struct
     int keygrabber;
     /** The mouse pointer grabber function */
     int mousegrabber;
-    /** Focused window */
-    window_t *focused_window;
     /** Wiboxes */
     wibox_array_t wiboxes;
     /** The startup notification display struct */

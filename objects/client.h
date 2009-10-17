@@ -154,8 +154,6 @@ void client_set_alt_name(lua_State *L, int, char *);
 void client_set_group_window(lua_State *, int, xcb_window_t);
 void client_set_icon(lua_State *, int, int);
 void client_set_skip_taskbar(lua_State *, int, bool);
-void client_focus(client_t *);
-void client_unfocus_update(client_t *);
 bool client_hasproto(client_t *, xcb_atom_t);
 void client_ignore_enterleave_events(void);
 void client_restore_enterleave_events(void);

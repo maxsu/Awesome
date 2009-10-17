@@ -122,6 +122,7 @@ typedef enum
  * \param c The client.
  * \return The real layer.
  */
+extern window_t *window_focused;
 static window_layer_t
 client_layer_translator(client_t *c)
 {
@@ -129,7 +130,7 @@ client_layer_translator(client_t *c)
     if(c->ontop)
         return WINDOW_LAYER_ONTOP;
     /* Fullscreen windows only get their own layer when they have the focus */
-    else if(c->fullscreen && globalconf.focused_window == (window_t *) c)
+    else if(c->fullscreen && window_focused == (window_t *) c)
         return WINDOW_LAYER_FULLSCREEN;
     else if(c->above)
         return WINDOW_LAYER_ABOVE;

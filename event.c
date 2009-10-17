@@ -536,7 +536,7 @@ event_handle_focusout(xcb_focus_in_event_t *ev)
             client_t *c;
 
             if((c = client_getbywin(ev->event)))
-                client_unfocus_update(c);
+                window_unfocus_update((window_t *) c);
           }
         /* all other events are ignored */
         default:
