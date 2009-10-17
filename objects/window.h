@@ -30,6 +30,8 @@
     LUA_OBJECT_HEADER \
     /** The X window number */ \
     xcb_window_t window; \
+    /** Cursor */ \
+    char *cursor; \
     /** Client logical screen */ \
     screen_t *screen; \
     /** Button bindings */ \

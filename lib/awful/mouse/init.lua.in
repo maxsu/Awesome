@@ -568,6 +568,8 @@ function client.resize(c, corner)
 end
 
 -- Set the cursor at startup
--- capi.root.cursor("left_ptr")
+for s = 1, capi.screen.count() do
+    capi.screen[s].root.cursor = "left_ptr"
+end
 
 -- vim: filetype=lua:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

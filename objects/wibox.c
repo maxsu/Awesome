@@ -65,7 +65,6 @@ wibox_wipe_resources(wibox_t *w)
 static void
 wibox_wipe(wibox_t *wibox)
 {
-    p_delete(&wibox->cursor);
     wibox_wipe_resources(wibox);
     widget_node_array_wipe(&wibox->widgets);
 }
@@ -706,7 +705,7 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
     wibox_init(wibox, phys_screen);
 
     xwindow_set_cursor(wibox->window,
-                      xcursor_new(globalconf.connection, xcursor_font_fromstr(wibox->cursor)));
+                       xcursor_new(globalconf.connection, xcursor_font_fromstr(wibox->cursor)));
 
     if(wibox->opacity != -1)
         xwindow_set_opacity(wibox->window, wibox->opacity);
@@ -834,7 +833,6 @@ luaA_wibox_geometry(lua_State *L)
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, ontop, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, cursor, lua_pushstring)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
 
 static int
@@ -1016,30 +1014,6 @@ luaA_wibox_set_ontop(lua_State *L, wibox_t *wibox)
     {
         wibox->ontop = b;
         luaA_object_emit_signal(L, -3, "property::ontop", 0);
-    }
-    return 0;
-}
-
-/** Set the wibox cursor.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_set_cursor(lua_State *L, wibox_t *wibox)
-{
-    const char *buf = luaL_checkstring(L, -1);
-    if(buf)
-    {
-        uint16_t cursor_font = xcursor_font_fromstr(buf);
-        if(cursor_font)
-        {
-            xcb_cursor_t cursor = xcursor_new(globalconf.connection, cursor_font);
-            p_delete(&wibox->cursor);
-            wibox->cursor = a_strdup(buf);
-            xwindow_set_cursor(wibox->window, cursor);
-            luaA_object_emit_signal(L, -3, "property::cursor", 0);
-        }
     }
     return 0;
 }
@@ -1231,10 +1205,6 @@ wibox_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_wibox_get_screen,
                             (lua_class_propfunc_t) luaA_wibox_set_screen);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_CURSOR,
-                            (lua_class_propfunc_t) luaA_wibox_set_cursor,
-                            (lua_class_propfunc_t) luaA_wibox_get_cursor,
-                            (lua_class_propfunc_t) luaA_wibox_set_cursor);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_FG,
                             (lua_class_propfunc_t) luaA_wibox_set_fg,
                             (lua_class_propfunc_t) luaA_wibox_get_fg,
