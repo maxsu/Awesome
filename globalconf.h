@@ -31,19 +31,18 @@
 #include <xcb/xcb_keysyms.h>
 
 #include "objects/key.h"
+#include "objects/button.h"
 #include "color.h"
 #include "font.h"
 #include "common/xembed.h"
 
 typedef struct wibox_t wibox_t;
 typedef struct a_screen screen_t;
-typedef struct button_t button_t;
 typedef struct widget_t widget_t;
 typedef struct client_t client_t;
 typedef struct window_t window_t;
 typedef struct tag tag_t;
 
-ARRAY_TYPE(button_t *, button)
 ARRAY_TYPE(tag_t *, tag)
 ARRAY_TYPE(screen_t, screen)
 ARRAY_TYPE(client_t *, client)

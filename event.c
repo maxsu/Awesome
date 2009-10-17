@@ -194,7 +194,8 @@ event_handle_button(xcb_button_press_event_t *ev)
     else if(ev->child == XCB_NONE)
         if(globalconf.screen->root == ev->event)
         {
-            event_button_callback(ev, &globalconf.buttons, 0, 0, NULL);
+            luaA_object_push(globalconf.L, globalconf.screens.tab[0].root);
+            event_button_callback(ev, &globalconf.screens.tab[0].root->buttons, -1, 1, NULL);
             return;
         }
 }
@@ -618,7 +619,13 @@ event_handle_key(xcb_key_press_event_t *ev)
             }
         }
         else
-            event_key_callback(ev, &globalconf.keys, 0, 0, &keysym);
+            foreach(screen, globalconf.screens)
+                if(screen->root->window == ev->event)
+                {
+                    luaA_object_push(globalconf.L, screen->root);
+                    event_key_callback(ev, &screen->root->keys, -1, 1, &keysym);
+                    return;
+                }
     }
 }
 
@@ -782,11 +789,10 @@ event_handle_mappingnotify(xcb_mapping_notify_event_t *ev)
         xcb_ungrab_key(globalconf.connection, XCB_GRAB_ANY, s->root, XCB_BUTTON_MASK_ANY);
         xwindow_grabkeys(s->root, &globalconf.keys);
 
-        foreach(_c, globalconf.clients)
+        foreach(c, globalconf.clients)
         {
-            client_t *c = *_c;
-            xcb_ungrab_key(globalconf.connection, XCB_GRAB_ANY, c->frame_window, XCB_BUTTON_MASK_ANY);
-            xwindow_grabkeys(c->frame_window, &c->keys);
+            xcb_ungrab_key(globalconf.connection, XCB_GRAB_ANY, (*c)->window, XCB_MOD_MASK_ANY);
+            xwindow_grabkeys((*c)->window, &(*c)->keys);
         }
     }
 }

@@ -22,8 +22,9 @@
 #ifndef AWESOME_WINDOW_H
 #define AWESOME_WINDOW_H
 
-#include "globalconf.h"
 #include "draw.h"
+#include "objects/button.h"
+#include "objects/key.h"
 
 void xwindow_set_state(xcb_window_t, uint32_t);
 xcb_get_property_cookie_t xwindow_get_state_unchecked(xcb_window_t);

@@ -50,7 +50,6 @@ extern const struct luaL_reg awesome_dbus_lib[];
 #endif
 extern const struct luaL_reg awesome_keygrabber_lib[];
 extern const struct luaL_reg awesome_mousegrabber_lib[];
-extern const struct luaL_reg awesome_root_lib[];
 extern const struct luaL_reg awesome_mouse_methods[];
 extern const struct luaL_reg awesome_mouse_meta[];
 extern const struct luaL_reg awesome_screen_methods[];
@@ -725,10 +724,6 @@ luaA_init(xdgHandle* xdg)
 
     /* Export awesome lib */
     luaA_openlib(L, "awesome", awesome_lib, awesome_lib);
-
-    /* Export root lib */
-    luaL_register(L, "root", awesome_root_lib);
-    lua_pop(L, 1); /* luaL_register() leaves the table on stack */
 
 #ifdef WITH_DBUS
     /* Export D-Bus lib */
