@@ -27,6 +27,8 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
+#include <xcb/xtest.h>
+
 #include <basedir_fs.h>
 
 #include "awesome.h"
@@ -42,6 +44,7 @@
 #include "event.h"
 #include "selection.h"
 #include "common/xcursor.h"
+#include "common/xutil.h"
 #include "common/buffer.h"
 #include "common/backtrace.h"
 
@@ -93,6 +96,58 @@ static int
 luaA_restart(lua_State *L)
 {
     awesome_restart();
+    return 0;
+}
+
+static int
+luaA_awesome_fake_input(lua_State *L)
+{
+    if(!globalconf.have_xtest)
+    {
+        luaA_warn(L, "XTest extension is not available, cannot fake input.");
+        return 0;
+    }
+
+    size_t tlen;
+    const char *stype = luaL_checklstring(L, 1, &tlen);
+    uint8_t type, detail;
+    int x = 0, y = 0;
+
+    switch(a_tokenize(stype, tlen))
+    {
+      case A_TK_KEY_PRESS:
+        type = XCB_KEY_PRESS;
+        detail = luaL_checknumber(L, 2); /* keycode */
+        break;
+      case A_TK_KEY_RELEASE:
+        type = XCB_KEY_RELEASE;
+        detail = luaL_checknumber(L, 2); /* keycode */
+        break;
+      case A_TK_BUTTON_PRESS:
+        type = XCB_BUTTON_PRESS;
+        detail = luaL_checknumber(L, 2); /* button number */
+        break;
+      case A_TK_BUTTON_RELEASE:
+        type = XCB_BUTTON_RELEASE;
+        detail = luaL_checknumber(L, 2); /* button number */
+        break;
+      case A_TK_MOTION_NOTIFY:
+        type = XCB_MOTION_NOTIFY;
+        detail = luaA_checkboolean(L, 2); /* relative to the current position or not */
+        x = luaL_checknumber(L, 3);
+        y = luaL_checknumber(L, 4);
+        break;
+      default:
+        return 0;
+    }
+
+    xcb_test_fake_input(globalconf.connection,
+                        type,
+                        detail,
+                        XCB_CURRENT_TIME,
+                        XCB_NONE,
+                        x, y,
+                        0);
     return 0;
 }
 
@@ -700,6 +755,7 @@ luaA_init(xdgHandle* xdg)
         { "exec", luaA_exec },
         { "spawn", luaA_spawn },
         { "restart", luaA_restart },
+        { "fake_input", luaA_awesome_fake_input },
         { "connect_signal", luaA_awesome_connect_signal },
         { "disconnect_signal", luaA_awesome_disconnect_signal },
         { "emit_signal", luaA_awesome_emit_signal },

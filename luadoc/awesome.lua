@@ -35,6 +35,19 @@ module("awesome")
 -- @param use_sn Use startup-notification, true or false, default to true.
 -- @return Process ID if everything is OK, or an error string if an error occured.
 
+--- Send fake events. Usually the current focused client will get it.
+-- @param event_type The event type: key_press, key_release, button_press, button_release
+-- or motion_notify.
+-- @param detail The detail: in case of a key event, this is the keycode to send, in
+-- case of a button event this is the number of the button. In case of a motion
+-- event, this is a boolean value which if true make the coordinates relatives.
+-- @param x In case of a motion event, this is the X coordinate.
+-- @param y In case of a motion event, this is the Y coordinate.
+-- @param screen In case of a motion event, this is the screen number to move on.
+-- If not specified, the current one is used.
+-- @name fake_input
+-- @class function
+
 --- Add a global signal.
 -- @param name A string with the event name.
 -- @param func The function to call.
