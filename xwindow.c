@@ -22,8 +22,8 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 
+#include "globalconf.h"
 #include "xwindow.h"
-#include "objects/button.h"
 #include "common/atoms.h"
 
 /** Mask shorthands */
