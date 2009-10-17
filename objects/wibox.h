@@ -23,13 +23,13 @@
 #define AWESOME_OBJECTS_WIBOX_H
 
 #include "objects/widget.h"
-#include "objects/window.h"
+#include "objects/ewindow.h"
 #include "common/luaobject.h"
 
 /** Wibox type */
 struct wibox_t
 {
-    WINDOW_OBJECT_HEADER
+    EWINDOW_OBJECT_HEADER
     /** Ontop */
     bool ontop;
     /** Visible */
