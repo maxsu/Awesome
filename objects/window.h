@@ -22,7 +22,7 @@
 #ifndef AWESOME_OBJECTS_WINDOW_H
 #define AWESOME_OBJECTS_WINDOW_H
 
-#include "strut.h"
+#include "globalconf.h"
 #include "objects/button.h"
 #include "common/luaclass.h"
 
@@ -65,6 +65,7 @@ void window_ban(window_t *);
 void window_ban_unfocus(window_t *);
 void window_unban(window_t *);
 void window_focus_update(window_t *);
+void window_unfocus_update(window_t *);
 void window_focus(lua_State *, int);
 
 void window_set_opacity(lua_State *, int, double);

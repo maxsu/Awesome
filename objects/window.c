@@ -28,6 +28,9 @@
 #include "common/luaobject.h"
 #include "common/xutil.h"
 
+/** Focused window */
+window_t *window_focused;
+
 static void
 window_wipe(window_t *window)
 {
@@ -52,12 +55,11 @@ void
 window_ban_unfocus(window_t *window)
 {
     /* Wait until the last moment to take away the focus from the window. */
-    if(globalconf.screens.tab[window->screen->phys_screen].focused_window == window)
+    if(window_focused == window)
     {
         xcb_window_t root_win = xutil_screen_get(globalconf.connection, window->screen->phys_screen)->root;
         /* Set focus on root window, so no events leak to the current window. */
-        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
-                            root_win, XCB_CURRENT_TIME);
+        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT, root_win, XCB_CURRENT_TIME);
     }
 }
 
@@ -95,10 +97,21 @@ window_unban(window_t *window)
 void
 window_focus_update(window_t *window)
 {
-    globalconf.screen_focus = &globalconf.screens.tab[window->screen->phys_screen];
-    globalconf.screen_focus->focused_window = window;
+    window_focused = window;
     luaA_object_push(globalconf.L, window);
     luaA_object_emit_signal(globalconf.L, -1, "focus", 0);
+    lua_pop(globalconf.L, 1);
+}
+
+/** Record that a window lost focus.
+ * \param c Client being unfocused
+ */
+void
+window_unfocus_update(window_t *window)
+{
+    window_focused = NULL;
+    luaA_object_push(globalconf.L, window);
+    luaA_object_emit_signal(globalconf.L, -1, "unfocus", 0);
     lua_pop(globalconf.L, 1);
 }
 
