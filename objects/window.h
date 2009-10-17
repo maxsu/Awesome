@@ -57,6 +57,7 @@ typedef struct
 } lua_interface_window_t;
 
 lua_class_t window_class;
+LUA_OBJECT_FUNCS(&window_class, window_t, window)
 
 void window_class_setup(lua_State *);
 
