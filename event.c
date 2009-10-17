@@ -530,7 +530,7 @@ event_handle_focusout(void *data __attribute__ ((unused)),
             client_t *c;
 
             if((c = client_getbywin(ev->event)))
-                client_unfocus_update(c);
+                window_unfocus_update((window_t *) c);
           }
         /* all other events are ignored */
         default:

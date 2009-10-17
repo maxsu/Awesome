@@ -241,8 +241,6 @@ screen_scan(void)
                 screen_array_append(&globalconf.screens, s);
             }
     }
-
-    globalconf.screen_focus = globalconf.screens.tab;
 }
 
 /** Return the Xinerama screen number where the coordinates belongs to.
