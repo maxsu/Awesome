@@ -233,6 +233,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, int phys_screen, 
     /* Store window */
     c->window = w;
     luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
+    /* Consider window is focusable by default */
+    c->focusable = true;
 
     /* Duplicate client and push it in client list */
     lua_pushvalue(globalconf.L, -1);
