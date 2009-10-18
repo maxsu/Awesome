@@ -243,6 +243,8 @@ window_class_setup(lua_State *L)
 
     static const struct luaL_reg window_meta[] =
     {
+        LUA_OBJECT_META(window)
+        LUA_CLASS_META
         { "buttons", luaA_window_buttons },
         { "focus", luaA_window_focus },
         { "keys", luaA_window_keys },
