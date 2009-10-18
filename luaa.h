@@ -54,12 +54,6 @@ luaA_checkboolean(lua_State *L, int n)
     return lua_toboolean(L, n);
 }
 
-static inline bool
-luaA_optboolean(lua_State *L, int idx, bool def)
-{
-    return luaL_opt(L, luaA_checkboolean, idx, def);
-}
-
 static inline lua_Number
 luaA_getopt_number(lua_State *L, int idx, const char *name, lua_Number def)
 {
@@ -68,24 +62,6 @@ luaA_getopt_number(lua_State *L, int idx, const char *name, lua_Number def)
         def = luaL_optnumber(L, -1, def);
     lua_pop(L, 1);
     return def;
-}
-
-static inline const char *
-luaA_getopt_lstring(lua_State *L, int idx, const char *name, const char *def, size_t *len)
-{
-    lua_getfield(L, idx, name);
-    const char *s = luaL_optlstring(L, -1, def, len);
-    lua_pop(L, 1);
-    return s;
-}
-
-static inline bool
-luaA_getopt_boolean(lua_State *L, int idx, const char *name, bool def)
-{
-    lua_getfield(L, idx, name);
-    bool b = luaA_optboolean(L, -1, def);
-    lua_pop(L, 1);
-    return b;
 }
 
 /** Push a area type to a table on stack.
@@ -150,20 +126,6 @@ luaA_registerfct(lua_State *L, int idx, int *fct)
 {
     luaA_checkfunction(L, idx);
     return luaA_register(L, idx, fct);
-}
-
-/** Grab a function from the registry and execute it.
- * \param L The Lua stack.
- * \param ref The function reference.
- * \param nargs The number of arguments for the Lua function.
- * \param nret The number of returned value from the Lua function.
- * \return True on no error, false otherwise.
- */
-static inline bool
-luaA_dofunction_from_registry(lua_State *L, int ref, int nargs, int nret)
-{
-    lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-    return luaA_dofunction(L, nargs, nret);
 }
 
 /** Print a warning about some Lua code.
