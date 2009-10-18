@@ -1525,6 +1525,7 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_size_hints,
                             NULL);
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_CURSOR, NULL, NULL, NULL);
 
     client_class.isvisible = (lua_interface_window_isvisible_t) client_isvisible;
     luaA_class_connect_signal(L, (lua_class_t *) &client_class, "focus", client_take_focus);
