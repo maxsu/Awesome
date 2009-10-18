@@ -195,10 +195,9 @@ wibox_init(wibox_t *w, int phys_screen)
                           XCB_GRAVITY_NORTH_WEST,
                           1,
                           XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
-                          | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE
                           | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_ENTER_WINDOW
                           | XCB_EVENT_MASK_LEAVE_WINDOW | XCB_EVENT_MASK_STRUCTURE_NOTIFY
-                          | XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_EXPOSURE
+                          | XCB_EVENT_MASK_EXPOSURE
                           | XCB_EVENT_MASK_PROPERTY_CHANGE
                       });
 
@@ -217,6 +216,8 @@ wibox_init(wibox_t *w, int phys_screen)
                   (const uint32_t[]) { s->black_pixel, s->white_pixel });
 
     wibox_shape_update(w);
+
+    xwindow_buttons_grab(w->window, &w->buttons);
 }
 
 /** Refresh the window content by copying its pixmap data to its window.
