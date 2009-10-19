@@ -227,11 +227,6 @@ ewindow_class_setup(lua_State *L)
     static const struct luaL_reg ewindow_methods[] =
     {
         LUA_CLASS_METHODS(ewindow)
-        { NULL, NULL }
-    };
-
-    static const struct luaL_reg ewindow_meta[] =
-    {
         { "struts", luaA_ewindow_struts },
         { "tags", luaA_ewindow_tags },
         { NULL, NULL }
@@ -240,7 +235,7 @@ ewindow_class_setup(lua_State *L)
     luaA_class_setup(L, (lua_class_t *) &ewindow_class, "ewindow", &window_class,
                      NULL, NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     ewindow_methods, ewindow_meta);
+                     ewindow_methods, NULL, NULL);
 
     luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_OPACITY,
                             (lua_class_propfunc_t) luaA_ewindow_set_opacity,

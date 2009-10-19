@@ -108,23 +108,21 @@ timer_class_setup(lua_State *L)
     static const struct luaL_reg timer_methods[] =
     {
         LUA_CLASS_METHODS(timer)
-        { "__call", luaA_timer_new },
+        { "start", luaA_timer_start },
+        { "stop", luaA_timer_stop },
         { NULL, NULL }
     };
 
-    static const struct luaL_reg timer_meta[] =
+    static const struct luaL_reg timer_module_meta[] =
     {
-        LUA_OBJECT_META(timer)
-            LUA_CLASS_META
-            { "start", luaA_timer_start },
-            { "stop", luaA_timer_stop },
-            { NULL, NULL },
+        { "__call", luaA_timer_new },
+        { NULL, NULL },
     };
 
     luaA_class_setup(L, &timer_class, "timer", NULL,
                      (lua_class_allocator_t) timer_new, NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     timer_methods, timer_meta);
+                     timer_methods, timer_module_meta, NULL);
     luaA_class_add_property(&timer_class, A_TK_TIMEOUT,
                             (lua_class_propfunc_t) luaA_timer_set_timeout,
                             (lua_class_propfunc_t) luaA_timer_get_timeout,

@@ -238,13 +238,6 @@ window_class_setup(lua_State *L)
     static const struct luaL_reg window_methods[] =
     {
         LUA_CLASS_METHODS(window)
-        { NULL, NULL }
-    };
-
-    static const struct luaL_reg window_meta[] =
-    {
-        LUA_OBJECT_META(window)
-        LUA_CLASS_META
         { "buttons", luaA_window_buttons },
         { "focus", luaA_window_focus },
         { "keys", luaA_window_keys },
@@ -255,7 +248,7 @@ window_class_setup(lua_State *L)
     luaA_class_setup(L, &window_class, "window", NULL,
                      (lua_class_allocator_t) window_new, (lua_class_collector_t) window_wipe, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     window_methods, window_meta);
+                     window_methods, NULL, NULL);
 
     luaA_class_add_property(&window_class, A_TK_WINDOW,
                             NULL,
