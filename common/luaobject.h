@@ -204,14 +204,6 @@ int luaA_object_emit_signal_simple(lua_State *);
         } \
     }
 
-int luaA_object_tostring(lua_State *);
-
-#define LUA_OBJECT_META(prefix) \
-    { "__tostring", luaA_object_tostring }, \
-    { "connect_signal", luaA_object_connect_signal_simple }, \
-    { "disconnect_signal", luaA_object_disconnect_signal_simple }, \
-    { "emit_signal", luaA_object_emit_signal_simple },
-
 #endif
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
