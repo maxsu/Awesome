@@ -102,21 +102,19 @@ button_class_setup(lua_State *L)
     static const struct luaL_reg button_methods[] =
     {
         LUA_CLASS_METHODS(button)
-        { "__call", luaA_button_new },
         { NULL, NULL }
     };
 
-    static const struct luaL_reg button_meta[] =
+    static const struct luaL_reg button_module_meta[] =
     {
-        LUA_OBJECT_META(button)
-        LUA_CLASS_META
+        { "__call", luaA_button_new },
         { NULL, NULL }
     };
 
     luaA_class_setup(L, &button_class, "button", NULL,
                      (lua_class_allocator_t) button_new, NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     button_methods, button_meta);
+                     button_methods, button_module_meta, NULL);
     luaA_class_add_property(&button_class, A_TK_BUTTON,
                             (lua_class_propfunc_t) luaA_button_set_button,
                             (lua_class_propfunc_t) luaA_button_get_button,

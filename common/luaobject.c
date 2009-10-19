@@ -294,29 +294,4 @@ luaA_object_emit_signal_simple(lua_State *L)
     return 0;
 }
 
-int
-luaA_object_tostring(lua_State *L)
-{
-    lua_class_t *lua_class = luaA_class_get(L, 1);
-    lua_object_t *object = luaA_checkudata(L, 1, lua_class);
-
-    int i = 0;
-    for(; lua_class; lua_class = lua_class->parent, i++)
-    {
-        if(i)
-        {
-            lua_pushliteral(L, "/");
-            lua_insert(L, - (i * 2));
-        }
-        lua_pushstring(L, NONULL(lua_class->name));
-        lua_insert(L, - (i * 2) - 1);
-    }
-
-    lua_pushfstring(L, ": %p", object);
-
-    lua_concat(L, i * 2);
-
-    return 1;
-}
-
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

@@ -783,15 +783,7 @@ image_class_setup(lua_State *L)
     static const struct luaL_reg image_methods[] =
     {
         LUA_CLASS_METHODS(image)
-        { "__call", luaA_image_new },
         { "argb32", luaA_image_argb32_new },
-        { NULL, NULL }
-    };
-
-    static const struct luaL_reg image_meta[] =
-    {
-        LUA_OBJECT_META(image)
-        LUA_CLASS_META
         { "rotate", luaA_image_rotate },
         { "orientate", luaA_image_orientate },
         { "crop", luaA_image_crop },
@@ -807,12 +799,18 @@ image_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
+    static const struct luaL_reg image_module_meta[] =
+    {
+        { "__call", luaA_image_new },
+        { NULL, NULL }
+    };
+
     luaA_class_setup(L, &image_class, "image", NULL,
                      (lua_class_allocator_t) image_new,
                      (lua_class_collector_t) image_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     image_methods, image_meta);
+                     image_methods, image_module_meta, NULL);
     luaA_class_add_property(&image_class, A_TK_WIDTH,
                             NULL,
                             (lua_class_propfunc_t) luaA_image_get_width,

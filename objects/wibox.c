@@ -1156,15 +1156,13 @@ wibox_class_setup(lua_State *L)
     static const struct luaL_reg wibox_methods[] =
     {
         LUA_CLASS_METHODS(wibox)
-        { "__call", luaA_wibox_new },
+        { "geometry", luaA_wibox_geometry },
         { NULL, NULL }
     };
 
-    static const struct luaL_reg wibox_meta[] =
+    static const struct luaL_reg wibox_module_meta[] =
     {
-        LUA_OBJECT_META(wibox)
-        LUA_CLASS_META
-        { "geometry", luaA_wibox_geometry },
+        { "__call", luaA_wibox_new },
         { NULL, NULL },
     };
 
@@ -1173,7 +1171,7 @@ wibox_class_setup(lua_State *L)
                      (lua_class_collector_t) wibox_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     wibox_methods, wibox_meta);
+                     wibox_methods, wibox_module_meta, NULL);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_WIDGETS,
                             (lua_class_propfunc_t) luaA_wibox_set_widgets,
                             (lua_class_propfunc_t) luaA_wibox_get_widgets,
