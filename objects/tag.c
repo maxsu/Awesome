@@ -374,15 +374,13 @@ tag_class_setup(lua_State *L)
     static const struct luaL_reg tag_methods[] =
     {
         LUA_CLASS_METHODS(tag)
-        { "__call", luaA_tag_new },
+        { "windows", luaA_tag_windows },
         { NULL, NULL }
     };
 
-    static const struct luaL_reg tag_meta[] =
+    static const struct luaL_reg tag_module_meta[] =
     {
-        LUA_OBJECT_META(tag)
-        LUA_CLASS_META
-        { "windows", luaA_tag_windows },
+        { "__call", luaA_tag_new },
         { NULL, NULL },
     };
 
@@ -391,7 +389,7 @@ tag_class_setup(lua_State *L)
                      (lua_class_collector_t) tag_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     tag_methods, tag_meta);
+                     tag_methods, tag_module_meta, NULL);
     luaA_class_add_property(&tag_class, A_TK_NAME,
                             (lua_class_propfunc_t) luaA_tag_set_name,
                             (lua_class_propfunc_t) luaA_tag_get_name,

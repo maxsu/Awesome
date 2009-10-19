@@ -181,6 +181,31 @@ luaA_class_gc(lua_State *L)
     return 0;
 }
 
+static int
+luaA_class_tostring(lua_State *L)
+{
+    lua_class_t *lua_class = luaA_class_get(L, 1);
+    lua_object_t *object = luaA_checkudata(L, 1, lua_class);
+
+    int i = 0;
+    for(; lua_class; lua_class = lua_class->parent, i++)
+    {
+        if(i)
+        {
+            lua_pushliteral(L, "/");
+            lua_insert(L, - (i * 2));
+        }
+        lua_pushstring(L, NONULL(lua_class->name));
+        lua_insert(L, - (i * 2) - 1);
+    }
+
+    lua_pushfstring(L, ": %p", object);
+
+    lua_concat(L, i * 2);
+
+    return 1;
+}
+
 /** Setup a new Lua class.
  * \param L The Lua VM state.
  * \param name The class name.
@@ -194,7 +219,9 @@ luaA_class_gc(lua_State *L)
  * \param newindex_miss_property Function to call when an object of this class
  * receive a __newindex request on an unknown property.
  * \param methods The methods to set on the class table.
- * \param meta The meta-methods to set on the class objects.
+ * \param metatable_module The metatable to set on the module/class table.
+ * \param metatable_object The metatable of the objects. Some field like __gc,
+ * __index, __newindex and tostring are automagically set.
  */
 void
 luaA_class_setup(lua_State *L, lua_class_t *class,
@@ -206,7 +233,8 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
                  lua_class_propfunc_t index_miss_property,
                  lua_class_propfunc_t newindex_miss_property,
                  const struct luaL_reg methods[],
-                 const struct luaL_reg meta[])
+                 const struct luaL_reg metatable_module[],
+                 const struct luaL_reg metatable_object[])
 {
     /* Create the object metatable */
     lua_newtable(L);
@@ -222,19 +250,45 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
     lua_pushlightuserdata(L, class);
     lua_rawset(L, LUA_REGISTRYINDEX);
 
-    /* Duplicate objects metatable */
-    lua_pushvalue(L, -1);
     /* Set garbage collector in the metatable */
     lua_pushcfunction(L, luaA_class_gc);
     lua_setfield(L, -2, "__gc");
 
-    lua_setfield(L, -2, "__index"); /* metatable.__index = metatable      1 */
+    /* Set __index and __newindex metamethod in the metatable */
+    lua_pushcfunction(L, luaA_class_index);
+    lua_setfield(L, -2, "__index");
+    lua_pushcfunction(L, luaA_class_newindex);
+    lua_setfield(L, -2, "__newindex");
+    lua_pushcfunction(L, luaA_class_tostring);
+    lua_setfield(L, -2, "__tostring");
 
-    luaL_register(L, NULL, meta);                                      /* 1 */
-    luaL_register(L, name, methods);                                   /* 2 */
-    lua_pushvalue(L, -1);           /* dup self as metatable              3 */
-    lua_setmetatable(L, -2);        /* set self as metatable              2 */
-    lua_pop(L, 2);
+    /* Register all functions provided in metatable.
+     * This is done now so the developer can replace __gc, __index, etc. */
+    if(metatable_object)
+        luaL_register(L, NULL, metatable_object);
+
+    if(methods)
+    {
+        /* Register all methods in the module table */
+        luaL_register(L, name, methods);
+
+        if(metatable_module)
+        {
+            /* Create a new table for the metatable of the module */
+            lua_newtable(L);
+            /* Register metatable functions of the module */
+            luaL_register(L, NULL, metatable_module);
+            /* Set module metatable */
+            lua_setmetatable(L, -2);
+        }
+
+        /* Also, store the 'module' table directly in the __methods field so
+         * object can access module easily from their __index */
+        lua_setfield(L, -2, "__methods");
+    }
+
+    /* Remove object metatable */
+    lua_pop(L, 1);
 
     class->collector = collector;
     class->allocator = allocator;
@@ -290,14 +344,14 @@ luaA_class_emit_signal(lua_State *L, lua_class_t *lua_class,
     lua_pop(L, nargs);
 }
 
-/** Try to use the metatable of an object.
+/** Try to use the methods of a module.
  * \param L The Lua VM state.
  * \param idxobj The index of the object.
  * \param idxfield The index of the field (attribute) to get.
  * \return The number of element pushed on stack.
  */
-int
-luaA_usemetatable(lua_State *L, int idxobj, int idxfield)
+static int
+luaA_use_methods(lua_State *L, int idxobj, int idxfield)
 {
     lua_class_t *class = luaA_class_get(L, idxobj);
 
@@ -307,19 +361,30 @@ luaA_usemetatable(lua_State *L, int idxobj, int idxfield)
         lua_pushlightuserdata(L, class);
         /* Get its metatable from registry */
         lua_rawget(L, LUA_REGISTRYINDEX);
-        /* Push the field */
-        lua_pushvalue(L, idxfield);
-        /* Get the field in the metatable */
-        lua_rawget(L, -2);
-        /* Do we have a field like that? */
-        if(!lua_isnil(L, -1))
+        /* Get the __methods table */
+        lua_getfield(L, -1, "__methods");
+        /* Check we have a __methods table */
+        if(lua_isnil(L, -1))
+            /* No, then remove nil */
+            lua_pop(L, 1);
+        else
         {
-            /* Yes, so remove the metatable and return it! */
+            /* Remove the metatable */
             lua_remove(L, -2);
-            return 1;
+            /* Push the field */
+            lua_pushvalue(L, idxfield);
+            /* Get the field in the methods table */
+            lua_rawget(L, -2);
+            /* Do we have a field like that? */
+            if(!lua_isnil(L, -1))
+            {
+                /* Yes, so remove the method table and return it! */
+                lua_remove(L, -2);
+                return 1;
+            }
+            /* No, so remove the metatable and the field value (nil) */
+            lua_pop(L, 2);
         }
-        /* No, so remove the metatable and its value */
-        lua_pop(L, 2);
     }
 
     return 0;
@@ -368,7 +433,7 @@ int
 luaA_class_index(lua_State *L)
 {
     /* Try to use metatable first. */
-    if(luaA_usemetatable(L, 1, 2))
+    if(luaA_use_methods(L, 1, 2))
         return 1;
 
     lua_class_t *class = luaA_class_get(L, 1);
@@ -397,10 +462,6 @@ luaA_class_index(lua_State *L)
 int
 luaA_class_newindex(lua_State *L)
 {
-    /* Try to use metatable first. */
-    if(luaA_usemetatable(L, 1, 2))
-        return 1;
-
     lua_class_t *class = luaA_class_get(L, 1);
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);

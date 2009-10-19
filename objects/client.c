@@ -1395,14 +1395,6 @@ client_class_setup(lua_State *L)
     {
         LUA_CLASS_METHODS(client)
         { "get", luaA_client_get },
-        { "__index", luaA_client_module_index },
-        { NULL, NULL }
-    };
-
-    static const struct luaL_reg client_meta[] =
-    {
-        LUA_OBJECT_META(client)
-        LUA_CLASS_META
         { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
         { "raise", luaA_client_raise },
@@ -1411,12 +1403,19 @@ client_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
+    static const struct luaL_reg client_module_meta[] =
+    {
+        { "__index", luaA_client_module_index },
+        { NULL, NULL }
+    };
+
     luaA_class_setup(L, (lua_class_t *) &client_class, "client", (lua_class_t *) &ewindow_class,
                      (lua_class_allocator_t) client_new,
                      (lua_class_collector_t) client_wipe,
                      (lua_class_checker_t) client_checker,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     client_methods, client_meta);
+                     client_methods, client_module_meta, NULL);
+
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_NAME,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_name,

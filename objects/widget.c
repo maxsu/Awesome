@@ -557,15 +557,19 @@ widget_class_setup(lua_State *L)
     static const struct luaL_reg widget_methods[] =
     {
         LUA_CLASS_METHODS(widget)
+        { "buttons", luaA_widget_buttons },
+        { "extents", luaA_widget_extents },
+        { NULL, NULL }
+    };
+
+    static const struct luaL_reg widget_module_meta[] =
+    {
         { "__call", luaA_widget_new },
         { NULL, NULL }
     };
 
-    static const struct luaL_reg widget_meta[] =
+    static const struct luaL_reg widget_object_meta[] =
     {
-        LUA_OBJECT_META(widget)
-        { "buttons", luaA_widget_buttons },
-        { "extents", luaA_widget_extents },
         { "__index", luaA_widget_index },
         { "__newindex", luaA_widget_newindex },
         { NULL, NULL }
@@ -575,7 +579,7 @@ widget_class_setup(lua_State *L)
                      (lua_class_allocator_t) widget_new,
                      (lua_class_collector_t) widget_wipe,
                      NULL, NULL, NULL,
-                     widget_methods, widget_meta);
+                     widget_methods, widget_module_meta, widget_object_meta);
     luaA_class_add_property(&widget_class, A_TK_VISIBLE,
                             (lua_class_propfunc_t) luaA_widget_set_visible,
                             (lua_class_propfunc_t) luaA_widget_get_visible,
