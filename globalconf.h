@@ -30,7 +30,6 @@
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_keysyms.h>
 
-#include "objects/key.h"
 #include "color.h"
 #include "font.h"
 #include "common/xembed.h"
@@ -40,11 +39,13 @@ typedef struct a_screen screen_t;
 typedef struct widget_t widget_t;
 typedef struct client_t client_t;
 typedef struct tag tag_t;
+typedef struct ewindow_t ewindow_t;
 
 ARRAY_TYPE(tag_t *, tag)
 ARRAY_TYPE(screen_t, screen)
 ARRAY_TYPE(client_t *, client)
 ARRAY_TYPE(wibox_t *, wibox)
+ARRAY_TYPE(ewindow_t *, ewindow)
 
 /** Main configuration structure */
 typedef struct
@@ -67,8 +68,6 @@ typedef struct
     bool have_xtest;
     /** Clients list */
     client_array_t clients;
-    /** Stack client history */
-    client_array_t stack;
     /** Lua VM state */
     lua_State *L;
     /** Default colors */

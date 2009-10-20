@@ -226,6 +226,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t
     c->banned = true;
     /* Store window */
     c->window = w;
+    /* Store parent */
+    c->parent = pscreen->root;
     luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
     /* Consider window is focusable by default */
     c->focusable = true;
@@ -280,7 +282,7 @@ HANDLE_GEOM(height)
     ewmh_client_check_hints(c);
 
     /* Push client in stack */
-    client_raise(c);
+    stack_ewindow_raise(globalconf.L, -1);
 
     /* update window title */
     property_update_wm_name(c, NULL);
@@ -492,7 +494,6 @@ client_unmanage(client_t *c)
             client_array_remove(&globalconf.clients, elem);
             break;
         }
-    stack_client_remove(c);
 
     /* Tag and window reference each other so there are tight forever.
      * We don't want the tag the unmanaged client to be referenced forever in a
@@ -596,38 +597,6 @@ luaA_client_kill(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     client_kill(c);
-    return 0;
-}
-
-/** Raise a client on top of others which are on the same layer.
- * \param L The Lua VM state.
- * \luastack
- * \lvalue A client.
- */
-static int
-luaA_client_raise(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-    client_raise(c);
-    return 0;
-}
-
-/** Lower a client on bottom of others which are on the same layer.
- * \param L The Lua VM state.
- * \luastack
- * \lvalue A client.
- */
-static int
-luaA_client_lower(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-
-    stack_client_push(c);
-
-    /* Traverse all transient layers. */
-    for(client_t *tc = c->transient_for; tc; tc = tc->transient_for)
-        stack_client_push(tc);
-
     return 0;
 }
 
@@ -976,8 +945,6 @@ client_class_setup(lua_State *L)
         { "get", luaA_client_get },
         { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
-        { "raise", luaA_client_raise },
-        { "lower", luaA_client_lower },
         { "unmanage", luaA_client_unmanage },
         { NULL, NULL }
     };

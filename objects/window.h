@@ -24,6 +24,7 @@
 
 #include "globalconf.h"
 #include "objects/button.h"
+#include "objects/key.h"
 #include "common/luaclass.h"
 
 #define WINDOW_OBJECT_HEADER \
@@ -41,13 +42,18 @@
     /** True if the window can have focus */ \
     bool focusable; \
     /** Key bindings */ \
-    key_array_t keys;
+    key_array_t keys; \
+    /** Parent window */ \
+    window_t *parent; \
+    /** Window stack */ \
+    ewindow_array_t stack;
 
+typedef struct window_t window_t;
 /** Window structure */
-typedef struct
+struct window_t
 {
     WINDOW_OBJECT_HEADER
-} window_t;
+};
 
 typedef bool (*lua_interface_window_isvisible_t)(window_t *);
 

@@ -22,6 +22,7 @@
 #include "luaa.h"
 #include "xwindow.h"
 #include "ewmh.h"
+#include "stack.h"
 #include "screen.h"
 #include "objects/window.h"
 #include "objects/tag.h"
@@ -509,6 +510,28 @@ luaA_ewindow_set_transient_for(lua_State *L, ewindow_t *ewindow)
     return 0;
 }
 
+/** Raise an ewindow on top of others which are on the same layer.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_ewindow_raise(lua_State *L)
+{
+    stack_ewindow_raise(L, 1);
+    return 0;
+}
+
+/** Lower an ewindow on top of others which are on the same layer.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_ewindow_lower(lua_State *L)
+{
+    stack_ewindow_lower(L, 1);
+    return 0;
+}
+
 void
 ewindow_class_setup(lua_State *L)
 {
@@ -517,6 +540,8 @@ ewindow_class_setup(lua_State *L)
         LUA_CLASS_METHODS(ewindow)
         { "struts", luaA_ewindow_struts },
         { "tags", luaA_ewindow_tags },
+        { "raise", luaA_ewindow_raise },
+        { "lower", luaA_ewindow_lower },
         { NULL, NULL }
     };
 

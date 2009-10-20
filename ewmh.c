@@ -165,7 +165,6 @@ ewmh_init_screen(protocol_screen_t *pscreen)
         _NET_SUPPORTING_WM_CHECK,
         _NET_STARTUP_ID,
         _NET_CLIENT_LIST,
-        _NET_CLIENT_LIST_STACKING,
         _NET_NUMBER_OF_DESKTOPS,
         _NET_CURRENT_DESKTOP,
         _NET_DESKTOP_NAMES,
@@ -328,23 +327,7 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::window", ewmh_update_strut);
 }
 
-/** Set the client list in stacking order, bottom to top.
- * \param phys_screen The physical screen id.
- */
-void
-ewmh_update_net_client_list_stacking(protocol_screen_t *protocol_screen)
-{
-    int n = 0;
-    xcb_window_t *wins = p_alloca(xcb_window_t, globalconf.stack.len);
-
-    foreach(client, globalconf.stack)
-        if((*client)->screen->protocol_screen == protocol_screen)
-            wins[n++] = (*client)->window;
-
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                        protocol_screen->root->window,
-			_NET_CLIENT_LIST_STACKING, WINDOW, 32, n, wins);
-}
+DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
 
 void
 ewmh_update_net_numbers_of_desktop(int phys_screen)

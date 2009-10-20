@@ -1,5 +1,5 @@
 /*
- * stack.c - client stack management
+ * stack.c - ewindow stack management
  *
  * Copyright © 2008-2009 Julien Danjou <julien@danjou.info>
  *
@@ -25,63 +25,81 @@
 #include "objects/wibox.h"
 #include "screen.h"
 
-static bool need_stack_refresh = false;
-
-void
-stack_client_remove(client_t *c)
+static void
+stack_ewindow_remove(ewindow_t *ewindow)
 {
-    foreach(client, globalconf.stack)
-        if(*client == c)
+    foreach(w, ewindow->parent->stack)
+        if(*w == ewindow)
         {
-            client_array_remove(&globalconf.stack, client);
+            ewindow_array_remove(&ewindow->parent->stack, w);
             break;
         }
-    ewmh_update_net_client_list_stacking(c->screen->protocol_screen);
-    need_stack_refresh = true;
 }
 
-/** Push the client at the beginning of the client stack.
- * \param c The client to push.
+/** Push the ewindow at the beginning of the ewindow stack.
+ * \param ewindow The ewindow to push.
+ */
+static void
+stack_ewindow_push(ewindow_t *ewindow)
+{
+    stack_ewindow_remove(ewindow);
+    ewindow_array_push(&ewindow->parent->stack, ewindow);
+}
+
+/** Push the ewindow at the end of the ewindow stack.
+ * \param ewindow The ewindow to push.
+ */
+static void
+stack_ewindow_append(ewindow_t *ewindow)
+{
+    stack_ewindow_remove(ewindow);
+    ewindow_array_append(&ewindow->parent->stack, ewindow);
+}
+
+/** Put ewindow on bottom of the stack.
+ * \param L The Lua VM state.
+ * \param idx The index of the ewindow to raise.
  */
 void
-stack_client_push(client_t *c)
+stack_ewindow_lower(lua_State *L, int idx)
 {
-    stack_client_remove(c);
-    client_array_push(&globalconf.stack, c);
-    ewmh_update_net_client_list_stacking(c->screen->protocol_screen);
-    need_stack_refresh = true;
+    ewindow_t *ewindow = luaA_checkudata(L, idx, (lua_class_t *) &ewindow_class);
+    stack_ewindow_push(ewindow);
+    luaA_object_emit_signal(L, idx, "lower", 0);
 }
 
-/** Push the client at the end of the client stack.
- * \param c The client to push.
+/** Put ewindow on top of the stack.
+ * \param L The Lua VM state.
+ * \param idx The index of the ewindow to raise.
  */
 void
-stack_client_append(client_t *c)
+stack_ewindow_raise(lua_State *L, int idx)
 {
-    stack_client_remove(c);
-    client_array_append(&globalconf.stack, c);
-    ewmh_update_net_client_list_stacking(c->screen->protocol_screen);
-    need_stack_refresh = true;
+    ewindow_t *ewindow = luaA_checkudata(L, idx, (lua_class_t *) &ewindow_class);
+    /* Push ewindow on top of the stack. */
+    stack_ewindow_append(ewindow);
+    luaA_object_emit_signal(L, idx, "raise", 0);
 }
 
-/** Stack a client above.
- * \param client The client.
- * \param previous The previous client on the stack.
+/** Stack a ewindow above.
+ * \param ewindow The ewindow.
+ * \param previous The previous ewindow on the stack.
  * \return The next-previous!
  */
 static xcb_window_t
-stack_client_above(client_t *c, xcb_window_t previous)
+stack_ewindow_above(ewindow_t *ewindow, xcb_window_t previous)
 {
-    xcb_configure_window(globalconf.connection, c->window,
+    xcb_configure_window(globalconf.connection, ewindow->window,
                          XCB_CONFIG_WINDOW_SIBLING | XCB_CONFIG_WINDOW_STACK_MODE,
                          (uint32_t[]) { previous, XCB_STACK_MODE_ABOVE });
 
-    previous = c->window;
+    previous = ewindow->window;
 
     /* stack transient window on top of their parents */
-    foreach(node, globalconf.stack)
-        if((*node)->transient_for == c)
-            previous = stack_client_above(*node, previous);
+    if(ewindow->parent)
+        foreach(node, ewindow->parent->stack)
+            if((*node)->transient_for == ewindow)
+                previous = stack_ewindow_above(*node, previous);
 
     return previous;
 }
@@ -99,30 +117,30 @@ typedef enum
     WINDOW_LAYER_ONTOP,
     /** This one only used for counting and is not a real layer */
     WINDOW_LAYER_COUNT
-} window_layer_t;
+} ewindow_layer_t;
 
 /** Get the real layer of a client according to its attribute (fullscreen, …)
- * \param c The client.
+ * \param window The window.
  * \return The real layer.
  */
-static window_layer_t
-client_layer_translator(client_t *c)
+static ewindow_layer_t
+ewindow_layer_translator(ewindow_t *ewindow)
 {
     /* first deal with user set attributes */
-    if(c->ontop)
+    if(ewindow->ontop)
         return WINDOW_LAYER_ONTOP;
-    else if(c->fullscreen)
+    else if(ewindow->fullscreen)
         return WINDOW_LAYER_FULLSCREEN;
-    else if(c->above)
+    else if(ewindow->above)
         return WINDOW_LAYER_ABOVE;
-    else if(c->below)
+    else if(ewindow->below)
         return WINDOW_LAYER_BELOW;
     /* check for transient attr */
-    else if(c->transient_for)
+    else if(ewindow->transient_for)
         return WINDOW_LAYER_IGNORE;
 
     /* then deal with windows type */
-    switch(c->type)
+    switch(ewindow->type)
     {
       case EWINDOW_TYPE_DESKTOP:
         return WINDOW_LAYER_DESKTOP;
@@ -133,75 +151,48 @@ client_layer_translator(client_t *c)
     return WINDOW_LAYER_NORMAL;
 }
 
-/** Restack clients.
+/** Restack windows.
  * \todo It might be worth stopping to restack everyone and only stack `c'
  * relatively to the first matching in the list.
  */
-void
-stack_refresh()
+static int
+stack_refresh(lua_State *L)
 {
-    if(!need_stack_refresh)
-        return;
-
+    ewindow_t *window = luaA_checkudata(L, 1, (lua_class_t *) &ewindow_class);
     xcb_window_t next = XCB_NONE;
 
-    /* stack desktop windows */
-    for(window_layer_t layer = WINDOW_LAYER_DESKTOP; layer < WINDOW_LAYER_BELOW; layer++)
-        foreach(node, globalconf.stack)
-            if(client_layer_translator(*node) == layer)
-                next = stack_client_above(*node, next);
+    if(window->parent)
+        for(ewindow_layer_t layer = WINDOW_LAYER_DESKTOP; layer < WINDOW_LAYER_COUNT; layer++)
+            foreach(node, window->parent->stack)
+                if(ewindow_layer_translator(*node) == layer)
+                    next = stack_ewindow_above(*node, next);
 
-    /* first stack not ontop wibox window */
-    foreach(wibox, globalconf.wiboxes)
-        if(!(*wibox)->ontop)
-        {
-            xcb_configure_window(globalconf.connection,
-                                 (*wibox)->window,
-                                 XCB_CONFIG_WINDOW_SIBLING | XCB_CONFIG_WINDOW_STACK_MODE,
-                                 (uint32_t[]) { next, XCB_STACK_MODE_ABOVE });
-            next = (*wibox)->window;
-        }
-
-    /* then stack clients */
-    for(window_layer_t layer = WINDOW_LAYER_BELOW; layer < WINDOW_LAYER_COUNT; layer++)
-        foreach(node, globalconf.stack)
-            if(client_layer_translator(*node) == layer)
-                next = stack_client_above(*node, next);
-
-    /* then stack ontop wibox window */
-    foreach(wibox, globalconf.wiboxes)
-        if((*wibox)->ontop)
-        {
-            xcb_configure_window(globalconf.connection,
-                                 (*wibox)->window,
-                                 XCB_CONFIG_WINDOW_SIBLING | XCB_CONFIG_WINDOW_STACK_MODE,
-                                 (uint32_t[]) { next, XCB_STACK_MODE_ABOVE });
-            next = (*wibox)->window;
-        }
-
-    need_stack_refresh = false;
+    return 0;
 }
 
 static int
-stack_need_update(lua_State *L)
+luaA_stack_ewindow_remove(lua_State *L)
 {
-    need_stack_refresh = true;
+    stack_ewindow_remove(luaA_checkudata(L, 1, (lua_class_t *) &ewindow_class));
     return 0;
 }
 
 void
 stack_init(void)
 {
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *)  &client_class, "property::fullscreen", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::maximized_vertical", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::maximized_horizontal", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::above", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::below", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::modal", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::ontop", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &wibox_class, "property::ontop", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &wibox_class, "property::visible", stack_need_update);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &wibox_class, "property::screen", stack_need_update);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::fullscreen", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::maximized_vertical", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::maximized_horizontal", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::above", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::below", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::modal", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::ontop", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::ontop", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::visible", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::screen", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "raise", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "lower", stack_refresh);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "unmanage", luaA_stack_ewindow_remove);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
