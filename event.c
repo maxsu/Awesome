@@ -661,9 +661,9 @@ event_handle_maprequest(xcb_map_request_event_t *ev)
         {
             luaA_object_push(globalconf.L, c);
             ewindow_set_minimized(globalconf.L, -1, false);
-            lua_pop(globalconf.L, 1);
             /* it will be raised, so just update ourself */
-            client_raise(c);
+            stack_ewindow_raise(globalconf.L, -1);
+            lua_pop(globalconf.L, 1);
         }
     }
     else

@@ -682,6 +682,7 @@ wibox_detach(lua_State *L, int udx)
             screen_emit_signal(L, wibox->screen, "property::workarea", 0);
 
         wibox->screen = NULL;
+        wibox->parent = NULL;
         luaA_object_emit_signal(L, udx, "property::screen", 0);
 
         luaA_object_unref(globalconf.L, wibox);
@@ -705,6 +706,8 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
 
     /* Set the wibox screen */
     wibox->screen = s;
+    wibox->parent = globalconf.screens.tab[0].root;
+    stack_ewindow_raise(globalconf.L, udx);
 
     /* Check that the wibox coordinates matches the screen. */
     screen_t *cscreen =
