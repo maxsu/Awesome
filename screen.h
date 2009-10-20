@@ -22,7 +22,7 @@
 #ifndef AWESOME_SCREEN_H
 #define AWESOME_SCREEN_H
 
-#include "draw.h"
+#include "area.h"
 #include "objects/window.h"
 
 typedef struct screen_output_t screen_output_t;

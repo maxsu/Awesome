@@ -29,6 +29,7 @@
 #include <ctype.h>
 #include <math.h>
 
+#include "draw.h"
 #include "globalconf.h"
 #include "screen.h"
 
