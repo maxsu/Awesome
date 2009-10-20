@@ -1,7 +1,7 @@
 /*
- * systray.h - systray handlers header
+ * protocol_screen.h - X protocol screen definition
  *
- * Copyright © 2008 Julien Danjou <julien@danjou.info>
+ * Copyright © 2009 Julien Danjou <julien@danjou.info>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,32 @@
  *
  */
 
-#ifndef AWESOME_SYSTRAY_H
-#define AWESOME_SYSTRAY_H
+#ifndef AWESOME_PROTOCOL_SCREEN_H
+#define AWESOME_PROTOCOL_SCREEN_H
 
-#include <xcb/xcb.h>
-#include "common/xembed.h"
-#include "protocol_screen.h"
+#include "objects/window.h"
 
-void systray_init(protocol_screen_t *);
-void systray_cleanup(protocol_screen_t *);
-int systray_request_handle(xcb_window_t, protocol_screen_t *, xembed_info_t *);
-bool systray_iskdedockapp(xcb_window_t);
-int systray_process_client_message(xcb_client_message_event_t *);
-int xembed_process_client_message(xcb_client_message_event_t *);
+/** Structure defining a screen in the sense of the X protocol means it.  */
+typedef struct
+{
+    /** The default visual, used to draw */
+    xcb_visualtype_t *visual;
+    /** The monitor of startup notifications */
+    SnMonitorContext *snmonitor;
+    /** Window that contains the systray */
+    struct
+    {
+        xcb_window_t window;
+        /** Systray window parent */
+        xcb_window_t parent;
+    } systray;
+    /** Screen's root window */
+    window_t *root;
+    /** Embedded windows */
+    xembed_window_array_t embedded;
+} protocol_screen_t;
+
+DO_ARRAY(protocol_screen_t, protocol_screen, DO_NOTHING)
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

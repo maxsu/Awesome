@@ -58,11 +58,9 @@ window_ban_unfocus(window_t *window)
 {
     /* Wait until the last moment to take away the focus from the window. */
     if(window_focused == window)
-    {
-        xcb_window_t root_win = xutil_screen_get(globalconf.connection, window->screen->phys_screen)->root;
         /* Set focus on root window, so no events leak to the current window. */
-        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT, root_win, XCB_CURRENT_TIME);
-    }
+        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
+                            window->screen->protocol_screen->root->window, XCB_CURRENT_TIME);
 }
 
 /** Ban window.

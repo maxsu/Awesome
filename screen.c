@@ -72,175 +72,210 @@ screen_default_visual(xcb_screen_t *s)
     return NULL;
 }
 
+static void
+protocol_screen_scan(void)
+{
+    for(int screen = 0; screen < xcb_get_setup(globalconf.connection)->roots_len; screen++)
+    {
+        xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, screen);
+        protocol_screen_t pscreen;
+        p_clear(&pscreen, 1);
+        pscreen.visual = screen_default_visual(xcb_screen);
+
+        /* Create root window */
+        window_new(globalconf.L);
+        pscreen.root = luaA_object_ref(globalconf.L, -1);
+        pscreen.root->focusable = true;
+        pscreen.root->window = xcb_screen->root;
+
+        protocol_screen_array_append(&protocol_screens, pscreen);
+    }
+}
+
+/** Scan screen information using XRandR protocol.
+ * \param pscreen The protocol screen to scan.
+ * \return True if informations where gathered successfully, false otherwise.
+ */
+static bool
+screen_scan_xrandr(protocol_screen_t *pscreen)
+{
+    /* Check for extension before checking for XRandR */
+    if(!xcb_get_extension_data(globalconf.connection, &xcb_randr_id)->present)
+        return false;
+
+    /* We require at least version 1.1 */
+    xcb_randr_query_version_reply_t *version_reply =
+        xcb_randr_query_version_reply(globalconf.connection,
+                                      xcb_randr_query_version(globalconf.connection, 1, 1), 0);
+    if(!version_reply)
+        return false;
+
+    /* A quick XRandR recall:
+     * You have CRTC that manages a part of a SCREEN.
+     * Each CRTC can draw stuff on one or more OUTPUT.
+     * So in awesome, we map our screen_t on XRandR CRTCs.
+     */
+
+    /* All this could be splitted in the Good Async Way.
+     * Fact is most of the time, we always one or 2 pscreen so it's not
+     * worth it. */
+    xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(globalconf.connection, pscreen->root->window);
+    xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(globalconf.connection, screen_res_c, NULL);
+
+    /* We go through CRTC, and build a screen for each one. */
+    xcb_randr_crtc_t *randr_crtcs = xcb_randr_get_screen_resources_crtcs(screen_res_r);
+
+    for(int i = 0; i < screen_res_r->num_crtcs; i++)
+    {
+        /* Get info on the output crtc */
+        xcb_randr_get_crtc_info_cookie_t crtc_info_c = xcb_randr_get_crtc_info(globalconf.connection, randr_crtcs[i], XCB_CURRENT_TIME);
+        xcb_randr_get_crtc_info_reply_t *crtc_info_r = xcb_randr_get_crtc_info_reply(globalconf.connection, crtc_info_c, NULL);
+
+        /* If CRTC has no OUTPUT, ignore it */
+        if(!xcb_randr_get_crtc_info_outputs_length(crtc_info_r))
+            continue;
+
+        /* Prepare the new screen */
+        screen_t new_screen;
+        p_clear(&new_screen, 1);
+        new_screen.geometry.x = crtc_info_r->x;
+        new_screen.geometry.y = crtc_info_r->y;
+        new_screen.geometry.width= crtc_info_r->width;
+        new_screen.geometry.height= crtc_info_r->height;
+        new_screen.protocol_screen = pscreen;
+
+        xcb_randr_output_t *randr_outputs = xcb_randr_get_crtc_info_outputs(crtc_info_r);
+
+        for(int j = 0; j < xcb_randr_get_crtc_info_outputs_length(crtc_info_r); j++)
+        {
+            xcb_randr_get_output_info_cookie_t output_info_c = xcb_randr_get_output_info(globalconf.connection, randr_outputs[j], XCB_CURRENT_TIME);
+            xcb_randr_get_output_info_reply_t *output_info_r = xcb_randr_get_output_info_reply(globalconf.connection, output_info_c, NULL);
+
+            int len = xcb_randr_get_output_info_name_length(output_info_r);
+            /* name is not NULL terminated */
+            char *name = memcpy(p_new(char *, len + 1), xcb_randr_get_output_info_name(output_info_r), len);
+            name[len] = '\0';
+
+            screen_output_array_append(&new_screen.outputs,
+                                       (screen_output_t) { .name = name,
+                                                           .mm_width = output_info_r->mm_width,
+                                                           .mm_height = output_info_r->mm_height });
+
+            p_delete(&output_info_r);
+        }
+
+        screen_array_append(&globalconf.screens, new_screen);
+
+        p_delete(&crtc_info_r);
+    }
+
+    p_delete(&screen_res_r);
+
+    /* If RandR provides more than 2 active CRTC, Xinerama is enabled */
+    if(globalconf.screens.len > 1)
+        globalconf.xinerama_is_active = true;
+
+    return true;
+}
+
+/** Scan screen information using Xinerama protocol.
+ * \param pscreen The protocol screen to scan.
+ * \return True if informations where gathered successfully, false otherwise.
+ */
+static bool
+screen_scan_xinerama(protocol_screen_t *pscreen)
+{
+    /* Check for extension before checking for Xinerama */
+    if(xcb_get_extension_data(globalconf.connection, &xcb_xinerama_id)->present)
+    {
+        xcb_xinerama_is_active_reply_t *xia;
+        xia = xcb_xinerama_is_active_reply(globalconf.connection, xcb_xinerama_is_active(globalconf.connection), NULL);
+        globalconf.xinerama_is_active = xia->state;
+        p_delete(&xia);
+    }
+
+    if(!globalconf.xinerama_is_active)
+        return false;
+
+    xcb_xinerama_query_screens_reply_t *xsq;
+    xcb_xinerama_screen_info_t *xsi;
+    int xinerama_screen_number;
+
+    xsq = xcb_xinerama_query_screens_reply(globalconf.connection,
+                                           xcb_xinerama_query_screens_unchecked(globalconf.connection),
+                                           NULL);
+
+    xsi = xcb_xinerama_query_screens_screen_info(xsq);
+    xinerama_screen_number = xcb_xinerama_query_screens_screen_info_length(xsq);
+
+    for(int screen = 0; screen < xinerama_screen_number; screen++)
+    {
+        /* now check if screens overlaps (same x,y): if so, we take only the biggest one */
+        bool drop = false;
+        foreach(screen_to_test, globalconf.screens)
+            if(xsi[screen].x_org == screen_to_test->geometry.x
+               && xsi[screen].y_org == screen_to_test->geometry.y)
+                {
+                    /* we already have a screen for this area, just check if
+                     * it's not bigger and drop it */
+                    drop = true;
+                    int i = screen_array_indexof(&globalconf.screens, screen_to_test);
+                    screen_to_test->geometry.width =
+                        MAX(xsi[screen].width, xsi[i].width);
+                    screen_to_test->geometry.height =
+                        MAX(xsi[screen].height, xsi[i].height);
+                }
+
+        if(!drop)
+        {
+            screen_t new_screen;
+            p_clear(&new_screen, 1);
+            new_screen.geometry = screen_xsitoarea(xsi[screen]);
+            new_screen.protocol_screen = pscreen;
+            screen_array_append(&globalconf.screens, new_screen);
+        }
+    }
+
+    p_delete(&xsq);
+
+    return true;
+}
+
 /** Get screens informations and fill global configuration.
  */
 void
 screen_scan(void)
 {
-    /* Check for extension before checking for XRandR */
-    if(xcb_get_extension_data(globalconf.connection, &xcb_randr_id)->present)
-    {
-        xcb_randr_query_version_reply_t *version_reply =
-            xcb_randr_query_version_reply(globalconf.connection,
-                                          xcb_randr_query_version(globalconf.connection, 1, 1), 0);
-        if(version_reply)
-        {
-            /* A quick XRandR recall:
-             * You have CRTC that manages a part of a SCREEN.
-             * Each CRTC can draw stuff on one or more OUTPUT. */
-            xcb_screen_t *screen = xutil_screen_get(globalconf.connection, globalconf.default_screen);
+    /* Scan screen protocol first */
+    protocol_screen_scan();
 
-            window_t *root = window_new(globalconf.L);
-            luaA_object_ref(globalconf.L, -1);
-            root->focusable = true;
-            root->window = screen->root;
-
-            xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(globalconf.connection, screen->root);
-            xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(globalconf.connection, screen_res_c, NULL);
-
-            /* We go through CRTC, and build a screen for each one. */
-            xcb_randr_crtc_t *randr_crtcs = xcb_randr_get_screen_resources_crtcs(screen_res_r);
-
-            for(int i = 0; i < screen_res_r->num_crtcs; i++)
+    foreach(pscreen, protocol_screens)
+        /* If Xrandr fails... */
+        if(!screen_scan_xrandr(pscreen))
+            /* ...try Xinerama... */
+            if(!screen_scan_xinerama(pscreen))
+                /* ... or then try the good old standard way */
             {
-                /* Get info on the output crtc */
-                xcb_randr_get_crtc_info_cookie_t crtc_info_c = xcb_randr_get_crtc_info(globalconf.connection, randr_crtcs[i], XCB_CURRENT_TIME);
-                xcb_randr_get_crtc_info_reply_t *crtc_info_r = xcb_randr_get_crtc_info_reply(globalconf.connection, crtc_info_c, NULL);
-
-                /* If CRTC has no OUTPUT, ignore it */
-                if(!xcb_randr_get_crtc_info_outputs_length(crtc_info_r))
-                    continue;
-
-                /* Prepare the new screen */
-                screen_t new_screen;
-                p_clear(&new_screen, 1);
-                new_screen.geometry.x = crtc_info_r->x;
-                new_screen.geometry.y = crtc_info_r->y;
-                new_screen.geometry.width= crtc_info_r->width;
-                new_screen.geometry.height= crtc_info_r->height;
-                new_screen.phys_screen = globalconf.default_screen;
-                new_screen.root = root;
-
-                xcb_randr_output_t *randr_outputs = xcb_randr_get_crtc_info_outputs(crtc_info_r);
-
-                for(int j = 0; j < xcb_randr_get_crtc_info_outputs_length(crtc_info_r); j++)
-                {
-                    xcb_randr_get_output_info_cookie_t output_info_c = xcb_randr_get_output_info(globalconf.connection, randr_outputs[j], XCB_CURRENT_TIME);
-                    xcb_randr_get_output_info_reply_t *output_info_r = xcb_randr_get_output_info_reply(globalconf.connection, output_info_c, NULL);
-
-                    int len = xcb_randr_get_output_info_name_length(output_info_r);
-                    /* name is not NULL terminated */
-                    char *name = memcpy(p_new(char *, len + 1), xcb_randr_get_output_info_name(output_info_r), len);
-                    name[len] = '\0';
-
-                    screen_output_array_append(&new_screen.outputs,
-                                               (screen_output_t) { .name = name,
-                                                                   .mm_width = output_info_r->mm_width,
-                                                                   .mm_height = output_info_r->mm_height });
-
-                    p_delete(&output_info_r);
-                }
-
-                screen_array_append(&globalconf.screens, new_screen);
-
-                p_delete(&crtc_info_r);
-            }
-
-            p_delete(&screen_res_r);
-
-            /* If RandR provides more than 2 active CRTC, Xinerama is enabled */
-            if(globalconf.screens.len > 1)
-                globalconf.xinerama_is_active = true;
-
-            globalconf.screens.tab[0].visual = screen_default_visual(xutil_screen_get(globalconf.connection, globalconf.default_screen));
-        }
-    }
-    else
-    {
-        /* Check for extension before checking for Xinerama */
-        if(xcb_get_extension_data(globalconf.connection, &xcb_xinerama_id)->present)
-        {
-            xcb_xinerama_is_active_reply_t *xia;
-            xia = xcb_xinerama_is_active_reply(globalconf.connection, xcb_xinerama_is_active(globalconf.connection), NULL);
-            globalconf.xinerama_is_active = xia->state;
-            p_delete(&xia);
-        }
-
-        if(globalconf.xinerama_is_active)
-        {
-            xcb_xinerama_query_screens_reply_t *xsq;
-            xcb_xinerama_screen_info_t *xsi;
-            int xinerama_screen_number;
-
-            xsq = xcb_xinerama_query_screens_reply(globalconf.connection,
-                                                   xcb_xinerama_query_screens_unchecked(globalconf.connection),
-                                                   NULL);
-
-            xsi = xcb_xinerama_query_screens_screen_info(xsq);
-            xinerama_screen_number = xcb_xinerama_query_screens_screen_info_length(xsq);
-
-            xcb_screen_t *s = xutil_screen_get(globalconf.connection, globalconf.default_screen);
-
-            /* build root window */
-            window_t *root = window_new(globalconf.L);
-            luaA_object_ref(globalconf.L, -1);
-            root->focusable = true;
-            root->window = s->root;
-
-            /* now check if screens overlaps (same x,y): if so, we take only the biggest one */
-            for(int screen = 0; screen < xinerama_screen_number; screen++)
-            {
-                bool drop = false;
-                foreach(screen_to_test, globalconf.screens)
-                    if(xsi[screen].x_org == screen_to_test->geometry.x
-                       && xsi[screen].y_org == screen_to_test->geometry.y)
-                        {
-                            /* we already have a screen for this area, just check if
-                             * it's not bigger and drop it */
-                            drop = true;
-                            int i = screen_array_indexof(&globalconf.screens, screen_to_test);
-                            screen_to_test->geometry.width =
-                                MAX(xsi[screen].width, xsi[i].width);
-                            screen_to_test->geometry.height =
-                                MAX(xsi[screen].height, xsi[i].height);
-                        }
-                if(!drop)
-                {
-                    screen_t new_screen;
-                    p_clear(&new_screen, 1);
-                    new_screen.geometry = screen_xsitoarea(xsi[screen]);
-                    new_screen.phys_screen = globalconf.default_screen;
-                    new_screen.root = root;
-                    screen_array_append(&globalconf.screens, new_screen);
-                }
-            }
-
-            p_delete(&xsq);
-
-            globalconf.screens.tab[0].visual = screen_default_visual(s);
-        }
-        else
-            /* One screen only / Zaphod mode */
-            for(int screen = 0;
-                screen < xcb_setup_roots_length(xcb_get_setup(globalconf.connection));
-                screen++)
-            {
-                xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, screen);
+                int pscreen_index = protocol_screen_array_indexof(&protocol_screens, pscreen);
+                xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, pscreen_index);
                 screen_t s;
                 p_clear(&s, 1);
                 s.geometry.x = 0;
                 s.geometry.y = 0;
                 s.geometry.width = xcb_screen->width_in_pixels;
                 s.geometry.height = xcb_screen->height_in_pixels;
-                s.visual = screen_default_visual(xcb_screen);
-                s.phys_screen = screen;
-                window_new(globalconf.L);
-                s.root = luaA_object_ref(globalconf.L, -1);
-                s.root->focusable = true;
-                s.root->window = xcb_screen->root;
+                s.protocol_screen = pscreen;
                 screen_array_append(&globalconf.screens, s);
             }
-    }
+}
+
+protocol_screen_t *
+protocol_screen_from_root(xcb_window_t root)
+{
+    foreach(screen, protocol_screens)
+        if(screen->root->window == root)
+            return screen;
+    return NULL;
 }
 
 /** Return the Xinerama screen number where the coordinates belongs to.
@@ -331,21 +366,6 @@ screen_area_get(screen_t *screen, bool strut)
     area.width -= left + right;
     area.height -= top + bottom;
 
-    return area;
-}
-
-/** Get display info.
- * \param phys_screen Physical screen number.
- * \return The display area.
- */
-area_t
-display_area_get(int phys_screen)
-{
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, phys_screen);
-    area_t area = { .x = 0,
-                    .y = 0,
-                    .width = s->width_in_pixels,
-                    .height = s->height_in_pixels };
     return area;
 }
 
@@ -526,7 +546,7 @@ luaA_screen_index(lua_State *L)
         lua_pushinteger(L, screen_array_indexof(&globalconf.screens, s) + 1);
         break;
       case A_TK_ROOT:
-        return luaA_object_push(L, s->root);
+        return luaA_object_push(L, s->protocol_screen->root);
       case A_TK_GEOMETRY:
         luaA_pusharea(L, s->geometry);
         break;

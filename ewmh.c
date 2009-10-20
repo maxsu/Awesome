@@ -78,16 +78,27 @@ ewmh_client_update_hints(lua_State *L)
 }
 
 /** Update the desktop geometry.
- * \param phys_screen The physical screen id.
+ * \param protocol_screen The protocol screen to update.
  */
 static void
-ewmh_update_desktop_geometry(int phys_screen)
+ewmh_update_desktop_geometry(protocol_screen_t *pscreen)
 {
-    area_t geom = screen_area_get(&globalconf.screens.tab[phys_screen], false);
+    screen_t *s = NULL;
+    foreach(screen, globalconf.screens)
+        if(screen->protocol_screen == pscreen)
+        {
+            s = screen;
+            break;
+        }
+
+    if(!s)
+        return;
+
+    area_t geom = screen_area_get(s, false);
     uint32_t sizes[] = { geom.width, geom.height };
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                        xutil_screen_get(globalconf.connection, phys_screen)->root,
+                        pscreen->root->window,
                         _NET_DESKTOP_GEOMETRY, CARDINAL, 32, countof(sizes), sizes);
 }
 
@@ -96,7 +107,7 @@ ewmh_update_net_active_window(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
+                        c->screen->protocol_screen->root->window,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { c->window });
     return 0;
 }
@@ -106,7 +117,7 @@ ewmh_reset_net_active_window(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
+                        c->screen->protocol_screen->root->window,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { XCB_NONE });
     return 0;
 }
@@ -119,11 +130,11 @@ ewmh_update_net_client_list(lua_State *L)
 
     int n = 0;
     foreach(client, globalconf.clients)
-        if((*client)->screen->phys_screen == c->screen->phys_screen)
+        if((*client)->screen->protocol_screen == c->screen->protocol_screen)
             wins[n++] = c->window;
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(globalconf.connection, c->screen->phys_screen)->root,
+                        c->screen->protocol_screen->root->window,
 			_NET_CLIENT_LIST, WINDOW, 32, n, wins);
 
     return 0;
@@ -143,9 +154,10 @@ ewmh_update_net_current_desktop(lua_State *L)
 }
 
 void
-ewmh_init_screen(int phys_screen)
+ewmh_init_screen(protocol_screen_t *pscreen)
 {
     xcb_window_t father;
+    int phys_screen = protocol_screen_array_indexof(&protocol_screens, pscreen);
     xcb_screen_t *xscreen = xutil_screen_get(globalconf.connection, phys_screen);
     xcb_atom_t atom[] =
     {
@@ -195,7 +207,6 @@ ewmh_init_screen(int phys_screen)
         _NET_WM_STATE_HIDDEN,
         _NET_WM_STATE_DEMANDS_ATTENTION
     };
-    int i;
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
                         xscreen->root, _NET_SUPPORTED, ATOM, 32,
@@ -220,11 +231,11 @@ ewmh_init_screen(int phys_screen)
                         father, _NET_WM_NAME, UTF8_STRING, 8, 7, "awesome");
 
     /* set the window manager PID */
-    i = getpid();
+    int i = getpid();
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
                         father, _NET_WM_PID, CARDINAL, 32, 1, &i);
 
-    ewmh_update_desktop_geometry(phys_screen);
+    ewmh_update_desktop_geometry(pscreen);
 };
 
 /** Update the client active desktop.
@@ -321,17 +332,17 @@ ewmh_init(void)
  * \param phys_screen The physical screen id.
  */
 void
-ewmh_update_net_client_list_stacking(int phys_screen)
+ewmh_update_net_client_list_stacking(protocol_screen_t *protocol_screen)
 {
     int n = 0;
     xcb_window_t *wins = p_alloca(xcb_window_t, globalconf.stack.len);
 
     foreach(client, globalconf.stack)
-        if((*client)->screen->phys_screen == phys_screen)
+        if((*client)->screen->protocol_screen == protocol_screen)
             wins[n++] = (*client)->window;
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(globalconf.connection, phys_screen)->root,
+                        protocol_screen->root->window,
 			_NET_CLIENT_LIST_STACKING, WINDOW, 32, n, wins);
 }
 

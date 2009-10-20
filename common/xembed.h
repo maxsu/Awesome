@@ -38,13 +38,11 @@ typedef struct
     unsigned long flags;
 } xembed_info_t;
 
-typedef struct xembed_window xembed_window_t;
-struct xembed_window
+typedef struct
 {
-    xcb_window_t win;
-    int phys_screen;
+    xcb_window_t window;
     xembed_info_t info;
-};
+} xembed_window_t;
 
 DO_ARRAY(xembed_window_t, xembed_window, DO_NOTHING)
 
