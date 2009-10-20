@@ -257,6 +257,41 @@ ewmh_client_reset_urgent(lua_State *L)
     return 0;
 }
 
+/** Update the client struts.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+ewmh_update_strut(lua_State *L)
+{
+    ewindow_t *ewindow = luaA_checkudata(L, 1, (lua_class_t *) &ewindow_class);
+
+    if(ewindow->window)
+    {
+        const uint32_t state[] =
+        {
+            ewindow->strut.left,
+            ewindow->strut.right,
+            ewindow->strut.top,
+            ewindow->strut.bottom,
+            ewindow->strut.left_start_y,
+            ewindow->strut.left_end_y,
+            ewindow->strut.right_start_y,
+            ewindow->strut.right_end_y,
+            ewindow->strut.top_start_x,
+            ewindow->strut.top_end_x,
+            ewindow->strut.bottom_start_x,
+            ewindow->strut.bottom_end_x
+        };
+
+        xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+                            ewindow->window, _NET_WM_STRUT_PARTIAL,
+                            CARDINAL, 32, countof(state), state);
+    }
+
+    return 0;
+}
+
 void
 ewmh_init(void)
 {
@@ -278,6 +313,8 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "untagged", ewmh_client_update_desktop);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", ewmh_update_net_current_desktop);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "focus", ewmh_client_reset_urgent);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::struts", ewmh_update_strut);
+    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::window", ewmh_update_strut);
 }
 
 /** Set the client list in stacking order, bottom to top.
@@ -508,36 +545,6 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
     }
 
     return 0;
-}
-
-/** Update the client struts.
- * \param window The window to update the struts for.
- * \param strut The strut type to update the window with.
- */
-void
-ewmh_update_strut(xcb_window_t window, strut_t *strut)
-{
-    if(window)
-    {
-        const uint32_t state[] =
-        {
-            strut->left,
-            strut->right,
-            strut->top,
-            strut->bottom,
-            strut->left_start_y,
-            strut->left_end_y,
-            strut->right_start_y,
-            strut->right_end_y,
-            strut->top_start_x,
-            strut->top_end_x,
-            strut->bottom_start_x,
-            strut->bottom_end_x
-        };
-
-        xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                            window, _NET_WM_STRUT_PARTIAL, CARDINAL, 32, countof(state), state);
-    }
 }
 
 void

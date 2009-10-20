@@ -55,7 +55,6 @@ luaA_ewindow_struts(lua_State *L)
     if(lua_gettop(L) == 2)
     {
         luaA_tostrut(L, 2, &ewindow->strut);
-        ewmh_update_strut(ewindow->window, &ewindow->strut);
         luaA_object_emit_signal(L, 1, "property::struts", 0);
         if(ewindow->screen)
             screen_emit_signal(L, ewindow->screen, "property::workarea", 0);
