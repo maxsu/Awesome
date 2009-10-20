@@ -23,15 +23,15 @@
 #define AWESOME_SCREEN_H
 
 #include "area.h"
-#include "objects/window.h"
+#include "protocol_screen.h"
 
 typedef struct screen_output_t screen_output_t;
 ARRAY_TYPE(screen_output_t, screen_output)
 
 struct a_screen
 {
-    /** Physical screen index */
-    int phys_screen;
+    /** Protocol screen */
+    protocol_screen_t *protocol_screen;
     /** Screen geometry */
     area_t geometry;
     /** Tag list */
@@ -43,12 +43,6 @@ struct a_screen
         /** Systray window parent */
         xcb_window_t parent;
     } systray;
-    /** Screen's root window */
-    window_t *root;
-    /** The monitor of startup notifications */
-    SnMonitorContext *snmonitor;
-    /** The default visual, used to draw */
-    xcb_visualtype_t *visual;
     /** The signals emitted by screen objects */
     signal_array_t signals;
     /** True if the banning on this screen needs to be updated */
@@ -58,13 +52,16 @@ struct a_screen
 };
 ARRAY_FUNCS(screen_t, screen, DO_NOTHING)
 
+/** Protocol screens */
+protocol_screen_array_t protocol_screens;
+
 void screen_emit_signal(lua_State *, screen_t *, const char *, int);
 void screen_scan(void);
 screen_t *screen_getbycoord(screen_t *, int, int);
 area_t screen_area_get(screen_t *, bool);
-area_t display_area_get(int);
 int screen_virttophys(int);
 void screen_client_moveto(client_t *, screen_t *, bool);
+protocol_screen_t *protocol_screen_from_root(xcb_window_t);
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

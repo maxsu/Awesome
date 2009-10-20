@@ -181,7 +181,7 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
                          XCB_CURRENT_TIME);
     }
     else if(ev->child == XCB_NONE)
-        foreach(screen, globalconf.screens)
+        foreach(screen, protocol_screens)
             if(screen->root->window == ev->event)
             {
                 luaA_object_push(globalconf.L, screen->root);
@@ -316,12 +316,14 @@ event_handle_destroynotify(void *data __attribute__ ((unused)),
     if((c = client_getbywin(ev->window)))
         client_unmanage(c);
     else
-        for(int i = 0; i < globalconf.embedded.len; i++)
-            if(globalconf.embedded.tab[i].win == ev->window)
-            {
-                xembed_window_array_take(&globalconf.embedded, i);
-                widget_invalidate_bytype(widget_systray);
-            }
+        foreach(screen, protocol_screens)
+            foreach(em, screen->embedded)
+                if(em->window == ev->window)
+                {
+                    xembed_window_array_remove(&screen->embedded, em);
+                    widget_invalidate_bytype(widget_systray);
+                    break;
+                }
 
     return 0;
 }
@@ -627,7 +629,7 @@ event_handle_key(void *data __attribute__ ((unused)),
             }
         }
         else
-            foreach(screen, globalconf.screens)
+            foreach(screen, protocol_screens)
                 if(screen->root->window == ev->event)
                 {
                     luaA_object_push(globalconf.L, screen->root);
@@ -648,7 +650,7 @@ static int
 event_handle_maprequest(void *data __attribute__ ((unused)),
                         xcb_connection_t *connection, xcb_map_request_event_t *ev)
 {
-    int phys_screen, ret = 0;
+    int ret = 0;
     client_t *c;
     xcb_get_window_attributes_cookie_t wa_c;
     xcb_get_window_attributes_reply_t *wa_r;
@@ -663,12 +665,15 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
     if(wa_r->override_redirect)
         goto bailout;
 
-    if(xembed_getbywin(&globalconf.embedded, ev->window))
-    {
-        xcb_map_window(connection, ev->window);
-        xembed_window_activate(connection, ev->window);
-    }
-    else if((c = client_getbywin(ev->window)))
+    foreach(screen, protocol_screens)
+        if(xembed_getbywin(&screen->embedded, ev->window))
+        {
+            xcb_map_window(connection, ev->window);
+            xembed_window_activate(connection, ev->window);
+            goto bailout;
+        }
+
+    if((c = client_getbywin(ev->window)))
     {
         /* Check that it may be visible, but not asked to be hidden */
         if(client_maybevisible(c) && !c->hidden)
@@ -690,9 +695,7 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
             goto bailout;
         }
 
-        phys_screen = xutil_root2screen(connection, geom_r->root);
-
-        client_manage(ev->window, geom_r, phys_screen, false);
+        client_manage(ev->window, geom_r, protocol_screen_from_root(geom_r->root), false);
 
         p_delete(&geom_r);
     }
@@ -715,18 +718,20 @@ event_handle_unmapnotify(void *data __attribute__ ((unused)),
 
     if((c = client_getbywin(ev->window)))
     {
-        if(ev->event == xutil_screen_get(connection, c->screen->phys_screen)->root
+        if(ev->event == c->screen->protocol_screen->root->window
            && XCB_EVENT_SENT(ev)
            && xwindow_get_state_reply(xwindow_get_state_unchecked(c->window)) == XCB_WM_STATE_NORMAL)
             client_unmanage(c);
     }
     else
-        for(int i = 0; i < globalconf.embedded.len; i++)
-            if(globalconf.embedded.tab[i].win == ev->window)
-            {
-                xembed_window_array_take(&globalconf.embedded, i);
-                widget_invalidate_bytype(widget_systray);
-            }
+        foreach(screen, protocol_screens)
+            foreach(em, screen->embedded)
+                if(em->window == ev->window)
+                {
+                    xembed_window_array_remove(&screen->embedded, em);
+                    widget_invalidate_bytype(widget_systray);
+                    break;
+                }
 
     return 0;
 }
@@ -823,7 +828,7 @@ event_handle_mappingnotify(void *data,
                             &globalconf.modeswitchmask);
 
         /* regrab everything */
-        foreach(screen, globalconf.screens)
+        foreach(screen, protocol_screens)
         {
             xcb_ungrab_key(connection, XCB_GRAB_ANY, screen->root->window, XCB_MOD_MASK_ANY);
             xwindow_grabkeys(screen->root->window, &screen->root->keys);

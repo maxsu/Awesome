@@ -67,8 +67,6 @@ typedef struct
     bool have_xtest;
     /** Clients list */
     client_array_t clients;
-    /** Embedded windows */
-    xembed_window_array_t embedded;
     /** Stack client history */
     client_array_t stack;
     /** Lua VM state */

@@ -205,13 +205,13 @@ client_restore_enterleave_events(void)
  * \param startup True if we are managing at startup time.
  */
 void
-client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, int phys_screen, bool startup)
+client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t *pscreen, bool startup)
 {
     const uint32_t select_input_val[] = { CLIENT_SELECT_INPUT_EVENT_MASK };
 
     if(systray_iskdedockapp(w))
     {
-        systray_request_handle(w, phys_screen, NULL);
+        systray_request_handle(w, pscreen, NULL);
         return;
     }
 
@@ -226,8 +226,6 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, int phys_screen, 
 
     client_t *c = client_new(globalconf.L);
 
-    /* Set initial screen */
-    c->screen = &globalconf.screens.tab[phys_screen];
     /* consider the window banned */
     c->banned = true;
     /* Store window */
@@ -241,7 +239,14 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, int phys_screen, 
     client_array_push(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
 
     /* Set the right screen */
-    screen_client_moveto(c, screen_getbycoord(&globalconf.screens.tab[phys_screen], wgeom->x, wgeom->y), false);
+    screen_t *screen = NULL;
+    foreach(s, globalconf.screens)
+        if(s->protocol_screen == pscreen)
+        {
+            screen = s;
+            break;
+        }
+    screen_client_moveto(c, screen_getbycoord(screen, wgeom->x, wgeom->y), false);
 
     /* Store initial geometry and emits signals so we inform that geometry have
      * been set. */
@@ -434,20 +439,6 @@ client_geometry_hints(client_t *c, area_t geometry)
 bool
 client_resize(client_t *c, area_t geometry, bool hints)
 {
-    area_t area;
-
-    /* offscreen appearance fixes */
-    area = display_area_get(c->screen->phys_screen);
-
-    if(geometry.x > area.width)
-        geometry.x = area.width - geometry.width;
-    if(geometry.y > area.height)
-        geometry.y = area.height - geometry.height;
-    if(geometry.x + geometry.width < 0)
-        geometry.x = 0;
-    if(geometry.y + geometry.height < 0)
-        geometry.y = 0;
-
     if(hints)
         geometry = client_geometry_hints(c, geometry);
 

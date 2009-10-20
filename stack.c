@@ -36,7 +36,7 @@ stack_client_remove(client_t *c)
             client_array_remove(&globalconf.stack, client);
             break;
         }
-    ewmh_update_net_client_list_stacking(c->screen->phys_screen);
+    ewmh_update_net_client_list_stacking(c->screen->protocol_screen);
     need_stack_refresh = true;
 }
 
@@ -48,7 +48,7 @@ stack_client_push(client_t *c)
 {
     stack_client_remove(c);
     client_array_push(&globalconf.stack, c);
-    ewmh_update_net_client_list_stacking(c->screen->phys_screen);
+    ewmh_update_net_client_list_stacking(c->screen->protocol_screen);
     need_stack_refresh = true;
 }
 
@@ -60,7 +60,7 @@ stack_client_append(client_t *c)
 {
     stack_client_remove(c);
     client_array_append(&globalconf.stack, c);
-    ewmh_update_net_client_list_stacking(c->screen->phys_screen);
+    ewmh_update_net_client_list_stacking(c->screen->protocol_screen);
     need_stack_refresh = true;
 }
 

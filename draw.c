@@ -119,7 +119,7 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
 
 /** Initialize a new draw context.
  * \param d The draw context to initialize.
- * \param phys_screen Physical screen id.
+ * \param pscreen Protocol screen to use.
  * \param width Width.
  * \param height Height.
  * \param px Pixmap object to store.
@@ -127,16 +127,16 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
  * \param bg Background color.
  */
 void
-draw_context_init(draw_context_t *d, int phys_screen,
+draw_context_init(draw_context_t *d, protocol_screen_t *pscreen,
                   int width, int height, xcb_pixmap_t px,
                   const xcolor_t *fg, const xcolor_t *bg)
 {
-    d->phys_screen = phys_screen;
+    d->pscreen = pscreen;
     d->width = width;
     d->height = height;
     d->pixmap = px;
     d->surface = cairo_xcb_surface_create(globalconf.connection,
-                                          px, globalconf.screens.tab[phys_screen].visual,
+                                          px, pscreen->visual,
                                           width, height);
     d->cr = cairo_create(d->surface);
     d->layout = pango_cairo_create_layout(d->cr);
@@ -313,10 +313,10 @@ draw_rotate(draw_context_t *ctx,
     cairo_t *cr;
 
     surface = cairo_xcb_surface_create(globalconf.connection, dest,
-                                       globalconf.screens.tab[ctx->phys_screen].visual,
+                                       ctx->pscreen->visual,
                                        dest_w, dest_h);
     source = cairo_xcb_surface_create(globalconf.connection, src,
-                                      globalconf.screens.tab[ctx->phys_screen].visual,
+                                      ctx->pscreen->visual,
                                       src_w, src_h);
     cr = cairo_create (surface);
 
@@ -350,7 +350,7 @@ draw_text_extents(draw_text_context_t *data)
 
     surface = cairo_xcb_surface_create(globalconf.connection,
                                        globalconf.default_screen,
-                                       globalconf.screens.tab[0].visual,
+                                       protocol_screens.tab[0].visual,
                                        s->width_in_pixels,
                                        s->height_in_pixels);
 

@@ -30,6 +30,7 @@
 #include "objects/image.h"
 #include "color.h"
 #include "area.h"
+#include "protocol_screen.h"
 
 typedef enum
 {
@@ -46,7 +47,7 @@ typedef struct
     xcb_pixmap_t pixmap;
     uint16_t width;
     uint16_t height;
-    int phys_screen;
+    protocol_screen_t *pscreen;
     cairo_t *cr;
     cairo_surface_t *surface;
     PangoLayout *layout;
@@ -54,7 +55,7 @@ typedef struct
     xcolor_t bg;
 } draw_context_t;
 
-void draw_context_init(draw_context_t *, int, int, int,
+void draw_context_init(draw_context_t *, protocol_screen_t *, int, int,
                        xcb_pixmap_t, const xcolor_t *, const xcolor_t *);
 
 /** Wipe a draw context.

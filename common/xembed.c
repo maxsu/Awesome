@@ -106,7 +106,7 @@ xembed_window_t *
 xembed_getbywin(xembed_window_array_t *list, xcb_window_t win)
 {
     for(int i = 0; i < list->len; i++)
-        if(list->tab[i].win == win)
+        if(list->tab[i].window == win)
             return &list->tab[i];
     return NULL;
 }
@@ -133,14 +133,14 @@ xembed_property_update(xcb_connection_t *connection, xembed_window_t *emwin,
     {
         if(info.flags & XEMBED_MAPPED)
         {
-            xcb_map_window(connection, emwin->win);
-            xembed_window_activate(connection, emwin->win);
+            xcb_map_window(connection, emwin->window);
+            xembed_window_activate(connection, emwin->window);
         }
         else
         {
-            xcb_unmap_window(connection, emwin->win);
-            xembed_window_deactivate(connection, emwin->win);
-            xembed_focus_out(connection, emwin->win);
+            xcb_unmap_window(connection, emwin->window);
+            xembed_window_deactivate(connection, emwin->window);
+            xembed_focus_out(connection, emwin->window);
         }
     }
 }

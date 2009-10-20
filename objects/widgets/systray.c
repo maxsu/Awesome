@@ -41,19 +41,18 @@ typedef struct
 static area_t
 systray_extents(lua_State *L, widget_t *widget)
 {
-    int screen = screen_virttophys(luaL_optnumber(L, -1, 1));
+    int phys_screen = screen_virttophys(luaL_optnumber(L, -1, 1));
+
     area_t geometry;
-    int phys_screen   = screen_virttophys(screen), n = 0;
-    systray_data_t *d = widget->data;
+    p_clear(&geometry, 1);
 
-    for(int i = 0; i < globalconf.embedded.len; i++)
-        if(globalconf.embedded.tab[i].phys_screen == phys_screen)
-            n++;
-
-    /** \todo use class hints */
-    geometry.width  = d->height * n;
-    geometry.height = d->height;
-    geometry.x      = geometry.y = 0;
+    if(phys_screen < protocol_screens.len)
+    {
+        systray_data_t *d = widget->data;
+        /** \todo use class hints */
+        geometry.width  = d->height * protocol_screens.tab[phys_screen].embedded.len;
+        geometry.height = d->height;
+    }
 
     return geometry;
 }
@@ -70,7 +69,7 @@ systray_draw(widget_t *widget, draw_context_t *ctx,
     /* set wibox orientation */
     /** \todo stop setting that property on each redraw */
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screens.tab[p->ctx.phys_screen].systray.window,
+                        p->ctx.pscreen->systray.window,
                         _NET_SYSTEM_TRAY_ORIENTATION, CARDINAL, 32, 1, &orient);
 }
 
