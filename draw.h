@@ -29,7 +29,7 @@
 
 #include "objects/image.h"
 #include "color.h"
-#include "common/array.h"
+#include "area.h"
 
 typedef enum
 {
@@ -40,21 +40,6 @@ typedef enum
     AlignBottom = (1 << 3),
     AlignMiddle = (1 << 5)
 } alignment_t;
-
-typedef struct area_t area_t;
-struct area_t
-{
-    /** Co-ords of upper left corner */
-    int16_t  x;
-    int16_t  y;
-    uint16_t width;
-    uint16_t height;
-};
-
-#define AREA_LEFT(a)    ((a).x)
-#define AREA_TOP(a)     ((a).y)
-#define AREA_RIGHT(a)   ((a).x + (a).width)
-#define AREA_BOTTOM(a)    ((a).y + (a).height)
 
 typedef struct
 {
