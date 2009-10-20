@@ -23,14 +23,15 @@
 #define AWESOME_EWMH_H
 
 #include "globalconf.h"
+#include "protocol_screen.h"
 #include "strut.h"
 
-void ewmh_init_screen(int);
+void ewmh_init_screen(protocol_screen_t *);
 void ewmh_init(void);
 void ewmh_update_net_numbers_of_desktop(int);
 void ewmh_update_net_desktop_names(int);
 int ewmh_process_client_message(xcb_client_message_event_t *);
-void ewmh_update_net_client_list_stacking(int);
+void ewmh_update_net_client_list_stacking(protocol_screen_t *);
 void ewmh_client_check_hints(client_t *);
 void ewmh_update_workarea(int);
 void ewmh_process_client_strut(client_t *, xcb_get_property_reply_t *);

@@ -345,7 +345,11 @@ property_handle_xembed_info(void *data __attribute__ ((unused)),
                             xcb_atom_t name,
                             xcb_get_property_reply_t *reply)
 {
-    xembed_window_t *emwin = xembed_getbywin(&globalconf.embedded, window);
+    xembed_window_t *emwin = NULL;
+
+    foreach(screen, protocol_screens)
+        if((emwin = xembed_getbywin(&screen->embedded, window)))
+            break;
 
     if(emwin)
         xembed_property_update(connection, emwin, reply);
@@ -365,12 +369,9 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
         foreach(w, globalconf.wiboxes)
             (*w)->need_update = true;
     else
-    {
-        int screen = xutil_root2screen(connection, window);
-        foreach(w, globalconf.wiboxes)
-            if(screen == screen_array_indexof(&globalconf.screens, (*w)->screen))
-               (*w)->need_update = true;
-    }
+        foreach(wibox, globalconf.wiboxes)
+            if(window == (*wibox)->screen->protocol_screen->root->window)
+               (*wibox)->need_update = true;
 
     return 0;
 }

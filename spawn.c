@@ -236,13 +236,11 @@ spawn_init(void)
 {
     globalconf.sndisplay = sn_xcb_display_new(globalconf.connection, NULL, NULL);
 
-    const int screen_max = xcb_setup_roots_length(xcb_get_setup(globalconf.connection));
-
-    for(int screen = 0; screen < screen_max; screen++)
-        globalconf.screens.tab[screen].snmonitor = sn_monitor_context_new(globalconf.sndisplay,
-                                                                          screen,
-                                                                          spawn_monitor_event,
-                                                                          NULL, NULL);
+    foreach(screen, protocol_screens)
+        screen->snmonitor = sn_monitor_context_new(globalconf.sndisplay,
+                                                   protocol_screen_array_indexof(&protocol_screens, screen),
+                                                   spawn_monitor_event,
+                                                   NULL, NULL);
 }
 
 static void
