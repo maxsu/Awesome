@@ -22,13 +22,11 @@
 #ifndef AWESOME_STACK_H
 #define AWESOME_STACK_H
 
-#include "globalconf.h"
+#include <lua.h>
 
-void stack_client_remove(client_t *);
-void stack_client_push(client_t *);
-void stack_client_append(client_t *);
-void stack_refresh(void);
 void stack_init(void);
+void stack_ewindow_raise(lua_State *L, int);
+void stack_ewindow_lower(lua_State *L, int);
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

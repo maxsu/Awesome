@@ -101,34 +101,6 @@ void client_ignore_enterleave_events(void);
 void client_restore_enterleave_events(void);
 void client_class_setup(lua_State *);
 
-/** Put client on top of the stack.
- * \param c The client to raise.
- */
-static inline void
-client_raise(client_t *c)
-{
-    client_t *tc = c;
-    int counter = 0;
-
-    /* Find number of transient layers.
-     * We limit the counter to the stack length: if some case, a buggy
-     * application might set transient_for as a loop… */
-    for(counter = 0; tc->transient_for && counter <= globalconf.stack.len; counter++)
-        tc = tc->transient_for;
-
-    /* Push them in reverse order. */
-    for(; counter > 0; counter--)
-    {
-        tc = c;
-        for(int i = 0; i < counter; i++)
-            tc = tc->transient_for;
-        stack_client_append(tc);
-    }
-
-    /* Push c on top of the stack. */
-    stack_client_append(c);
-}
-
 /** Check if a client has fixed size.
  * \param c A client.
  * \return A boolean value, true if the client has a fixed size.
