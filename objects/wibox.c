@@ -240,6 +240,10 @@ wibox_init(wibox_t *w)
     /* Update draw context physical screen, important for Zaphod. */
     wibox_draw_context_update(w);
 
+    luaA_object_push(globalconf.L, w);
+    luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
+    lua_pop(globalconf.L, 1);
+
     wibox_shape_update(w);
 
     xwindow_buttons_grab(w->window, &w->buttons);
@@ -663,6 +667,10 @@ wibox_detach(lua_State *L, int udx)
 
         wibox_wipe_resources(wibox);
 
+        /* XXX this may be done in wipe_resources, but since wipe_resources is
+         * called via __gc, not sure it would work */
+        luaA_object_emit_signal(globalconf.L, udx, "property::window", 0);
+
         foreach(item, globalconf.wiboxes)
             if(*item == wibox)
             {
@@ -718,8 +726,6 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
 
     if(wibox->opacity != -1)
         xwindow_set_opacity(wibox->window, wibox->opacity);
-
-    ewmh_update_strut(wibox->window, &wibox->strut);
 
     if(wibox->visible)
         wibox_map(wibox);
