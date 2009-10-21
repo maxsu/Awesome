@@ -720,20 +720,7 @@ luaA_client_get(lua_State *L)
     return 1;
 }
 
-#define LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(prefix, lua_class, target_class, type, prop) \
-    void \
-    prefix##_set_##prop(lua_State *L, int idx, int vidx) \
-    { \
-        type *item = luaA_checkudata(L, idx, (lua_class)); \
-        idx = luaA_absindex(L, idx); \
-        vidx = luaA_absindex(L, vidx); \
-        luaA_checkudata(L, vidx, (target_class)); \
-        item->prop = luaA_object_ref_item(L, idx, vidx); \
-        luaA_object_emit_signal(L, idx < vidx ? idx : idx - 1, "property::" #prop, 0); \
-    }
 LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, &image_class, client_t, icon)
-LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, (lua_class_t *) &client_class, client_t, transient_for)
-#undef LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC
 
 /** Kill a client.
  * \param L The Lua VM state.
@@ -1009,12 +996,6 @@ luaA_client_get_icon(lua_State *L, client_t *c)
 }
 
 static int
-luaA_client_get_transient_for(lua_State *L, client_t *c)
-{
-    return luaA_object_push_item(L, -2, c->transient_for);
-}
-
-static int
 luaA_client_get_size_hints(lua_State *L, client_t *c)
 {
     const char *u_or_p = NULL;
@@ -1204,10 +1185,6 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_name,
                             NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TRANSIENT_FOR,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_transient_for,
-                            NULL);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_SKIP_TASKBAR,
                             (lua_class_propfunc_t) luaA_client_set_skip_taskbar,
                             (lua_class_propfunc_t) luaA_client_get_skip_taskbar,
@@ -1276,7 +1253,14 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_size_hints,
                             NULL);
+    /* Property overrides */
+    /* Cursor is not available */
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_CURSOR, NULL, NULL, NULL);
+    /* Transient for is readonly */
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TRANSIENT_FOR,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_ewindow_get_transient_for,
+                            NULL);
 
     client_class.isvisible = (lua_interface_window_isvisible_t) client_isvisible;
     luaA_class_connect_signal(L, (lua_class_t *) &client_class, "focus", client_take_focus);

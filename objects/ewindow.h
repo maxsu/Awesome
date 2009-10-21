@@ -56,13 +56,16 @@
     /** True if the client is modal */ \
     bool modal; \
     /** True if the client is on top */ \
-    bool ontop;
+    bool ontop; \
+    /** Window it is transient for */ \
+    ewindow_t *transient_for;
 
+typedef struct ewindow_t ewindow_t;
 /** Window structure */
-typedef struct
+struct ewindow_t
 {
     EWINDOW_OBJECT_HEADER
-} ewindow_t;
+};
 
 lua_interface_window_t ewindow_class;
 
@@ -81,6 +84,9 @@ void ewindow_set_fullscreen(lua_State *, int, bool);
 void ewindow_set_maximized_horizontal(lua_State *, int, bool);
 void ewindow_set_maximized_vertical(lua_State *, int, bool);
 void ewindow_set_minimized(lua_State *, int, bool);
+void ewindow_set_transient_for(lua_State *, int, int);
+
+int luaA_ewindow_get_transient_for(lua_State *, ewindow_t *);
 
 DO_ARRAY(ewindow_t *, ewindow, DO_NOTHING)
 

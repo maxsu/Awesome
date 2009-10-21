@@ -96,8 +96,6 @@ struct client_t
     char *role;
     /** Client pid */
     uint32_t pid;
-    /** Window it is transient for */
-    client_t *transient_for;
 };
 
 ARRAY_FUNCS(client_t *, client, DO_NOTHING)
@@ -124,7 +122,6 @@ void client_set_icon_name(lua_State *, int, char *);
 void client_set_alt_icon_name(lua_State *, int, char *);
 void client_set_class_instance(lua_State *, int, const char *, const char *);
 void client_set_type(lua_State *L, int, window_type_t);
-void client_set_transient_for(lua_State *, int, int);
 void client_set_name(lua_State *L, int, char *);
 void client_set_alt_name(lua_State *L, int, char *);
 void client_set_group_window(lua_State *, int, xcb_window_t);
@@ -148,14 +145,14 @@ client_raise(client_t *c)
      * We limit the counter to the stack length: if some case, a buggy
      * application might set transient_for as a loop… */
     for(counter = 0; tc->transient_for && counter <= globalconf.stack.len; counter++)
-        tc = tc->transient_for;
+        tc = (client_t *) tc->transient_for;
 
     /* Push them in reverse order. */
     for(; counter > 0; counter--)
     {
         tc = c;
         for(int i = 0; i < counter; i++)
-            tc = tc->transient_for;
+            tc = (client_t *) tc->transient_for;
         stack_client_append(tc);
     }
 
