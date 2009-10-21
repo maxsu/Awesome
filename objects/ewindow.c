@@ -366,6 +366,7 @@ luaA_ewindow_tags(lua_State *L)
 
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, sticky)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, modal)
+LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(ewindow, (lua_class_t *) &ewindow_class, (lua_class_t *) &ewindow_class, ewindow_t, transient_for)
 
 static int
 luaA_ewindow_set_sticky(lua_State *L, ewindow_t *c)
@@ -385,6 +386,19 @@ static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, above, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, below, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_horizontal, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_vertical, lua_pushboolean)
+
+int
+luaA_ewindow_get_transient_for(lua_State *L, ewindow_t *ewindow)
+{
+    return luaA_object_push_item(L, -2, ewindow->transient_for);
+}
+
+static int
+luaA_ewindow_set_transient_for(lua_State *L, ewindow_t *ewindow)
+{
+    ewindow_set_transient_for(L, -3, -1);
+    return 0;
+}
 
 void
 ewindow_class_setup(lua_State *L)
@@ -450,6 +464,10 @@ ewindow_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_ewindow_set_maximized_vertical,
                             (lua_class_propfunc_t) luaA_ewindow_get_maximized_vertical,
                             (lua_class_propfunc_t) luaA_ewindow_set_maximized_vertical);
+    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_TRANSIENT_FOR,
+                            (lua_class_propfunc_t) luaA_ewindow_set_transient_for,
+                            (lua_class_propfunc_t) luaA_ewindow_get_transient_for,
+                            (lua_class_propfunc_t) luaA_ewindow_set_transient_for);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

@@ -212,6 +212,18 @@ int luaA_object_emit_signal_simple(lua_State *);
         return 0; \
     }
 
+#define LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(prefix, lua_class, target_class, type, prop) \
+    void \
+    prefix##_set_##prop(lua_State *L, int idx, int vidx) \
+    { \
+        type *item = luaA_checkudata(L, idx, (lua_class)); \
+        idx = luaA_absindex(L, idx); \
+        vidx = luaA_absindex(L, vidx); \
+        luaA_checkudata(L, vidx, (target_class)); \
+        item->prop = luaA_object_ref_item(L, idx, vidx); \
+        luaA_object_emit_signal(L, idx < vidx ? idx : idx - 1, "property::" #prop, 0); \
+    }
+
 #endif
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
