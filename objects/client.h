@@ -75,22 +75,6 @@ struct client_t
     bool urgent;
     /** True if the client is hidden */
     bool hidden;
-    /** True if the client is minimized */
-    bool minimized;
-    /** True if the client is fullscreen */
-    bool fullscreen;
-    /** True if the client is maximized horizontally */
-    bool maximized_horizontal;
-    /** True if the client is maximized vertically */
-    bool maximized_vertical;
-    /** True if the client is above others */
-    bool above;
-    /** True if the client is below others */
-    bool below;
-    /** True if the client is modal */
-    bool modal;
-    /** True if the client is on top */
-    bool ontop;
     /** true if the client must be skipped from task bar client list */
     bool skip_taskbar;
     /** The window type */
@@ -132,14 +116,6 @@ area_t client_geometry_hints(client_t *, area_t);
 bool client_resize(client_t *, area_t, bool);
 void client_unmanage(client_t *);
 void client_kill(client_t *);
-void client_set_above(lua_State *, int, bool);
-void client_set_below(lua_State *, int, bool);
-void client_set_modal(lua_State *, int, bool);
-void client_set_ontop(lua_State *, int, bool);
-void client_set_fullscreen(lua_State *, int, bool);
-void client_set_maximized_horizontal(lua_State *, int, bool);
-void client_set_maximized_vertical(lua_State *, int, bool);
-void client_set_minimized(lua_State *, int, bool);
 void client_set_urgent(lua_State *, int, bool);
 void client_set_pid(lua_State *, int, uint32_t);
 void client_set_role(lua_State *, int, char *);

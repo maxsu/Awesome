@@ -660,7 +660,7 @@ event_handle_maprequest(xcb_map_request_event_t *ev)
         if(client_maybevisible(c) && !c->hidden)
         {
             luaA_object_push(globalconf.L, c);
-            client_set_minimized(globalconf.L, -1, false);
+            ewindow_set_minimized(globalconf.L, -1, false);
             lua_pop(globalconf.L, 1);
             /* it will be raised, so just update ourself */
             client_raise(c);
@@ -750,7 +750,7 @@ event_handle_clientmessage(xcb_client_message_event_t *ev)
            && ev->data.data32[0] == XCB_WM_STATE_ICONIC)
         {
             luaA_object_push(globalconf.L, c);
-            client_set_minimized(globalconf.L, -1, true);
+            ewindow_set_minimized(globalconf.L, -1, true);
             lua_pop(globalconf.L, 1);
         }
     }

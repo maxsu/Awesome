@@ -376,65 +376,65 @@ ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
     else if(state == _NET_WM_STATE_FULLSCREEN)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_fullscreen(globalconf.L, -1, false);
+            ewindow_set_fullscreen(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_fullscreen(globalconf.L, -1, true);
+            ewindow_set_fullscreen(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_fullscreen(globalconf.L, -1, !c->fullscreen);
+            ewindow_set_fullscreen(globalconf.L, -1, !c->fullscreen);
     }
     else if(state == _NET_WM_STATE_MAXIMIZED_HORZ)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_maximized_horizontal(globalconf.L, -1, false);
+            ewindow_set_maximized_horizontal(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_maximized_horizontal(globalconf.L, -1, true);
+            ewindow_set_maximized_horizontal(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_maximized_horizontal(globalconf.L, -1, !c->maximized_horizontal);
+            ewindow_set_maximized_horizontal(globalconf.L, -1, !c->maximized_horizontal);
     }
     else if(state == _NET_WM_STATE_MAXIMIZED_VERT)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_maximized_vertical(globalconf.L, -1, false);
+            ewindow_set_maximized_vertical(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_maximized_vertical(globalconf.L, -1, true);
+            ewindow_set_maximized_vertical(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_maximized_vertical(globalconf.L, -1, !c->maximized_vertical);
+            ewindow_set_maximized_vertical(globalconf.L, -1, !c->maximized_vertical);
     }
     else if(state == _NET_WM_STATE_ABOVE)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_above(globalconf.L, -1, false);
+            ewindow_set_above(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_above(globalconf.L, -1, true);
+            ewindow_set_above(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_above(globalconf.L, -1, !c->above);
+            ewindow_set_above(globalconf.L, -1, !c->above);
     }
     else if(state == _NET_WM_STATE_BELOW)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_below(globalconf.L, -1, false);
+            ewindow_set_below(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_below(globalconf.L, -1, true);
+            ewindow_set_below(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_below(globalconf.L, -1, !c->below);
+            ewindow_set_below(globalconf.L, -1, !c->below);
     }
     else if(state == _NET_WM_STATE_MODAL)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_modal(globalconf.L, -1, false);
+            ewindow_set_modal(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_modal(globalconf.L, -1, true);
+            ewindow_set_modal(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_modal(globalconf.L, -1, !c->modal);
+            ewindow_set_modal(globalconf.L, -1, !c->modal);
     }
     else if(state == _NET_WM_STATE_HIDDEN)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_minimized(globalconf.L, -1, false);
+            ewindow_set_minimized(globalconf.L, -1, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_minimized(globalconf.L, -1, true);
+            ewindow_set_minimized(globalconf.L, -1, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_minimized(globalconf.L, -1, !c->minimized);
+            ewindow_set_minimized(globalconf.L, -1, !c->minimized);
     }
     else if(state == _NET_WM_STATE_DEMANDS_ATTENTION)
     {
