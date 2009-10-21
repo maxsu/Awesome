@@ -63,6 +63,7 @@ modal
 modifiers
 motion_notify
 name
+normal
 ontop
 opacity
 orientation
@@ -107,3 +108,16 @@ workarea
 wrap
 x
 y
+desktop
+dock
+splash
+dialog
+menu
+toolbar
+utility
+dropdown_menu
+tooltip
+popup_menu
+notification
+combo
+dnd

@@ -36,7 +36,7 @@ ewindow_isvisible(ewindow_t *ewindow)
     if(ewindow->minimized)
         return false;
 
-    if(ewindow->sticky)
+    if(ewindow->sticky || ewindow->type == EWINDOW_TYPE_DESKTOP)
         return true;
 
     foreach(tag, ewindow->screen->tags)
@@ -235,6 +235,114 @@ ewindow_set_opacity(lua_State *L, int idx, double opacity)
     }
 }
 
+int
+luaA_ewindow_get_type(lua_State *L, ewindow_t *ewindow)
+{
+    switch(ewindow->type)
+    {
+      case EWINDOW_TYPE_DESKTOP:
+        lua_pushliteral(L, "desktop");
+        break;
+      case EWINDOW_TYPE_DOCK:
+        lua_pushliteral(L, "dock");
+        break;
+      case EWINDOW_TYPE_SPLASH:
+        lua_pushliteral(L, "splash");
+        break;
+      case EWINDOW_TYPE_DIALOG:
+        lua_pushliteral(L, "dialog");
+        break;
+      case EWINDOW_TYPE_MENU:
+        lua_pushliteral(L, "menu");
+        break;
+      case EWINDOW_TYPE_TOOLBAR:
+        lua_pushliteral(L, "toolbar");
+        break;
+      case EWINDOW_TYPE_UTILITY:
+        lua_pushliteral(L, "utility");
+        break;
+      case EWINDOW_TYPE_DROPDOWN_MENU:
+        lua_pushliteral(L, "dropdown_menu");
+        break;
+      case EWINDOW_TYPE_POPUP_MENU:
+        lua_pushliteral(L, "popup_menu");
+        break;
+      case EWINDOW_TYPE_TOOLTIP:
+        lua_pushliteral(L, "tooltip");
+        break;
+      case EWINDOW_TYPE_NOTIFICATION:
+        lua_pushliteral(L, "notification");
+        break;
+      case EWINDOW_TYPE_COMBO:
+        lua_pushliteral(L, "combo");
+        break;
+      case EWINDOW_TYPE_DND:
+        lua_pushliteral(L, "dnd");
+        break;
+      case EWINDOW_TYPE_NORMAL:
+        lua_pushliteral(L, "normal");
+        break;
+    }
+    return 1;
+}
+
+static int
+luaA_ewindow_set_type(lua_State *L, ewindow_t *ewindow)
+{
+    size_t len;
+    const char *value = luaL_checklstring(L, -1, &len);
+
+    switch(a_tokenize(value, len))
+    {
+      case A_TK_DESKTOP:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_DESKTOP);
+        break;
+      case A_TK_DOCK:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_DOCK);
+        break;
+      case A_TK_SPLASH:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_SPLASH);
+        break;
+      case A_TK_DIALOG:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_DIALOG);
+        break;
+      case A_TK_MENU:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_MENU);
+        break;
+      case A_TK_TOOLBAR:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_TOOLBAR);
+        break;
+      case A_TK_UTILITY:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_UTILITY);
+        break;
+      case A_TK_DROPDOWN_MENU:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_DROPDOWN_MENU);
+        break;
+      case A_TK_POPUP_MENU:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_POPUP_MENU);
+        break;
+      case A_TK_TOOLTIP:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_TOOLTIP);
+        break;
+      case A_TK_NOTIFICATION:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_NOTIFICATION);
+        break;
+      case A_TK_COMBO:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_COMBO);
+        break;
+      case A_TK_DND:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_DND);
+        break;
+      case A_TK_NORMAL:
+        ewindow_set_type(L, -3, EWINDOW_TYPE_NORMAL);
+        break;
+      default:
+        break;
+    }
+
+    return 0;
+}
+
 /** Set an ewindow opacity.
  * \param L The Lua VM state.
  * \param ewindow The ewindow object.
@@ -366,6 +474,7 @@ luaA_ewindow_tags(lua_State *L)
 
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, sticky)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, modal)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, type)
 LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(ewindow, (lua_class_t *) &ewindow_class, (lua_class_t *) &ewindow_class, ewindow_t, transient_for)
 
 static int
@@ -468,6 +577,10 @@ ewindow_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_ewindow_set_transient_for,
                             (lua_class_propfunc_t) luaA_ewindow_get_transient_for,
                             (lua_class_propfunc_t) luaA_ewindow_set_transient_for);
+    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_TYPE,
+                            (lua_class_propfunc_t) luaA_ewindow_set_type,
+                            (lua_class_propfunc_t) luaA_ewindow_get_type,
+                            (lua_class_propfunc_t) luaA_ewindow_set_type);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

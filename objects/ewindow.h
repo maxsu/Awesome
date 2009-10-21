@@ -27,6 +27,29 @@
 #include "objects/button.h"
 #include "common/luaclass.h"
 
+/** ewindows type */
+typedef enum
+{
+    EWINDOW_TYPE_NORMAL = 0,
+    EWINDOW_TYPE_DESKTOP,
+    EWINDOW_TYPE_DOCK,
+    EWINDOW_TYPE_SPLASH,
+    EWINDOW_TYPE_DIALOG,
+    /* The ones below may have TRANSIENT_FOR, but are not plain dialogs.
+     * They were purposefully placed below DIALOG.
+     */
+    EWINDOW_TYPE_MENU,
+    EWINDOW_TYPE_TOOLBAR,
+    EWINDOW_TYPE_UTILITY,
+    /* This ones are usually set on override-redirect windows. */
+    EWINDOW_TYPE_DROPDOWN_MENU,
+    EWINDOW_TYPE_POPUP_MENU,
+    EWINDOW_TYPE_TOOLTIP,
+    EWINDOW_TYPE_NOTIFICATION,
+    EWINDOW_TYPE_COMBO,
+    EWINDOW_TYPE_DND
+} ewindow_type_t;
+
 #define EWINDOW_OBJECT_HEADER \
     WINDOW_OBJECT_HEADER \
     /** Opacity */ \
@@ -58,7 +81,9 @@
     /** True if the client is on top */ \
     bool ontop; \
     /** Window it is transient for */ \
-    ewindow_t *transient_for;
+    ewindow_t *transient_for; \
+    /** The window type */ \
+    ewindow_type_t type;
 
 typedef struct ewindow_t ewindow_t;
 /** Window structure */
@@ -85,8 +110,10 @@ void ewindow_set_maximized_horizontal(lua_State *, int, bool);
 void ewindow_set_maximized_vertical(lua_State *, int, bool);
 void ewindow_set_minimized(lua_State *, int, bool);
 void ewindow_set_transient_for(lua_State *, int, int);
+void ewindow_set_type(lua_State *, int, ewindow_type_t);
 
 int luaA_ewindow_get_transient_for(lua_State *, ewindow_t *);
+int luaA_ewindow_get_type(lua_State *, ewindow_t *);
 
 DO_ARRAY(ewindow_t *, ewindow, DO_NOTHING)
 
