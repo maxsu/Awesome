@@ -40,7 +40,23 @@
     /** Window tags */ \
     tag_array_t tags; \
     /** True if the window is sticky */ \
-    bool sticky;
+    bool sticky; \
+    /** True if the client is minimized */ \
+    bool minimized; \
+    /** True if the client is fullscreen */ \
+    bool fullscreen; \
+    /** True if the client is maximized horizontally */ \
+    bool maximized_horizontal; \
+    /** True if the client is maximized vertically */ \
+    bool maximized_vertical; \
+    /** True if the client is above others */ \
+    bool above; \
+    /** True if the client is below others */ \
+    bool below; \
+    /** True if the client is modal */ \
+    bool modal; \
+    /** True if the client is on top */ \
+    bool ontop;
 
 /** Window structure */
 typedef struct
@@ -57,6 +73,14 @@ bool ewindow_isvisible(ewindow_t *);
 void ewindow_set_opacity(lua_State *, int, double);
 void ewindow_set_border_width(lua_State *, int, int);
 void ewindow_set_sticky(lua_State *, int, bool);
+void ewindow_set_above(lua_State *, int, bool);
+void ewindow_set_below(lua_State *, int, bool);
+void ewindow_set_modal(lua_State *, int, bool);
+void ewindow_set_ontop(lua_State *, int, bool);
+void ewindow_set_fullscreen(lua_State *, int, bool);
+void ewindow_set_maximized_horizontal(lua_State *, int, bool);
+void ewindow_set_maximized_vertical(lua_State *, int, bool);
+void ewindow_set_minimized(lua_State *, int, bool);
 
 DO_ARRAY(ewindow_t *, ewindow, DO_NOTHING)
 

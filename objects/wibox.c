@@ -825,7 +825,6 @@ luaA_wibox_geometry(lua_State *L)
     return luaA_pusharea(L, wibox->geometry);
 }
 
-static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, ontop, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
 
 static int
@@ -992,23 +991,6 @@ static int
 luaA_wibox_get_bg_image(lua_State *L, wibox_t *wibox)
 {
     return luaA_object_push_item(L, 1, wibox->bg_image);
-}
-
-/** Set the wibox on top status.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_set_ontop(lua_State *L, wibox_t *wibox)
-{
-    bool b = luaA_checkboolean(L, -1);
-    if(b != wibox->ontop)
-    {
-        wibox->ontop = b;
-        luaA_object_emit_signal(L, -3, "property::ontop", 0);
-    }
-    return 0;
 }
 
 /** Set the wibox screen.
@@ -1188,10 +1170,6 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_orientation,
                             (lua_class_propfunc_t) luaA_wibox_get_orientation,
                             (lua_class_propfunc_t) luaA_wibox_set_orientation);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ONTOP,
-                            (lua_class_propfunc_t) luaA_wibox_set_ontop,
-                            (lua_class_propfunc_t) luaA_wibox_get_ontop,
-                            (lua_class_propfunc_t) luaA_wibox_set_ontop);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SCREEN,
                             NULL,
                             (lua_class_propfunc_t) luaA_wibox_get_screen,
