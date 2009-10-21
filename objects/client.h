@@ -35,29 +35,6 @@
                                         | XCB_EVENT_MASK_LEAVE_WINDOW \
                                         | XCB_EVENT_MASK_FOCUS_CHANGE)
 
-/** Windows type */
-typedef enum
-{
-    WINDOW_TYPE_NORMAL = 0,
-    WINDOW_TYPE_DESKTOP,
-    WINDOW_TYPE_DOCK,
-    WINDOW_TYPE_SPLASH,
-    WINDOW_TYPE_DIALOG,
-    /* The ones below may have TRANSIENT_FOR, but are not plain dialogs.
-     * They were purposefully placed below DIALOG.
-     */
-    WINDOW_TYPE_MENU,
-    WINDOW_TYPE_TOOLBAR,
-    WINDOW_TYPE_UTILITY,
-    /* This ones are usually set on override-redirect windows. */
-    WINDOW_TYPE_DROPDOWN_MENU,
-    WINDOW_TYPE_POPUP_MENU,
-    WINDOW_TYPE_TOOLTIP,
-    WINDOW_TYPE_NOTIFICATION,
-    WINDOW_TYPE_COMBO,
-    WINDOW_TYPE_DND
-} window_type_t;
-
 /** client_t type */
 struct client_t
 {
@@ -74,8 +51,6 @@ struct client_t
     bool hidden;
     /** true if the client must be skipped from task bar client list */
     bool skip_taskbar;
-    /** The window type */
-    window_type_t type;
     /** Window of the group leader */
     xcb_window_t group_window;
     /** Window holding command needed to start it (session management related) */
@@ -116,7 +91,6 @@ void client_set_machine(lua_State *, int, char *);
 void client_set_icon_name(lua_State *, int, char *);
 void client_set_alt_icon_name(lua_State *, int, char *);
 void client_set_class_instance(lua_State *, int, const char *, const char *);
-void client_set_type(lua_State *L, int, window_type_t);
 void client_set_name(lua_State *L, int, char *);
 void client_set_alt_name(lua_State *L, int, char *);
 void client_set_group_window(lua_State *, int, xcb_window_t);

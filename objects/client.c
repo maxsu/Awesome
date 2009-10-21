@@ -99,7 +99,6 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
 }
 
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, group_window)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, type)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, pid)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, skip_taskbar)
 
@@ -141,8 +140,6 @@ client_set_class_instance(lua_State *L, int cidx, const char *class, const char 
 bool
 client_maybevisible(client_t *c)
 {
-    if(c->type == WINDOW_TYPE_DESKTOP)
-        return true;
     return ewindow_isvisible((ewindow_t *) c);
 }
 
@@ -798,57 +795,6 @@ luaA_client_get_content(lua_State *L, client_t *c)
 }
 
 static int
-luaA_client_get_type(lua_State *L, client_t *c)
-{
-    switch(c->type)
-    {
-      case WINDOW_TYPE_DESKTOP:
-        lua_pushliteral(L, "desktop");
-        break;
-      case WINDOW_TYPE_DOCK:
-        lua_pushliteral(L, "dock");
-        break;
-      case WINDOW_TYPE_SPLASH:
-        lua_pushliteral(L, "splash");
-        break;
-      case WINDOW_TYPE_DIALOG:
-        lua_pushliteral(L, "dialog");
-        break;
-      case WINDOW_TYPE_MENU:
-        lua_pushliteral(L, "menu");
-        break;
-      case WINDOW_TYPE_TOOLBAR:
-        lua_pushliteral(L, "toolbar");
-        break;
-      case WINDOW_TYPE_UTILITY:
-        lua_pushliteral(L, "utility");
-        break;
-      case WINDOW_TYPE_DROPDOWN_MENU:
-        lua_pushliteral(L, "dropdown_menu");
-        break;
-      case WINDOW_TYPE_POPUP_MENU:
-        lua_pushliteral(L, "popup_menu");
-        break;
-      case WINDOW_TYPE_TOOLTIP:
-        lua_pushliteral(L, "tooltip");
-        break;
-      case WINDOW_TYPE_NOTIFICATION:
-        lua_pushliteral(L, "notification");
-        break;
-      case WINDOW_TYPE_COMBO:
-        lua_pushliteral(L, "combo");
-        break;
-      case WINDOW_TYPE_DND:
-        lua_pushliteral(L, "dnd");
-        break;
-      case WINDOW_TYPE_NORMAL:
-        lua_pushliteral(L, "normal");
-        break;
-    }
-    return 1;
-}
-
-static int
 luaA_client_get_screen(lua_State *L, client_t *c)
 {
     if(!c->screen)
@@ -1061,10 +1007,6 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_content,
                             NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TYPE,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_type,
-                            NULL);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_CLASS,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_class,
@@ -1132,6 +1074,11 @@ client_class_setup(lua_State *L)
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_TRANSIENT_FOR,
                             NULL,
                             (lua_class_propfunc_t) luaA_ewindow_get_transient_for,
+                            NULL);
+    /* Type is not modifiable */
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TYPE,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_ewindow_get_type,
                             NULL);
 
     client_class.isvisible = (lua_interface_window_isvisible_t) client_isvisible;
