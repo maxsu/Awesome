@@ -204,6 +204,14 @@ int luaA_object_emit_signal_simple(lua_State *);
         } \
     }
 
+#define LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(pfx, type, prop, checker) \
+    int \
+    luaA_##pfx##_set_##prop(lua_State *L, type *c) \
+    { \
+        pfx##_set_##prop(L, -3, checker(L, -1)); \
+        return 0; \
+    }
+
 #endif
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

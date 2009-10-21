@@ -63,7 +63,7 @@ client_wipe(client_t *c)
 static bool
 client_isvisible(client_t *c)
 {
-    return (!c->hidden && !c->minimized && client_maybevisible(c));
+    return (!c->hidden && client_maybevisible(c));
 }
 
 /** Change the clients urgency flag.
@@ -102,7 +102,6 @@ LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t,
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, type)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, pid)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, skip_taskbar)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, modal)
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
     void \
@@ -483,157 +482,6 @@ client_resize(client_t *c, area_t geometry, bool hints)
     return false;
 }
 
-/** Set a client minimized, or not.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s Set or not the client minimized.
- */
-void
-client_set_minimized(lua_State *L, int cidx, bool s)
-{
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
-
-    if(c->minimized != s)
-    {
-        c->minimized = s;
-        if(s)
-            xwindow_set_state(c->window, XCB_WM_STATE_ICONIC);
-        else
-            xwindow_set_state(c->window, XCB_WM_STATE_NORMAL);
-        if(strut_has_value(&c->strut))
-            screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
-        luaA_object_emit_signal(L, cidx, "property::minimized", 0);
-    }
-}
-
-/** Set a client fullscreen, or not.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s Set or not the client fullscreen.
- */
-void
-client_set_fullscreen(lua_State *L, int cidx, bool s)
-{
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
-
-    if(c->fullscreen != s)
-    {
-        /* become fullscreen! */
-        if(s)
-        {
-            /* remove any max state */
-            client_set_maximized_horizontal(L, cidx, false);
-            client_set_maximized_vertical(L, cidx, false);
-            /* You can only be part of one of the special layers. */
-            client_set_below(L, cidx, false);
-            client_set_above(L, cidx, false);
-            client_set_ontop(L, cidx, false);
-        }
-        int abs_cidx = luaA_absindex(L, cidx); \
-        lua_pushboolean(L, s);
-        luaA_object_emit_signal(L, abs_cidx, "request::fullscreen", 1);
-        c->fullscreen = s;
-        luaA_object_emit_signal(L, abs_cidx, "property::fullscreen", 0);
-    }
-}
-
-/** Set a client horizontally|vertically maximized.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s The maximized status.
- */
-#define DO_FUNCTION_CLIENT_MAXIMIZED(type) \
-    void \
-    client_set_maximized_##type(lua_State *L, int cidx, bool s) \
-    { \
-        client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class); \
-        if(c->maximized_##type != s) \
-        { \
-            int abs_cidx = luaA_absindex(L, cidx); \
-            if(s) \
-                client_set_fullscreen(L, abs_cidx, false); \
-            lua_pushboolean(L, s); \
-            luaA_object_emit_signal(L, abs_cidx, "request::maximized_" #type, 1); \
-            c->maximized_##type = s; \
-            luaA_object_emit_signal(L, abs_cidx, "property::maximized_" #type, 0); \
-        } \
-    }
-DO_FUNCTION_CLIENT_MAXIMIZED(vertical)
-DO_FUNCTION_CLIENT_MAXIMIZED(horizontal)
-#undef DO_FUNCTION_CLIENT_MAXIMIZED
-
-/** Set a client above, or not.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s Set or not the client above.
- */
-void
-client_set_above(lua_State *L, int cidx, bool s)
-{
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
-
-    if(c->above != s)
-    {
-        /* You can only be part of one of the special layers. */
-        if(s)
-        {
-            client_set_below(L, cidx, false);
-            client_set_ontop(L, cidx, false);
-            client_set_fullscreen(L, cidx, false);
-        }
-        c->above = s;
-        luaA_object_emit_signal(L, cidx, "property::above", 0);
-    }
-}
-
-/** Set a client below, or not.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s Set or not the client below.
- */
-void
-client_set_below(lua_State *L, int cidx, bool s)
-{
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
-
-    if(c->below != s)
-    {
-        /* You can only be part of one of the special layers. */
-        if(s)
-        {
-            client_set_above(L, cidx, false);
-            client_set_ontop(L, cidx, false);
-            client_set_fullscreen(L, cidx, false);
-        }
-        c->below = s;
-        luaA_object_emit_signal(L, cidx, "property::below", 0);
-    }
-}
-
-/** Set a client ontop, or not.
- * \param L The Lua VM state.
- * \param cidx The client index.
- * \param s Set or not the client ontop attribute.
- */
-void
-client_set_ontop(lua_State *L, int cidx, bool s)
-{
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
-
-    if(c->ontop != s)
-    {
-        /* You can only be part of one of the special layers. */
-        if(s)
-        {
-            client_set_above(L, cidx, false);
-            client_set_below(L, cidx, false);
-            client_set_fullscreen(L, cidx, false);
-        }
-        c->ontop = s;
-        luaA_object_emit_signal(L, cidx, "property::ontop", 0);
-    }
-}
-
 /** Unmanage a client.
  * \param c The client.
  */
@@ -876,41 +724,6 @@ luaA_client_set_hidden(lua_State *L, client_t *c)
 }
 
 static int
-luaA_client_set_minimized(lua_State *L, client_t *c)
-{
-    client_set_minimized(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
-luaA_client_set_fullscreen(lua_State *L, client_t *c)
-{
-    client_set_fullscreen(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
-luaA_client_set_modal(lua_State *L, client_t *c)
-{
-    client_set_modal(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
-luaA_client_set_maximized_horizontal(lua_State *L, client_t *c)
-{
-    client_set_maximized_horizontal(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
-luaA_client_set_maximized_vertical(lua_State *L, client_t *c)
-{
-    client_set_maximized_vertical(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
 luaA_client_set_icon(lua_State *L, client_t *c)
 {
     client_set_icon(L, -3, -1);
@@ -922,27 +735,6 @@ luaA_client_set_size_hints_honor(lua_State *L, client_t *c)
 {
     c->size_hints_honor = luaA_checkboolean(L, -1);
     luaA_object_emit_signal(L, -3, "property::size_hints_honor", 0);
-    return 0;
-}
-
-static int
-luaA_client_set_ontop(lua_State *L, client_t *c)
-{
-    client_set_ontop(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
-luaA_client_set_below(lua_State *L, client_t *c)
-{
-    client_set_below(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
-static int
-luaA_client_set_above(lua_State *L, client_t *c)
-{
-    client_set_above(L, -3, luaA_checkboolean(L, -1));
     return 0;
 }
 
@@ -983,16 +775,8 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, leader_window, lua_pushnumbe
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, hidden, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, minimized, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, fullscreen, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, modal, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, ontop, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, above, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, below, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, size_hints_honor, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_horizontal, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, maximized_vertical, lua_pushboolean)
 
 static int
 luaA_client_get_content(lua_State *L, client_t *c)
@@ -1340,46 +1124,14 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_client_set_hidden,
                             (lua_class_propfunc_t) luaA_client_get_hidden,
                             (lua_class_propfunc_t) luaA_client_set_hidden);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MINIMIZED,
-                            (lua_class_propfunc_t) luaA_client_set_minimized,
-                            (lua_class_propfunc_t) luaA_client_get_minimized,
-                            (lua_class_propfunc_t) luaA_client_set_minimized);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_FULLSCREEN,
-                            (lua_class_propfunc_t) luaA_client_set_fullscreen,
-                            (lua_class_propfunc_t) luaA_client_get_fullscreen,
-                            (lua_class_propfunc_t) luaA_client_set_fullscreen);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MODAL,
-                            (lua_class_propfunc_t) luaA_client_set_modal,
-                            (lua_class_propfunc_t) luaA_client_get_modal,
-                            (lua_class_propfunc_t) luaA_client_set_modal);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_GROUP_WINDOW,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_group_window,
                             NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MAXIMIZED_HORIZONTAL,
-                            (lua_class_propfunc_t) luaA_client_set_maximized_horizontal,
-                            (lua_class_propfunc_t) luaA_client_get_maximized_horizontal,
-                            (lua_class_propfunc_t) luaA_client_set_maximized_horizontal);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_MAXIMIZED_VERTICAL,
-                            (lua_class_propfunc_t) luaA_client_set_maximized_vertical,
-                            (lua_class_propfunc_t) luaA_client_get_maximized_vertical,
-                            (lua_class_propfunc_t) luaA_client_set_maximized_vertical);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_ICON,
                             (lua_class_propfunc_t) luaA_client_set_icon,
                             (lua_class_propfunc_t) luaA_client_get_icon,
                             (lua_class_propfunc_t) luaA_client_set_icon);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_ONTOP,
-                            (lua_class_propfunc_t) luaA_client_set_ontop,
-                            (lua_class_propfunc_t) luaA_client_get_ontop,
-                            (lua_class_propfunc_t) luaA_client_set_ontop);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_ABOVE,
-                            (lua_class_propfunc_t) luaA_client_set_above,
-                            (lua_class_propfunc_t) luaA_client_get_above,
-                            (lua_class_propfunc_t) luaA_client_set_above);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_BELOW,
-                            (lua_class_propfunc_t) luaA_client_set_below,
-                            (lua_class_propfunc_t) luaA_client_get_below,
-                            (lua_class_propfunc_t) luaA_client_set_below);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_SIZE_HINTS_HONOR,
                             (lua_class_propfunc_t) luaA_client_set_size_hints_honor,
                             (lua_class_propfunc_t) luaA_client_get_size_hints_honor,

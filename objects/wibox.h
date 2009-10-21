@@ -30,8 +30,6 @@
 struct wibox_t
 {
     EWINDOW_OBJECT_HEADER
-    /** Ontop */
-    bool ontop;
     /** Visible */
     bool visible;
     /** Widget list */
