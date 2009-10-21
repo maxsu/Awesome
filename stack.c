@@ -143,7 +143,7 @@ client_layer_translator(client_t *c)
     /* then deal with windows type */
     switch(c->type)
     {
-      case WINDOW_TYPE_DESKTOP:
+      case EWINDOW_TYPE_DESKTOP:
         return WINDOW_LAYER_DESKTOP;
       default:
         break;

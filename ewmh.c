@@ -573,21 +573,26 @@ ewmh_client_check_hints(client_t *c)
     if(reply && (data = xcb_get_property_value(reply)))
     {
         state = (xcb_atom_t *) data;
+        ewindow_type_t type = c->type;
         for(int i = 0; i < xcb_get_property_value_length(reply) / ssizeof(xcb_atom_t); i++)
             if(state[i] == _NET_WM_WINDOW_TYPE_DESKTOP)
-                c->type = MAX(c->type, WINDOW_TYPE_DESKTOP);
+                type = MAX(c->type, EWINDOW_TYPE_DESKTOP);
             else if(state[i] == _NET_WM_WINDOW_TYPE_DIALOG)
-                c->type = MAX(c->type, WINDOW_TYPE_DIALOG);
+                type = MAX(c->type, EWINDOW_TYPE_DIALOG);
             else if(state[i] == _NET_WM_WINDOW_TYPE_SPLASH)
-                c->type = MAX(c->type, WINDOW_TYPE_SPLASH);
+                type = MAX(c->type, EWINDOW_TYPE_SPLASH);
             else if(state[i] == _NET_WM_WINDOW_TYPE_DOCK)
-                c->type = MAX(c->type, WINDOW_TYPE_DOCK);
+                type = MAX(c->type, EWINDOW_TYPE_DOCK);
             else if(state[i] == _NET_WM_WINDOW_TYPE_MENU)
-                c->type = MAX(c->type, WINDOW_TYPE_MENU);
+                type = MAX(c->type, EWINDOW_TYPE_MENU);
             else if(state[i] == _NET_WM_WINDOW_TYPE_TOOLBAR)
-                c->type = MAX(c->type, WINDOW_TYPE_TOOLBAR);
+                type = MAX(c->type, EWINDOW_TYPE_TOOLBAR);
             else if(state[i] == _NET_WM_WINDOW_TYPE_UTILITY)
-                c->type = MAX(c->type, WINDOW_TYPE_UTILITY);
+                type = MAX(c->type, EWINDOW_TYPE_UTILITY);
+
+        luaA_object_push(globalconf.L, c);
+        ewindow_set_type(globalconf.L, -1, type);
+        lua_pop(globalconf.L, 1);
     }
 
     p_delete(&reply);

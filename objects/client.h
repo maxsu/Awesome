@@ -77,8 +77,6 @@ struct client_t
     bool hidden;
     /** true if the client must be skipped from task bar client list */
     bool skip_taskbar;
-    /** The window type */
-    window_type_t type;
     /** Window of the group leader */
     xcb_window_t group_window;
     /** Window holding command needed to start it (session management related) */
@@ -121,7 +119,6 @@ void client_set_machine(lua_State *, int, char *);
 void client_set_icon_name(lua_State *, int, char *);
 void client_set_alt_icon_name(lua_State *, int, char *);
 void client_set_class_instance(lua_State *, int, const char *, const char *);
-void client_set_type(lua_State *L, int, window_type_t);
 void client_set_name(lua_State *L, int, char *);
 void client_set_alt_name(lua_State *L, int, char *);
 void client_set_group_window(lua_State *, int, xcb_window_t);
