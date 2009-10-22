@@ -679,7 +679,11 @@ wibox_detach(lua_State *L, int udx)
             }
 
         if(strut_has_value(&wibox->strut))
-            screen_emit_signal(L, wibox->screen, "property::workarea", 0);
+        {
+            lua_pushlightuserdata(L, wibox->screen);
+            luaA_object_emit_signal(L, -1, "property::workarea", 0);
+            lua_pop(L, 1);
+        }
 
         wibox->screen = NULL;
         wibox->parent = NULL;
@@ -738,7 +742,11 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
     luaA_object_emit_signal(L, udx, "property::screen", 0);
 
     if(strut_has_value(&wibox->strut))
-        screen_emit_signal(L, wibox->screen, "property::workarea", 0);
+    {
+        lua_pushlightuserdata(L, wibox->screen);
+        luaA_object_emit_signal(L, -1, "property::workarea", 0);
+        lua_pop(L, 1);
+    }
 }
 
 static int

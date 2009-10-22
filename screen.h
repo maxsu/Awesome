@@ -30,16 +30,13 @@ ARRAY_TYPE(screen_output_t, screen_output)
 
 struct a_screen
 {
-    /** Physical screen index */
-    int phys_screen;
+    LUA_OBJECT_HEADER
     /** Screen geometry */
     area_t geometry;
     /** Tag list */
     tag_array_t tags;
     /** Screen's root window */
     window_t *root;
-    /** The signals emitted by screen objects */
-    signal_array_t signals;
     /** True if the banning on this screen needs to be updated */
     bool need_lazy_banning;
     /** The screen outputs informations */
@@ -48,6 +45,8 @@ struct a_screen
 ARRAY_FUNCS(screen_t, screen, DO_NOTHING)
 
 void screen_emit_signal(lua_State *, screen_t *, const char *, int);
+
+void screen_class_setup(lua_State *);
 void screen_scan(void);
 screen_t *screen_getbycoord(int, int);
 area_t screen_area_get(screen_t *, bool);

@@ -34,6 +34,9 @@
 #include "luaa.h"
 #include "common/xutil.h"
 
+static lua_class_t screen_class;
+LUA_OBJECT_FUNCS(&screen_class, screen_t, screen)
+
 struct screen_output_t
 {
     /** The XRandR names of the output */
@@ -122,7 +125,6 @@ screen_scan_randr(void)
                 new_screen.geometry.y = crtc_info_r->y;
                 new_screen.geometry.width= crtc_info_r->width;
                 new_screen.geometry.height= crtc_info_r->height;
-                new_screen.phys_screen = globalconf.default_screen;
                 new_screen.root = root;
 
                 xcb_randr_output_t *randr_outputs = xcb_randr_get_crtc_info_outputs(crtc_info_r);
@@ -214,7 +216,6 @@ screen_scan_xinerama(void)
                 screen_t new_screen;
                 p_clear(&new_screen, 1);
                 new_screen.geometry = screen_xsitoarea(xsi[screen]);
-                new_screen.phys_screen = globalconf.default_screen;
                 new_screen.root = root;
                 screen_array_append(&globalconf.screens, new_screen);
             }
@@ -252,6 +253,10 @@ screen_scan(void)
 {
     if(!screen_scan_randr() && !screen_scan_xinerama())
         screen_scan_x11();
+
+    /* Transforms all screen in lightuserdata */
+    foreach(screen, globalconf.screens)
+        screen_make_light(globalconf.L, screen);
 
     globalconf.visual = screen_default_visual(globalconf.screen);
 }
@@ -410,20 +415,6 @@ screen_client_moveto(client_t *c, screen_t *new_screen, bool doresize)
     lua_pop(globalconf.L, 1);
 }
 
-/** Push a screen onto the stack.
- * \param L The Lua VM state.
- * \param s The screen to push.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_pushscreen(lua_State *L, screen_t *s)
-{
-    lua_pushlightuserdata(L, s);
-    luaL_getmetatable(L, "screen");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
 /** Screen module.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -439,11 +430,15 @@ luaA_screen_module_index(lua_State *L)
         foreach(screen, globalconf.screens)
             foreach(output, screen->outputs)
                 if(!a_strcmp(output->name, name))
-                    return luaA_pushscreen(L, screen);
+                {
+                    lua_pushlightuserdata(L, screen);
+                    return 1;
+                }
 
     int screen = luaL_checknumber(L, 2) - 1;
     luaA_checkscreen(screen);
-    return luaA_pushscreen(L, &globalconf.screens.tab[screen]);
+    lua_pushlightuserdata(L, &globalconf.screens.tab[screen]);
+    return 1;
 }
 
 /** Get screen tags.
@@ -457,7 +452,7 @@ luaA_screen_module_index(lua_State *L)
 static int
 luaA_screen_tags(lua_State *L)
 {
-    screen_t *s = luaL_checkudata(L, 1, "screen");
+    screen_t *s = luaA_checkudata(L, 1, &screen_class);
 
     if(lua_gettop(L) == 2)
     {
@@ -484,139 +479,6 @@ luaA_screen_tags(lua_State *L)
     return 1;
 }
 
-/** A screen.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lfield coords The screen coordinates. Immutable.
- * \lfield workarea The screen workarea.
- */
-static int
-luaA_screen_index(lua_State *L)
-{
-    size_t len;
-    const char *buf;
-    screen_t *s;
-
-    /* Get metatable of the screen. */
-    lua_getmetatable(L, 1);
-    /* Get the field */
-    lua_pushvalue(L, 2);
-    lua_rawget(L, -2);
-    /* Do we have a field like that? */
-    if(!lua_isnil(L, -1))
-    {
-        /* Yes, so return it! */
-        lua_remove(L, -2);
-        return 1;
-    }
-    /* No, so remove everything. */
-    lua_pop(L, 2);
-
-    buf = luaL_checklstring(L, 2, &len);
-    s = lua_touserdata(L, 1);
-
-    switch(a_tokenize(buf, len))
-    {
-      case A_TK_INDEX:
-        lua_pushinteger(L, screen_array_indexof(&globalconf.screens, s) + 1);
-        break;
-      case A_TK_ROOT:
-        return luaA_object_push(L, s->root);
-      case A_TK_GEOMETRY:
-        luaA_pusharea(L, s->geometry);
-        break;
-      case A_TK_WORKAREA:
-        luaA_pusharea(L, screen_area_get(s, true));
-        break;
-      case A_TK_OUTPUTS:
-        {
-            lua_createtable(L, 0, s->outputs.len);
-            foreach(output, s->outputs)
-            {
-                lua_createtable(L, 2, 0);
-                lua_pushinteger(L, output->mm_width);
-                lua_setfield(L, -2, "mm_width");
-                lua_pushinteger(L, output->mm_height);
-                lua_setfield(L, -2, "mm_height");
-                lua_setfield(L, -2, output->name);
-            }
-        }
-        break;
-      default:
-        return 0;
-    }
-
-    return 1;
-}
-
-/** Add a signal to a screen.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue A screen.
- * \lparam A signal name.
- * \lparam A function to call when the signal is emitted.
- */
-static int
-luaA_screen_connect_signal(lua_State *L)
-{
-    screen_t *s = lua_touserdata(L, 1);
-    const char *name = luaL_checkstring(L, 2);
-    luaA_checkfunction(L, 3);
-    signal_add(&s->signals, name, luaA_object_ref(L, 3));
-    return 0;
-}
-
-/** Remove a signal to a screen.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue A screen.
- * \lparam A signal name.
- * \lparam A function to remove
- */
-static int
-luaA_screen_disconnect_signal(lua_State *L)
-{
-    screen_t *s = lua_touserdata(L, 1);
-    const char *name = luaL_checkstring(L, 2);
-    luaA_checkfunction(L, 3);
-    const void *ref = lua_topointer(L, 3);
-    signal_remove(&s->signals, name, ref);
-    luaA_object_unref(L, (void *) ref);
-    return 0;
-}
-
-/** Emit a signal to a screen.
- * \param L The Lua VM state.
- * \param screen The screen.
- * \param name The signal name.
- * \param nargs The number of arguments to the signal function.
- */
-void
-screen_emit_signal(lua_State *L, screen_t *screen, const char *name, int nargs)
-{
-    luaA_pushscreen(L, screen);
-    lua_insert(L, - nargs - 1);
-    signal_object_emit(L, &screen->signals, name, nargs + 1);
-}
-
-/** Emit a signal to a screen.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue A screen.
- * \lparam A signal name.
- * \lparam Various arguments, optional.
- */
-static int
-luaA_screen_emit_signal(lua_State *L)
-{
-    screen_emit_signal(L, lua_touserdata(L, 1), luaL_checkstring(L, 2), lua_gettop(L) - 2);
-    return 0;
-}
-
 /** Get the screen count.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -631,21 +493,89 @@ luaA_screen_count(lua_State *L)
     return 1;
 }
 
-const struct luaL_reg awesome_screen_methods[] =
+static int
+luaA_screen_get_index(lua_State *L, screen_t *screen)
 {
-    { "count", luaA_screen_count },
-    { "__index", luaA_screen_module_index },
-    { NULL, NULL }
-};
+    lua_pushinteger(L, screen_array_indexof(&globalconf.screens, screen) + 1);
+    return 1;
+}
 
-const struct luaL_reg awesome_screen_meta[] =
+static int
+luaA_screen_get_root(lua_State *L, screen_t *screen)
 {
-    { "connect_signal", luaA_screen_connect_signal },
-    { "disconnect_signal", luaA_screen_disconnect_signal },
-    { "emit_signal", luaA_screen_emit_signal },
-    { "tags", luaA_screen_tags },
-    { "__index", luaA_screen_index },
-    { NULL, NULL }
-};
+    return luaA_object_push(L, screen->root);
+}
+
+static int
+luaA_screen_get_geometry(lua_State *L, screen_t *screen)
+{
+    return luaA_pusharea(L, screen->geometry);
+}
+
+static int
+luaA_screen_get_workarea(lua_State *L, screen_t *screen)
+{
+    return luaA_pusharea(L, screen_area_get(screen, true));
+}
+
+static int
+luaA_screen_get_outputs(lua_State *L, screen_t *screen)
+{
+    lua_createtable(L, 0, screen->outputs.len);
+    foreach(output, screen->outputs)
+    {
+        lua_createtable(L, 0, 2);
+        lua_pushinteger(L, output->mm_width);
+        lua_setfield(L, -2, "mm_width");
+        lua_pushinteger(L, output->mm_height);
+        lua_setfield(L, -2, "mm_height");
+        lua_setfield(L, -2, output->name);
+    }
+    return 1;
+}
+
+void
+screen_class_setup(lua_State *L)
+{
+    static const struct luaL_reg screen_methods[] =
+    {
+        LUA_CLASS_METHODS(screen)
+        { "tags", luaA_screen_tags },
+        { "count", luaA_screen_count },
+        { NULL, NULL }
+    };
+
+    static const struct luaL_reg screen_module_meta[] =
+    {
+        { "__index", luaA_screen_module_index },
+        { NULL, NULL }
+    };
+
+    luaA_class_setup(L, &screen_class, "screen", NULL,
+                     NULL, NULL, NULL,
+                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
+                     screen_methods, screen_module_meta, NULL);
+
+    luaA_class_add_property(&screen_class, A_TK_INDEX,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_screen_get_index,
+                            NULL);
+    luaA_class_add_property(&screen_class, A_TK_ROOT,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_screen_get_root,
+                            NULL);
+    luaA_class_add_property(&screen_class, A_TK_GEOMETRY,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_screen_get_geometry,
+                            NULL);
+    luaA_class_add_property(&screen_class, A_TK_WORKAREA,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_screen_get_workarea,
+                            NULL);
+    luaA_class_add_property(&screen_class, A_TK_OUTPUTS,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_screen_get_outputs,
+                            NULL);
+}
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
