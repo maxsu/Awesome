@@ -30,7 +30,7 @@
 #include "common/xcursor.h"
 
 /** Focused window */
-window_t *window_focused;
+window_t *_G_window_focused;
 
 static void
 window_wipe(window_t *window)
@@ -57,7 +57,7 @@ void
 window_ban_unfocus(window_t *window)
 {
     /* Wait until the last moment to take away the focus from the window. */
-    if(window_focused == window)
+    if(_G_window_focused == window)
         /* Set focus on root window, so no events leak to the current window. */
         xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
                             window->screen->protocol_screen->root->window, XCB_CURRENT_TIME);
@@ -97,7 +97,7 @@ window_unban(window_t *window)
 void
 window_focus_update(window_t *window)
 {
-    window_focused = window;
+    _G_window_focused = window;
     luaA_object_push(globalconf.L, window);
     luaA_object_emit_signal(globalconf.L, -1, "focus", 0);
     lua_pop(globalconf.L, 1);
@@ -109,7 +109,7 @@ window_focus_update(window_t *window)
 void
 window_unfocus_update(window_t *window)
 {
-    window_focused = NULL;
+    _G_window_focused = NULL;
     luaA_object_push(globalconf.L, window);
     luaA_object_emit_signal(globalconf.L, -1, "unfocus", 0);
     lua_pop(globalconf.L, 1);

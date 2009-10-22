@@ -347,7 +347,7 @@ property_handle_xembed_info(void *data __attribute__ ((unused)),
 {
     xembed_window_t *emwin = NULL;
 
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
         if((emwin = xembed_getbywin(&screen->embedded, window)))
             break;
 

@@ -157,7 +157,7 @@ void
 ewmh_init_screen(protocol_screen_t *pscreen)
 {
     xcb_window_t father;
-    int phys_screen = protocol_screen_array_indexof(&protocol_screens, pscreen);
+    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
     xcb_screen_t *xscreen = xutil_screen_get(globalconf.connection, phys_screen);
     xcb_atom_t atom[] =
     {

@@ -181,7 +181,7 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
                          XCB_CURRENT_TIME);
     }
     else if(ev->child == XCB_NONE)
-        foreach(screen, protocol_screens)
+        foreach(screen, _G_protocol_screens)
             if(screen->root->window == ev->event)
             {
                 luaA_object_push(globalconf.L, screen->root);
@@ -316,7 +316,7 @@ event_handle_destroynotify(void *data __attribute__ ((unused)),
     if((c = client_getbywin(ev->window)))
         client_unmanage(c);
     else
-        foreach(screen, protocol_screens)
+        foreach(screen, _G_protocol_screens)
             foreach(em, screen->embedded)
                 if(em->window == ev->window)
                 {
@@ -621,7 +621,7 @@ event_handle_key(void *data __attribute__ ((unused)),
             }
         }
         else
-            foreach(screen, protocol_screens)
+            foreach(screen, _G_protocol_screens)
                 if(screen->root->window == ev->event)
                 {
                     luaA_object_push(globalconf.L, screen->root);
@@ -657,7 +657,7 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
     if(wa_r->override_redirect)
         goto bailout;
 
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
         if(xembed_getbywin(&screen->embedded, ev->window))
         {
             xcb_map_window(connection, ev->window);
@@ -716,7 +716,7 @@ event_handle_unmapnotify(void *data __attribute__ ((unused)),
             client_unmanage(c);
     }
     else
-        foreach(screen, protocol_screens)
+        foreach(screen, _G_protocol_screens)
             foreach(em, screen->embedded)
                 if(em->window == ev->window)
                 {
@@ -820,7 +820,7 @@ event_handle_mappingnotify(void *data,
                             &globalconf.modeswitchmask);
 
         /* regrab everything */
-        foreach(screen, protocol_screens)
+        foreach(screen, _G_protocol_screens)
         {
             xcb_ungrab_key(connection, XCB_GRAB_ANY, screen->root->window, XCB_MOD_MASK_ANY);
             xwindow_grabkeys(screen->root->window, &screen->root->keys);

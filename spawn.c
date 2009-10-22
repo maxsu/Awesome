@@ -236,9 +236,9 @@ spawn_init(void)
 {
     globalconf.sndisplay = sn_xcb_display_new(globalconf.connection, NULL, NULL);
 
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
         screen->snmonitor = sn_monitor_context_new(globalconf.sndisplay,
-                                                   protocol_screen_array_indexof(&protocol_screens, screen),
+                                                   protocol_screen_array_indexof(&_G_protocol_screens, screen),
                                                    spawn_monitor_event,
                                                    NULL, NULL);
 }

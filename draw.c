@@ -350,7 +350,7 @@ draw_text_extents(draw_text_context_t *data)
 
     surface = cairo_xcb_surface_create(globalconf.connection,
                                        globalconf.default_screen,
-                                       protocol_screens.tab[0].visual,
+                                       _G_protocol_screens.tab[0].visual,
                                        s->width_in_pixels,
                                        s->height_in_pixels);
 

@@ -151,7 +151,7 @@ wibox_draw_context_update(wibox_t *w)
       case South:
       case North:
         {
-            int phys_screen = protocol_screen_array_indexof(&protocol_screens, w->ctx.pscreen);
+            int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, w->ctx.pscreen);
             xcb_screen_t *s = xutil_screen_get(globalconf.connection, phys_screen);
 
             /* we need a new pixmap this way [     ] to render */
@@ -183,7 +183,7 @@ wibox_draw_context_update(wibox_t *w)
 static void
 wibox_init(wibox_t *w, protocol_screen_t *pscreen)
 {
-    int phys_screen = protocol_screen_array_indexof(&protocol_screens, pscreen);
+    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
     xcb_screen_t *s = xutil_screen_get(globalconf.connection, phys_screen);
 
     w->window = xcb_generate_id(globalconf.connection);
@@ -283,7 +283,7 @@ wibox_moveresize(lua_State *L, int udx, area_t geometry)
             if(w->pixmap != w->ctx.pixmap)
                 xcb_free_pixmap(globalconf.connection, w->ctx.pixmap);
             w->pixmap = xcb_generate_id(globalconf.connection);
-            int phys_screen = protocol_screen_array_indexof(&protocol_screens, w->ctx.pscreen);
+            int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, w->ctx.pscreen);
             xcb_screen_t *s = xutil_screen_get(globalconf.connection, phys_screen);
             xcb_create_pixmap(globalconf.connection, s->root_depth, w->pixmap, s->root,
                               w->geometry.width, w->geometry.height);

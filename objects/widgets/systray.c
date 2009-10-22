@@ -46,11 +46,11 @@ systray_extents(lua_State *L, widget_t *widget)
     area_t geometry;
     p_clear(&geometry, 1);
 
-    if(phys_screen < protocol_screens.len)
+    if(phys_screen < _G_protocol_screens.len)
     {
         systray_data_t *d = widget->data;
         /** \todo use class hints */
-        geometry.width  = d->height * protocol_screens.tab[phys_screen].embedded.len;
+        geometry.width  = d->height * _G_protocol_screens.tab[phys_screen].embedded.len;
         geometry.height = d->height;
     }
 
