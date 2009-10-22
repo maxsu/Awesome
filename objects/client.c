@@ -510,7 +510,11 @@ client_unmanage(client_t *c)
     lua_pop(globalconf.L, 1);
 
     if(strut_has_value(&c->strut))
-        screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
+    {
+        lua_pushlightuserdata(globalconf.L, c->screen);
+        luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
+        lua_pop(globalconf.L, 1);
+    }
 
     xwindow_set_state(c->window, XCB_WM_STATE_WITHDRAWN);
 
@@ -670,7 +674,11 @@ luaA_client_set_hidden(lua_State *L, client_t *c)
     {
         c->hidden = b;
         if(strut_has_value(&c->strut))
-            screen_emit_signal(globalconf.L, c->screen, "property::workarea", 0);
+        {
+            lua_pushlightuserdata(globalconf.L, c->screen);
+            luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
+            lua_pop(globalconf.L, 1);
+        }
         luaA_object_emit_signal(L, -3, "property::hidden", 0);
     }
     return 0;

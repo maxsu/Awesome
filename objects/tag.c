@@ -90,8 +90,10 @@ tag_append_to_screen(lua_State *L, int udx, screen_t *s)
     luaA_object_emit_signal(L, -1, "property::screen", 0);
     lua_pop(L, 1);
 
+    lua_pushlightuserdata(globalconf.L, tag->screen);
     luaA_object_push(globalconf.L, tag);
-    screen_emit_signal(globalconf.L, s, "tag::attach", 1);
+    luaA_object_emit_signal(globalconf.L, -2, "tag::attach", 1);
+    lua_pop(globalconf.L, 1);
 }
 
 /** Remove a tag from screen. Tag must be on a screen.
@@ -118,12 +120,12 @@ tag_remove_from_screen(tag_t *tag)
     ewmh_update_net_desktop_names(phys_screen);
     ewmh_update_workarea(phys_screen);
 
-    screen_t *s = tag->screen;
+    lua_pushlightuserdata(globalconf.L, tag->screen);
     tag->screen = NULL;
-
     luaA_object_push(globalconf.L, tag);
     luaA_object_emit_signal(globalconf.L, -1, "property::screen", 0);
-    screen_emit_signal(globalconf.L, s, "tag::detach", 1);
+    luaA_object_emit_signal(globalconf.L, -2, "tag::detach", 1);
+    lua_pop(globalconf.L, 1);
 
     luaA_object_unref(globalconf.L, tag);
 }

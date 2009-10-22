@@ -30,6 +30,7 @@ ARRAY_TYPE(screen_output_t, screen_output)
 
 struct a_screen
 {
+    LUA_OBJECT_HEADER
     /** Protocol screen */
     protocol_screen_t *protocol_screen;
     /** Screen geometry */
@@ -43,8 +44,6 @@ struct a_screen
         /** Systray window parent */
         xcb_window_t parent;
     } systray;
-    /** The signals emitted by screen objects */
-    signal_array_t signals;
     /** True if the banning on this screen needs to be updated */
     bool need_lazy_banning;
     /** The screen outputs informations */
@@ -55,7 +54,7 @@ ARRAY_FUNCS(screen_t, screen, DO_NOTHING)
 /** Protocol screens */
 protocol_screen_array_t _G_protocol_screens;
 
-void screen_emit_signal(lua_State *, screen_t *, const char *, int);
+void screen_class_setup(lua_State *);
 void screen_scan(void);
 screen_t *screen_getbycoord(screen_t *, int, int);
 area_t screen_area_get(screen_t *, bool);

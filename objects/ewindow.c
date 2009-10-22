@@ -61,7 +61,11 @@ luaA_ewindow_struts(lua_State *L)
         luaA_tostrut(L, 2, &ewindow->strut);
         luaA_object_emit_signal(L, 1, "property::struts", 0);
         if(ewindow->screen)
-            screen_emit_signal(L, ewindow->screen, "property::workarea", 0);
+        {
+            lua_pushlightuserdata(L, ewindow->screen);
+            luaA_object_emit_signal(L, -1, "property::workarea", 0);
+            lua_pop(globalconf.L, 1);
+        }
     }
 
     return luaA_pushstrut(L, ewindow->strut);
@@ -85,7 +89,11 @@ ewindow_set_minimized(lua_State *L, int cidx, bool s)
         else
             xwindow_set_state(ewindow->window, XCB_WM_STATE_NORMAL);
         if(strut_has_value(&ewindow->strut))
-            screen_emit_signal(globalconf.L, ewindow->screen, "property::workarea", 0);
+        {
+            lua_pushlightuserdata(L, ewindow->screen);
+            luaA_object_emit_signal(L, -1, "property::workarea", 0);
+            lua_pop(globalconf.L, 1);
+        }
         luaA_object_emit_signal(L, cidx, "property::minimized", 0);
     }
 }
