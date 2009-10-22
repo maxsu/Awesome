@@ -293,6 +293,29 @@ luaA_classof(lua_State *L)
     return 1;
 }
 
+/** Check that an object is an instance of a class.
+ * Push true or false.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack
+ */
+static int
+luaA_instanceof(lua_State *L)
+{
+    luaL_checkany(L, 1);
+    const char *name = luaL_checkstring(L, 2);
+
+    lua_class_t *lua_class = luaA_class_get(L, 1);
+    for(; lua_class; lua_class = lua_class->parent)
+        if(!a_strcmp(lua_class->name, name))
+        {
+            lua_pushboolean(L, true);
+            return 1;
+        }
+
+    lua_pushboolean(L, false);
+    return 1;
+}
+
 /** Replace various standards Lua functions with our own.
  * \param L The Lua VM state.
  */
@@ -324,6 +347,9 @@ luaA_fixups(lua_State *L)
     /* set classof */
     lua_pushcfunction(L, luaA_classof);
     lua_setfield(L, LUA_GLOBALSINDEX, "classof");
+    /* set classof */
+    lua_pushcfunction(L, luaA_instanceof);
+    lua_setfield(L, LUA_GLOBALSINDEX, "instanceof");
     /* set selection */
     lua_pushliteral(L, "selection");
     lua_pushcfunction(L, luaA_selection_get);
