@@ -74,7 +74,7 @@ struct lua_class_t
     LUA_CLASS_HEADER
 };
 
-const char * luaA_typename(lua_State *, int);
+const char * luaA_classname(lua_State *, int);
 lua_class_t * luaA_class_get(lua_State *, int);
 
 void luaA_class_connect_signal(lua_State *, lua_class_t *, const char *, lua_CFunction);

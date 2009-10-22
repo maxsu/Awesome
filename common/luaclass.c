@@ -108,7 +108,7 @@ luaA_class_get(lua_State *L, int idx)
  * \param idx The index of the object on the stack.
  */
 const char *
-luaA_typename(lua_State *L, int idx)
+luaA_classname(lua_State *L, int idx)
 {
     int type = lua_type(L, idx);
 
