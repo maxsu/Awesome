@@ -91,7 +91,8 @@ luaA_class_get(lua_State *L, int idx)
 {
     int type = lua_type(L, idx);
 
-    if(type == LUA_TUSERDATA && lua_getmetatable(L, idx))
+    if((type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA)
+       && lua_getmetatable(L, idx))
     {
         /* Use the metatable has key to get the class from registry */
         lua_rawget(L, LUA_REGISTRYINDEX);
