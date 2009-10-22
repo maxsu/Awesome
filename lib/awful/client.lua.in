@@ -76,8 +76,8 @@ end
 --- Adds client to urgent stack.
 -- @param c The client object.
 -- @param prop The property which is updated.
-function urgent.add(c, prop)
-    if type(c) == "client" and prop == "urgent" and c.urgent then
+function urgent.add(c)
+    if c.urgent then
         table.insert(data.urgent, c)
     end
 end
