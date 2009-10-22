@@ -35,7 +35,7 @@
 #include "common/atoms.h"
 #include "common/xutil.h"
 
-extern window_t *window_focused;
+extern window_t *_G_window_focused;
 
 /** Collect a client.
  * \param L The Lua VM state.
@@ -1047,7 +1047,7 @@ luaA_client_module_index(lua_State *L)
     switch(a_tokenize(buf, len))
     {
       case A_TK_FOCUS:
-        return luaA_object_push(globalconf.L, window_focused);
+        return luaA_object_push(globalconf.L, _G_window_focused);
         break;
       default:
         return 0;

@@ -140,7 +140,7 @@ typedef enum
  * \param window The window.
  * \return The real layer.
  */
-extern window_t *window_focused;
+extern window_t *_G_window_focused;
 static ewindow_layer_t
 ewindow_layer_translator(ewindow_t *ewindow)
 {
@@ -148,7 +148,7 @@ ewindow_layer_translator(ewindow_t *ewindow)
     if(ewindow->ontop)
         return WINDOW_LAYER_ONTOP;
     /* Fullscreen windows only get their own layer when they have the focus */
-    else if(ewindow->fullscreen && window_focused == (window_t *) ewindow)
+    else if(ewindow->fullscreen && _G_window_focused == (window_t *) ewindow)
         return WINDOW_LAYER_FULLSCREEN;
     else if(ewindow->above)
         return WINDOW_LAYER_ABOVE;

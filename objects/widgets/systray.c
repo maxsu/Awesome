@@ -46,14 +46,10 @@ systray_extents(lua_State *L, widget_t *widget)
     luaA_checkscreen(screen);
 
     area_t geometry;
-    int n = 0;
     systray_data_t *d = widget->data;
 
-    for(int i = 0; i < globalconf.embedded.len; i++)
-        n++;
-
     /** \todo use class hints */
-    geometry.width  = d->height * n;
+    geometry.width  = d->height * globalconf.embedded.len;
     geometry.height = d->height;
     geometry.x      = geometry.y = 0;
 

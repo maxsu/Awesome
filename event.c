@@ -619,13 +619,12 @@ event_handle_key(xcb_key_press_event_t *ev)
             }
         }
         else
-            foreach(screen, globalconf.screens)
-                if(screen->root->window == ev->event)
-                {
-                    luaA_object_push(globalconf.L, screen->root);
-                    event_key_callback(ev, &screen->root->keys, -1, 1, &keysym);
-                    return;
-                }
+            if(globalconf.screen->root == ev->event)
+            {
+                luaA_object_push(globalconf.L, globalconf.screens.tab[0].root);
+                event_key_callback(ev, &globalconf.screens.tab[0].root->keys, -1, 1, &keysym);
+                return;
+            }
     }
 }
 
