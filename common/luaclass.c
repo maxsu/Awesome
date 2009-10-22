@@ -446,7 +446,7 @@ luaA_class_index(lua_State *L)
         if(prop->index)
             return prop->index(L, luaA_checkudata(L, 1, class));
     }
-    else
+    else if(class)
     {
         if(class->index_miss_property)
             return class->index_miss_property(L, luaA_checkudata(L, 1, class));
