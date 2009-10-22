@@ -60,7 +60,7 @@ awesome_atexit(void)
 
     a_dbus_cleanup();
 
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
     {
         /* reparent systray windows, otherwise they may die with their master */
         foreach(embed, screen->embedded)
@@ -89,16 +89,16 @@ awesome_atexit(void)
 static void
 scan(void)
 {
-    xcb_query_tree_cookie_t tree_cookies[protocol_screens.len];
+    xcb_query_tree_cookie_t tree_cookies[_G_protocol_screens.len];
 
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
         /* Get the window tree associated to this screen */
-        tree_cookies[protocol_screen_array_indexof(&protocol_screens, screen)] =
+        tree_cookies[protocol_screen_array_indexof(&_G_protocol_screens, screen)] =
             xcb_query_tree_unchecked(globalconf.connection, screen->root->window);
 
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
     {
-        int screen_index = protocol_screen_array_indexof(&protocol_screens, screen);
+        int screen_index = protocol_screen_array_indexof(&_G_protocol_screens, screen);
 
         xcb_query_tree_reply_t *tree_r = xcb_query_tree_reply(globalconf.connection,
                                                               tree_cookies[screen_index],
@@ -495,7 +495,7 @@ main(int argc, char **argv)
                         &globalconf.modeswitchmask);
 
     /* do this only for real screen */
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
     {
         /* select for events on root window */
         xcb_change_window_attributes(globalconf.connection, screen->root->window,

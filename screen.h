@@ -53,7 +53,7 @@ struct a_screen
 ARRAY_FUNCS(screen_t, screen, DO_NOTHING)
 
 /** Protocol screens */
-protocol_screen_array_t protocol_screens;
+protocol_screen_array_t _G_protocol_screens;
 
 void screen_emit_signal(lua_State *, screen_t *, const char *, int);
 void screen_scan(void);

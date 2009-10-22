@@ -88,7 +88,7 @@ protocol_screen_scan(void)
         pscreen.root->focusable = true;
         pscreen.root->window = xcb_screen->root;
 
-        protocol_screen_array_append(&protocol_screens, pscreen);
+        protocol_screen_array_append(&_G_protocol_screens, pscreen);
     }
 }
 
@@ -249,14 +249,14 @@ screen_scan(void)
     /* Scan screen protocol first */
     protocol_screen_scan();
 
-    foreach(pscreen, protocol_screens)
+    foreach(pscreen, _G_protocol_screens)
         /* If Xrandr fails... */
         if(!screen_scan_xrandr(pscreen))
             /* ...try Xinerama... */
             if(!screen_scan_xinerama(pscreen))
                 /* ... or then try the good old standard way */
             {
-                int pscreen_index = protocol_screen_array_indexof(&protocol_screens, pscreen);
+                int pscreen_index = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
                 xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, pscreen_index);
                 screen_t s;
                 p_clear(&s, 1);
@@ -272,7 +272,7 @@ screen_scan(void)
 protocol_screen_t *
 protocol_screen_from_root(xcb_window_t root)
 {
-    foreach(screen, protocol_screens)
+    foreach(screen, _G_protocol_screens)
         if(screen->root->window == root)
             return screen;
     return NULL;

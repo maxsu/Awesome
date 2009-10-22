@@ -44,7 +44,7 @@ font_new(const char *fontname)
      * order to get font informations */
     surface = cairo_xcb_surface_create(globalconf.connection,
                                        globalconf.default_screen,
-                                       protocol_screens.tab[0].visual, 1, 1);
+                                       _G_protocol_screens.tab[0].visual, 1, 1);
 
     cr = cairo_create(surface);
     layout = pango_cairo_create_layout(cr);

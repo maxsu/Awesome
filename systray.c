@@ -39,7 +39,7 @@ void
 systray_init(protocol_screen_t *pscreen)
 {
     xcb_client_message_event_t ev;
-    int phys_screen = protocol_screen_array_indexof(&protocol_screens, pscreen);
+    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
     xcb_screen_t *xscreen = xutil_screen_get(globalconf.connection, phys_screen);
     char *atom_name;
     xcb_intern_atom_cookie_t atom_systray_q;
@@ -98,7 +98,7 @@ systray_init(protocol_screen_t *pscreen)
 void
 systray_cleanup(protocol_screen_t *pscreen)
 {
-    int phys_screen = protocol_screen_array_indexof(&protocol_screens, pscreen);
+    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
     xcb_intern_atom_reply_t *atom_systray_r;
     char *atom_name;
 
@@ -195,7 +195,7 @@ systray_process_client_message(xcb_client_message_event_t *ev)
         if(!(geom_r = xcb_get_geometry_reply(globalconf.connection, geom_c, NULL)))
             return -1;
 
-        foreach(screen, protocol_screens)
+        foreach(screen, _G_protocol_screens)
             if(screen->root->window == geom_r->root)
             {
                 ret = systray_request_handle(ev->data.data32[2], screen, NULL);
