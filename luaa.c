@@ -286,10 +286,10 @@ luaAe_ipairs(lua_State *L)
  * \return The number of arguments pushed on the stack.
  */
 static int
-luaAe_type(lua_State *L)
+luaA_classof(lua_State *L)
 {
     luaL_checkany(L, 1);
-    lua_pushstring(L, luaA_typename(L, 1));
+    lua_pushstring(L, luaA_classname(L, 1));
     return 1;
 }
 
@@ -318,10 +318,12 @@ luaA_fixups(lua_State *L)
     lua_pushcfunction(L, luaA_ipairs_aux);
     lua_pushcclosure(L, luaAe_ipairs, 1);
     lua_settable(L, LUA_GLOBALSINDEX);
-    /* replace type */
-    lua_pushliteral(L, "type");
-    lua_pushcfunction(L, luaAe_type);
-    lua_settable(L, LUA_GLOBALSINDEX);
+    /* set type */
+    lua_pushcfunction(L, luaA_classof);
+    lua_setfield(L, LUA_GLOBALSINDEX, "type");
+    /* set classof */
+    lua_pushcfunction(L, luaA_classof);
+    lua_setfield(L, LUA_GLOBALSINDEX, "classof");
     /* set selection */
     lua_pushliteral(L, "selection");
     lua_pushcfunction(L, luaA_selection_get);
