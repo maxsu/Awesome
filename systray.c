@@ -171,8 +171,6 @@ systray_request_handle(xcb_window_t embed_win, protocol_screen_t *pscreen, xembe
 
     xembed_window_array_append(&pscreen->embedded, em);
 
-    widget_invalidate_bytype(widget_systray);
-
     return 0;
 }
 

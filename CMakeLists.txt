@@ -78,7 +78,6 @@ set(AWE_SRCS
     ${SOURCE_DIR}/objects/window.c
     ${SOURCE_DIR}/objects/widget.c
     ${SOURCE_DIR}/objects/widgets/imagebox.c
-    ${SOURCE_DIR}/objects/widgets/systray.c
     ${SOURCE_DIR}/objects/widgets/textbox.c)
 
 set(AWE_MAN_SRCS
