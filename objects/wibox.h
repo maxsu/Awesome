@@ -49,8 +49,6 @@ struct wibox_t
     xcb_pixmap_t pixmap;
     /** The graphic context. */
     xcb_gcontext_t gc;
-    /** The window geometry. */
-    area_t geometry;
     /** Draw context */
     draw_context_t ctx;
     /** Orientation */

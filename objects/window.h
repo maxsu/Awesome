@@ -23,6 +23,7 @@
 #define AWESOME_OBJECTS_WINDOW_H
 
 #include "globalconf.h"
+#include "area.h"
 #include "objects/button.h"
 #include "common/luaclass.h"
 
@@ -34,20 +35,25 @@
     char *cursor; \
     /** Client logical screen */ \
     screen_t *screen; \
+    /** Parent window */ \
+    window_t *parent; \
     /** Button bindings */ \
     button_array_t buttons; \
     /** True if the window is banned from the view */ \
     bool banned; \
     /** True if the window can have focus */ \
     bool focusable; \
+    /** Geometry */ \
+    area_t geometry; \
     /** Key bindings */ \
     key_array_t keys;
 
+typedef struct window_t window_t;
 /** Window structure */
-typedef struct
+struct window_t
 {
     WINDOW_OBJECT_HEADER
-} window_t;
+};
 
 typedef bool (*lua_interface_window_isvisible_t)(window_t *);
 

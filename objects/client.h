@@ -66,8 +66,6 @@ struct client_t
     char *name, *alt_name, *icon_name, *alt_icon_name;
     /** WM_CLASS stuff */
     char *class, *instance;
-    /** Window geometry */
-    area_t geometry;
     /** Has urgency hint */
     bool urgent;
     /** True if the client is hidden */

@@ -32,12 +32,7 @@ typedef struct
     /** The monitor of startup notifications */
     SnMonitorContext *snmonitor;
     /** Window that contains the systray */
-    struct
-    {
-        xcb_window_t window;
-        /** Systray window parent */
-        xcb_window_t parent;
-    } systray;
+    window_t *systray;
     /** Screen's root window */
     window_t *root;
     /** Embedded windows */
