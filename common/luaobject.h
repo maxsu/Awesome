@@ -31,59 +31,6 @@ void luaA_object_setup(lua_State *);
 void * luaA_object_incref(lua_State *, int, int);
 void luaA_object_decref(lua_State *, int, void *);
 
-/** Store an item in the environment table of an object.
- * \param L The Lua VM state.
- * \param ud The index of the object on the stack.
- * \param iud The index of the item on the stack.
- * \return The item reference.
- */
-static inline void *
-luaA_object_ref_item(lua_State *L, int ud, int iud)
-{
-    /* Get the env table from the object */
-    lua_getfenv(L, ud);
-    void *pointer = luaA_object_incref(L, -1, iud < 0 ? iud - 1 : iud);
-    /* Remove env table */
-    lua_pop(L, 1);
-    return pointer;
-}
-
-/** Unref an item from the environment table of an object.
- * \param L The Lua VM state.
- * \param ud The index of the object on the stack.
- * \param ref item.
- */
-static inline void
-luaA_object_unref_item(lua_State *L, int ud, void *pointer)
-{
-    /* Get the env table from the object */
-    lua_getfenv(L, ud);
-    /* Decrement */
-    luaA_object_decref(L, -1, pointer);
-    /* Remove env table */
-    lua_pop(L, 1);
-}
-
-/** Push an object item on the stack.
- * \param L The Lua VM state.
- * \param ud The object index on the stack.
- * \param pointer The item pointer.
- * \return The number of element pushed on stack.
- */
-static inline int
-luaA_object_push_item(lua_State *L, int ud, void *pointer)
-{
-    /* Get env table of the object */
-    lua_getfenv(L, ud);
-    /* Push key */
-    lua_pushlightuserdata(L, pointer);
-    /* Get env.pointer */
-    lua_rawget(L, -2);
-    /* Remove env table */
-    lua_remove(L, -2);
-    return 1;
-}
-
 static inline void
 luaA_object_registry_push(lua_State *L)
 {
@@ -148,6 +95,74 @@ luaA_object_push(lua_State *L, void *pointer)
     return 1;
 }
 
+/** Store an item in the environment table of an object.
+ * \param L The Lua VM state.
+ * \param ud The index of the object on the stack.
+ * \param iud The index of the item on the stack.
+ * \return The item reference.
+ */
+static inline void *
+luaA_object_ref_item(lua_State *L, int ud, int iud)
+{
+    /* Get the env table from the object */
+    lua_getfenv(L, ud);
+    void * pointer;
+    /* If it has not an env table, it might be a lightuserdata, so use the
+     * global registry */
+    if(lua_isnil(L, -1))
+        pointer = luaA_object_ref(L, iud);
+    else
+        pointer = luaA_object_incref(L, -1, iud < 0 ? iud - 1 : iud);
+    /* Remove env table (or nil) */
+    lua_pop(L, 1);
+    return pointer;
+}
+
+/** Unref an item from the environment table of an object.
+ * \param L The Lua VM state.
+ * \param ud The index of the object on the stack.
+ * \param ref item.
+ */
+static inline void
+luaA_object_unref_item(lua_State *L, int ud, void *pointer)
+{
+    /* Get the env table from the object */
+    lua_getfenv(L, ud);
+    if(lua_isnil(L, -1))
+        return luaA_object_unref(L, pointer);
+    else
+        /* Decrement */
+        luaA_object_decref(L, -1, pointer);
+    /* Remove env table (or nil) */
+    lua_pop(L, 1);
+}
+
+/** Push an object item on the stack.
+ * \param L The Lua VM state.
+ * \param ud The object index on the stack.
+ * \param pointer The item pointer.
+ * \return The number of element pushed on stack.
+ */
+static inline int
+luaA_object_push_item(lua_State *L, int ud, void *pointer)
+{
+    /* Get env table of the object */
+    lua_getfenv(L, ud);
+    /* If it has not an env table, uses the global registry. */
+    if(lua_isnil(L, -1))
+        luaA_object_push(L, pointer);
+    else
+    {
+        /* Push key */
+        lua_pushlightuserdata(L, pointer);
+        /* Get env.pointer */
+        lua_rawget(L, -2);
+    }
+    /* Remove env table (or nil) */
+    lua_remove(L, -2);
+    return 1;
+}
+
 void signal_object_emit(lua_State *, signal_array_t *, const char *, int);
 
 void luaA_object_connect_signal(lua_State *, int, const char *, lua_CFunction);
@@ -175,6 +190,19 @@ int luaA_object_emit_signal_simple(lua_State *);
         lua_pushvalue(L, -1);                                                  \
         luaA_class_emit_signal(L, (lua_class), "new", 1);                      \
         return p;                                                              \
+    }                                                                          \
+    static inline type *                                                       \
+    prefix##_make_light(lua_State *L, type *item)                              \
+    {                                                                          \
+        lua_pushlightuserdata(L, item);                                        \
+        luaA_settype(L, (lua_class));                                          \
+        luaA_class_emit_signal(L, (lua_class), "new", 1);                      \
+        return item;                                                           \
+    }                                                                          \
+    static inline type *                                                       \
+    prefix##_new_light(lua_State *L)                                           \
+    {                                                                          \
+        return prefix##_make_light(L, p_new(type, 1));                         \
     }
 
 #define OBJECT_EXPORT_PROPERTY(pfx, type, field) \
