@@ -24,19 +24,11 @@
 
 #include "common/luaclass.h"
 
-#define LUAA_OBJECT_REGISTRY_KEY "awesome.object.registry"
-
 int luaA_settype(lua_State *, lua_class_t *);
 void luaA_object_setup(lua_State *);
 void * luaA_object_incref(lua_State *, int, int);
 void luaA_object_decref(lua_State *, int, void *);
-
-static inline void
-luaA_object_registry_push(lua_State *L)
-{
-    lua_pushliteral(L, LUAA_OBJECT_REGISTRY_KEY);
-    lua_rawget(L, LUA_REGISTRYINDEX);
-}
+void luaA_object_registry_push(lua_State *);
 
 /** Reference an object and return a pointer to it.
  * That only works with userdata, table, thread or function.
