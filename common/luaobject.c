@@ -21,6 +21,15 @@
 
 #include "common/luaobject.h"
 
+static const int LUAA_OBJECT_REGISTRY_KEY;
+
+void
+luaA_object_registry_push(lua_State *L)
+{
+    lua_pushlightuserdata(L, (void *) &LUAA_OBJECT_REGISTRY_KEY);
+    lua_rawget(L, LUA_REGISTRYINDEX);
+}
+
 /** Setup the object system at startup.
  * \param L The Lua VM state.
  */
@@ -28,7 +37,7 @@ void
 luaA_object_setup(lua_State *L)
 {
     /* Push identification string */
-    lua_pushliteral(L, LUAA_OBJECT_REGISTRY_KEY);
+    lua_pushlightuserdata(L, (void *) &LUAA_OBJECT_REGISTRY_KEY);
     /* Create an empty table */
     lua_newtable(L);
     /* Create an empty metatable */
