@@ -56,30 +56,8 @@ typedef struct
 } draw_context_t;
 
 void draw_context_init(draw_context_t *, protocol_screen_t *, int, int,
-                       xcb_pixmap_t, const xcolor_t *, const xcolor_t *);
-
-/** Wipe a draw context.
- * \param ctx The draw_context_t to wipe.
- */
-static inline void
-draw_context_wipe(draw_context_t *ctx)
-{
-    if(ctx->layout)
-    {
-        g_object_unref(ctx->layout);
-        ctx->layout = NULL;
-    }
-    if(ctx->surface)
-    {
-        cairo_surface_destroy(ctx->surface);
-        ctx->surface = NULL;
-    }
-    if(ctx->cr)
-    {
-        cairo_destroy(ctx->cr);
-        ctx->cr = NULL;
-    }
-}
+                       const xcolor_t *, const xcolor_t *);
+void draw_context_wipe(draw_context_t *);
 
 bool draw_iso2utf8(const char *, size_t, char **, ssize_t *);
 

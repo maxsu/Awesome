@@ -122,27 +122,61 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
  * \param pscreen Protocol screen to use.
  * \param width Width.
  * \param height Height.
- * \param px Pixmap object to store.
  * \param fg Foreground color.
  * \param bg Background color.
  */
 void
 draw_context_init(draw_context_t *d, protocol_screen_t *pscreen,
-                  int width, int height, xcb_pixmap_t px,
+                  int width, int height,
                   const xcolor_t *fg, const xcolor_t *bg)
 {
+    /* Create a pixmap. */
+    int pscreen_index = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
+    xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, pscreen_index);
+    d->pixmap = xcb_generate_id(globalconf.connection);
+    xcb_create_pixmap(globalconf.connection, xcb_screen->root_depth,
+                      d->pixmap, xcb_screen->root,
+                      width, height);
+
     d->pscreen = pscreen;
     d->width = width;
     d->height = height;
-    d->pixmap = px;
     d->surface = cairo_xcb_surface_create(globalconf.connection,
-                                          px, pscreen->visual,
+                                          d->pixmap, pscreen->visual,
                                           width, height);
     d->cr = cairo_create(d->surface);
     d->layout = pango_cairo_create_layout(d->cr);
     d->fg = *fg;
     d->bg = *bg;
 };
+
+/** Wipe a draw context.
+ * \param ctx The draw_context_t to wipe.
+ */
+void
+draw_context_wipe(draw_context_t *ctx)
+{
+    if(ctx->pixmap)
+    {
+        xcb_free_pixmap(globalconf.connection, ctx->pixmap);
+        ctx->pixmap = XCB_NONE;
+    }
+    if(ctx->layout)
+    {
+        g_object_unref(ctx->layout);
+        ctx->layout = NULL;
+    }
+    if(ctx->surface)
+    {
+        cairo_surface_destroy(ctx->surface);
+        ctx->surface = NULL;
+    }
+    if(ctx->cr)
+    {
+        cairo_destroy(ctx->cr);
+        ctx->cr = NULL;
+    }
+}
 
 /** Draw text into a draw context.
  * \param ctx Draw context  to draw to.
