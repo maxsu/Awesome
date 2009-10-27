@@ -829,16 +829,10 @@ event_handle_mappingnotify(void *data,
 
         /* regrab everything */
         foreach(screen, _G_protocol_screens)
-        {
-            xcb_ungrab_key(connection, XCB_GRAB_ANY, screen->root->window, XCB_MOD_MASK_ANY);
             xwindow_grabkeys(screen->root->window, &screen->root->keys);
-        }
 
         foreach(c, globalconf.clients)
-        {
-            xcb_ungrab_key(connection, XCB_GRAB_ANY, (*c)->window, XCB_MOD_MASK_ANY);
             xwindow_grabkeys((*c)->window, &(*c)->keys);
-        }
     }
 
     return 0;
