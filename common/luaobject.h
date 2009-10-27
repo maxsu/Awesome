@@ -27,8 +27,9 @@
 int luaA_settype(lua_State *, lua_class_t *);
 void luaA_object_setup(lua_State *);
 void * luaA_object_incref(lua_State *, int, int);
-void luaA_object_decref(lua_State *, int, void *);
-void luaA_object_registry_push(lua_State *);
+void luaA_object_decref(lua_State *, int, int);
+void luaA_object_registry_refcount_push(lua_State *);
+int luaA_object_push(lua_State *, void *);
 
 /** Reference an object and return a pointer to it.
  * That only works with userdata, table, thread or function.
@@ -39,8 +40,9 @@ void luaA_object_registry_push(lua_State *);
 static inline void *
 luaA_object_ref(lua_State *L, int oud)
 {
-    luaA_object_registry_push(L);
-    void *p = luaA_object_incref(L, -1, oud < 0 ? oud - 1 : oud);
+    oud = luaA_absindex(L, oud);
+    luaA_object_registry_refcount_push(L);
+    void *p = luaA_object_incref(L, -1, oud);
     lua_pop(L, 1);
     return p;
 }
@@ -65,26 +67,25 @@ luaA_object_ref_class(lua_State *L, int oud, lua_class_t *class)
  * \param oud The object index on the stack.
  */
 static inline void
-luaA_object_unref(lua_State *L, void *pointer)
+luaA_object_unref_from_stack(lua_State *L, int oud)
 {
-    luaA_object_registry_push(L);
-    luaA_object_decref(L, -1, pointer);
+    oud = luaA_absindex(L, oud);
+    luaA_object_registry_refcount_push(L);
+    luaA_object_decref(L, -1, oud);
     lua_pop(L, 1);
 }
 
-/** Push a referenced object onto the stack.
+/** Unreference an object and return a pointer to it.
+ * That only works with userdata, table, thread or function.
  * \param L The Lua VM state.
- * \param pointer The object to push.
- * \return The number of element pushed on stack.
+ * \param pointer The object pointer.
  */
-static inline int
-luaA_object_push(lua_State *L, void *pointer)
+static inline void
+luaA_object_unref(lua_State *L, void *pointer)
 {
-    luaA_object_registry_push(L);
-    lua_pushlightuserdata(L, pointer);
-    lua_rawget(L, -2);
-    lua_remove(L, -2);
-    return 1;
+    luaA_object_push(L, pointer);
+    luaA_object_unref_from_stack(L, -1);
+    lua_pop(L, 1);
 }
 
 /** Store an item in the environment table of an object.
@@ -96,15 +97,16 @@ luaA_object_push(lua_State *L, void *pointer)
 static inline void *
 luaA_object_ref_item(lua_State *L, int ud, int iud)
 {
+    iud = luaA_absindex(L, iud);
     /* Get the env table from the object */
     lua_getfenv(L, ud);
-    void * pointer;
+    void *pointer;
     /* If it has not an env table, it might be a lightuserdata, so use the
      * global registry */
     if(lua_isnil(L, -1))
         pointer = luaA_object_ref(L, iud);
     else
-        pointer = luaA_object_incref(L, -1, iud < 0 ? iud - 1 : iud);
+        pointer = luaA_object_incref(L, -1, iud);
     /* Remove env table (or nil) */
     lua_pop(L, 1);
     return pointer;
@@ -113,19 +115,36 @@ luaA_object_ref_item(lua_State *L, int ud, int iud)
 /** Unref an item from the environment table of an object.
  * \param L The Lua VM state.
  * \param ud The index of the object on the stack.
- * \param ref item.
+ * \param iud The index of the item on the stack.
+ */
+static inline void
+luaA_object_unref_item_from_stack(lua_State *L, int ud, int iud)
+{
+    iud = luaA_absindex(L, iud);
+    /* Get the env table from the object */
+    lua_getfenv(L, ud);
+    /* No env table? Then we unref from the global registry */
+    if(lua_isnil(L, -1))
+        luaA_object_unref_from_stack(L, iud);
+    else
+        /* Decrement */
+        luaA_object_decref(L, -1, iud);
+    /* Remove env table (or nil) */
+    lua_pop(L, 1);
+}
+
+/** Unref an item from the environment table of an object.
+ * \param L The Lua VM state.
+ * \param ud The index of the object on the stack.
+ * \param pointer The address of the object.
  */
 static inline void
 luaA_object_unref_item(lua_State *L, int ud, void *pointer)
 {
-    /* Get the env table from the object */
-    lua_getfenv(L, ud);
-    if(lua_isnil(L, -1))
-        return luaA_object_unref(L, pointer);
-    else
-        /* Decrement */
-        luaA_object_decref(L, -1, pointer);
-    /* Remove env table (or nil) */
+    ud = luaA_absindex(L, ud);
+    luaA_object_push(L, pointer);
+    luaA_object_unref_item_from_stack(L, ud, -1);
+    /* Remove object */
     lua_pop(L, 1);
 }
 
@@ -135,24 +154,10 @@ luaA_object_unref_item(lua_State *L, int ud, void *pointer)
  * \param pointer The item pointer.
  * \return The number of element pushed on stack.
  */
-static inline int
+static inline int __attribute__ ((deprecated))
 luaA_object_push_item(lua_State *L, int ud, void *pointer)
 {
-    /* Get env table of the object */
-    lua_getfenv(L, ud);
-    /* If it has not an env table, uses the global registry. */
-    if(lua_isnil(L, -1))
-        luaA_object_push(L, pointer);
-    else
-    {
-        /* Push key */
-        lua_pushlightuserdata(L, pointer);
-        /* Get env.pointer */
-        lua_rawget(L, -2);
-    }
-    /* Remove env table (or nil) */
-    lua_remove(L, -2);
-    return 1;
+    return luaA_object_push(L, pointer);
 }
 
 void signal_object_emit(lua_State *, signal_array_t *, const char *, int);

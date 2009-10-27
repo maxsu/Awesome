@@ -22,11 +22,19 @@
 #include "common/luaobject.h"
 
 static const int LUAA_OBJECT_REGISTRY_KEY;
+static const int LUAA_OBJECT_REGISTRY_REFCOUNT_KEY;
 
-void
+static void
 luaA_object_registry_push(lua_State *L)
 {
     lua_pushlightuserdata(L, (void *) &LUAA_OBJECT_REGISTRY_KEY);
+    lua_rawget(L, LUA_REGISTRYINDEX);
+}
+
+void
+luaA_object_registry_refcount_push(lua_State *L)
+{
+    lua_pushlightuserdata(L, (void *) &LUAA_OBJECT_REGISTRY_REFCOUNT_KEY);
     lua_rawget(L, LUA_REGISTRYINDEX);
 }
 
@@ -40,18 +48,53 @@ luaA_object_setup(lua_State *L)
     lua_pushlightuserdata(L, (void *) &LUAA_OBJECT_REGISTRY_KEY);
     /* Create an empty table */
     lua_newtable(L);
-    /* Create an empty metatable */
+    /* Create its metatable with __mode = 'v'  */
     lua_newtable(L);
-    /* Set this empty table as the registry metatable.
-     * It's used to store the number of reference on stored objects. */
+    lua_pushliteral(L, "v");
+    lua_setfield(L, -2, "__mode");
     lua_setmetatable(L, -2);
+    /* Register table inside registry */
+    lua_rawset(L, LUA_REGISTRYINDEX);
+
+    /* Push identification string */
+    lua_pushlightuserdata(L, (void *) &LUAA_OBJECT_REGISTRY_REFCOUNT_KEY);
+    /* Create an empty table */
+    lua_newtable(L);
     /* Register table inside registry */
     lua_rawset(L, LUA_REGISTRYINDEX);
 }
 
+static int
+luaA_object_get_refcount(lua_State *L, int tud, int oud)
+{
+    tud = luaA_absindex(L, tud);
+    lua_pushvalue(L, oud);
+    /* Get the number of references */
+    lua_rawget(L, tud);
+    /* Get the number of references */
+    int count = lua_tonumber(L, -1);
+    /* Remove counter */
+    lua_pop(L, 1);
+    return count;
+}
+
+static void
+luaA_object_set_refcount(lua_State *L, int tud, int oud, int count)
+{
+    tud = luaA_absindex(L, tud);
+    lua_pushvalue(L, oud);
+    /* Push value */
+    if(count)
+        lua_pushinteger(L, count);
+    else
+        lua_pushnil(L);
+    /* Get the number of references */
+    lua_rawset(L, tud);
+}
+
 /** Increment a object reference in its store table.
  * \param L The Lua VM state.
- * \param tud The table index on the stack.
+ * \param tud The table index on the stack, where to store reference counting.
  * \param oud The object index on the stack.
  * \return A pointer to the object.
  */
@@ -62,90 +105,59 @@ luaA_object_incref(lua_State *L, int tud, int oud)
     void *pointer = (void *) lua_topointer(L, oud);
 
     /* Not reference able. */
-    if(!pointer)
+    if(pointer)
     {
-        lua_remove(L, oud);
-        return NULL;
+        int count = luaA_object_get_refcount(L, tud, oud) + 1;
+
+        luaA_object_set_refcount(L, tud, oud, count);
+
+        /* New guy! */
+        if(count == 1)
+        {
+            oud = luaA_absindex(L, oud);
+            /* Store into registry for futur use */
+            luaA_object_registry_push(L);
+            lua_pushlightuserdata(L, pointer);
+            lua_pushvalue(L, oud);
+            /* Set registry[data pointer] = data */
+            lua_rawset(L, -3);
+            /* Remove registry */
+            lua_pop(L, 1);
+        }
     }
-
-    /* Push the pointer (key) */
-    lua_pushlightuserdata(L, pointer);
-    /* Push the data (value) */
-    lua_pushvalue(L, oud < 0 ? oud - 1 : oud);
-    /* table.lightudata = data */
-    lua_rawset(L, tud < 0 ? tud - 2 : tud);
-
-    /* refcount++ */
-
-    /* Get the metatable */
-    lua_getmetatable(L, tud);
-    /* Push the pointer (key) */
-    lua_pushlightuserdata(L, pointer);
-    /* Get the number of references */
-    lua_rawget(L, -2);
-    /* Get the number of references and increment it */
-    int count = lua_tonumber(L, -1) + 1;
-    lua_pop(L, 1);
-    /* Push the pointer (key) */
-    lua_pushlightuserdata(L, pointer);
-    /* Push count (value) */
-    lua_pushinteger(L, count);
-    /* Set metatable[pointer] = count */
-    lua_rawset(L, -3);
-    /* Pop metatable */
-    lua_pop(L, 1);
 
     /* Remove referenced item */
     lua_remove(L, oud);
-
     return pointer;
 }
 
 /** Decrement a object reference in its store table.
  * \param L The Lua VM state.
- * \param tud The table index on the stack.
+ * \param tud The table index on the stack, where to store reference counting.
  * \param oud The object index on the stack.
  * \return A pointer to the object.
  */
 void
-luaA_object_decref(lua_State *L, int tud, void *pointer)
+luaA_object_decref(lua_State *L, int tud, int oud)
 {
-    if(!pointer)
-        return;
+    /* Check that the object is referencable */
+    if(lua_topointer(L, oud))
+        luaA_object_set_refcount(L, tud, oud, luaA_object_get_refcount(L, tud, oud) - 1);
+}
 
-    /* First, refcount-- */
-    /* Get the metatable */
-    lua_getmetatable(L, tud);
-    /* Push the pointer (key) */
+/** Push a referenced object onto the stack.
+ * \param L The Lua VM state.
+ * \param pointer The object to push.
+ * \return The number of element pushed on stack.
+ */
+int
+luaA_object_push(lua_State *L, void *pointer)
+{
+    luaA_object_registry_push(L);
     lua_pushlightuserdata(L, pointer);
-    /* Get the number of references */
     lua_rawget(L, -2);
-    /* Get the number of references and decrement it */
-    int count = lua_tonumber(L, -1) - 1;
-    lua_pop(L, 1);
-    /* Push the pointer (key) */
-    lua_pushlightuserdata(L, pointer);
-    /* Hasn't the ref reached 0? */
-    if(count)
-        lua_pushinteger(L, count);
-    else
-        /* Yup, delete it, set nil as value */
-        lua_pushnil(L);
-    /* Set meta[pointer] = count/nil */
-    lua_rawset(L, -3);
-    /* Pop metatable */
-    lua_pop(L, 1);
-
-    /* Wait, no more ref? */
-    if(!count)
-    {
-        /* Yes? So remove it from table */
-        lua_pushlightuserdata(L, pointer);
-        /* Push nil as value */
-        lua_pushnil(L);
-        /* table[pointer] = nil */
-        lua_rawset(L, tud < 0 ? tud - 2 : tud);
-    }
+    lua_remove(L, -2);
+    return 1;
 }
 
 int
