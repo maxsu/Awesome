@@ -43,8 +43,6 @@ struct wibox_t
     bool need_shape_update;
     /** Background image */
     image_t *bg_image;
-    /** The pixmap copied to the window object. */
-    xcb_pixmap_t pixmap;
     /** The graphic context. */
     xcb_gcontext_t gc;
     /** The window geometry. */
