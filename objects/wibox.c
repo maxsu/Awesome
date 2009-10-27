@@ -72,11 +72,6 @@ wibox_wipe_resources(wibox_t *w)
         client_restore_enterleave_events();
         w->window = XCB_NONE;
     }
-    if(w->pixmap)
-    {
-        xcb_free_pixmap(globalconf.connection, w->pixmap);
-        w->pixmap = XCB_NONE;
-    }
     draw_context_wipe(&w->ctx);
 }
 
@@ -180,7 +175,7 @@ wibox_draw_context_update(wibox_t *w)
     draw_context_init(&w->ctx,
                       w->geometry.width,
                       w->geometry.height,
-                      w->pixmap, &fg, &bg);
+                      &fg, &bg);
 }
 
 /** Initialize a wibox.
@@ -210,11 +205,6 @@ wibox_init(wibox_t *w)
                           | XCB_EVENT_MASK_EXPOSURE
                           | XCB_EVENT_MASK_PROPERTY_CHANGE
                       });
-
-    /* Create a pixmap. */
-    w->pixmap = xcb_generate_id(globalconf.connection);
-    xcb_create_pixmap(globalconf.connection, s->root_depth, w->pixmap, s->root,
-                      w->geometry.width, w->geometry.height);
 
     /* Update draw context physical screen, important for Zaphod. */
     wibox_draw_context_update(w);
@@ -276,14 +266,7 @@ wibox_moveresize(lua_State *L, int udx, area_t geometry)
         }
 
         if(mask_vals & (XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT))
-        {
-            xcb_free_pixmap(globalconf.connection, w->pixmap);
-            w->pixmap = xcb_generate_id(globalconf.connection);
-            xcb_screen_t *s = globalconf.screen;
-            xcb_create_pixmap(globalconf.connection, s->root_depth, w->pixmap, s->root,
-                              w->geometry.width, w->geometry.height);
             wibox_draw_context_update(w);
-        }
 
         /* Activate BMA */
         client_ignore_enterleave_events();
@@ -335,9 +318,10 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
                              int16_t x, int16_t y,
                              uint16_t w, uint16_t h)
 {
-    xcb_copy_area(globalconf.connection, wibox->pixmap,
-                  wibox->window, globalconf.gc, x, y, x, y,
-                  w, h);
+    if(wibox->ctx.pixmap && wibox->window)
+        xcb_copy_area(globalconf.connection, wibox->ctx.pixmap,
+                      wibox->window, globalconf.gc,  x, y, x, y,
+                      w, h);
 }
 
 static void

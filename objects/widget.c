@@ -232,7 +232,7 @@ widget_render(wibox_t *wibox)
                && (data = xcb_get_property_value(prop_r))
                && (rootpix = *(xcb_pixmap_t *) data))
                 xcb_copy_area(globalconf.connection, rootpix,
-                              wibox->pixmap, globalconf.gc,
+                              wibox->ctx.pixmap, globalconf.gc, 
                               x, y,
                               0, 0,
                               ctx->width, ctx->height);
