@@ -113,7 +113,7 @@ luaA_classname(lua_State *L, int idx)
 {
     int type = lua_type(L, idx);
 
-    if(type == LUA_TUSERDATA)
+    if(type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA)
     {
         lua_class_t *lua_class = luaA_class_get(L, idx);
         if(lua_class)
