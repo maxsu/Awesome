@@ -44,7 +44,6 @@ widget_wipe(widget_t *widget)
 }
 
 /** Get a widget node from a wibox by coords.
- * \param orientation Wibox orientation.
  * \param widgets The widget list.
  * \param width The container width.
  * \param height The container height.
@@ -53,27 +52,9 @@ widget_wipe(widget_t *widget)
  * \return A widget.
  */
 widget_t *
-widget_getbycoords(orientation_t orientation, widget_node_array_t *widgets,
+widget_getbycoords(widget_node_array_t *widgets,
                    int width, int height, int16_t *x, int16_t *y)
 {
-    int tmp;
-
-    /* Need to transform coordinates like it was top/bottom */
-    switch(orientation)
-    {
-      case South:
-        tmp = *y;
-        *y = width - *x;
-        *x = tmp;
-        break;
-      case North:
-        tmp = *y;
-        *y = *x;
-        *x = height - tmp;
-        break;
-      default:
-        break;
-    }
     foreach(w, *widgets)
         if(w->widget->isvisible
            && *x >= w->geometry.x && *x < w->geometry.x + w->geometry.width
@@ -154,15 +135,6 @@ widget_geometries(wibox_t *wibox)
         area_t geometry = wibox->geometry;
         geometry.x = 0;
         geometry.y = 0;
-        /* we need to exchange the width and height of the wibox window if it
-         * it is rotated, so the layout function doesn't need to care about that
-         */
-        if(wibox->orientation != East)
-        {
-            int i = geometry.height;
-            geometry.height = geometry.width;
-            geometry.width = i;
-        }
         luaA_pusharea(globalconf.L, geometry);
         /* Push 2nd argument: widget table */
         luaA_object_push(globalconf.L, wibox);
@@ -259,34 +231,11 @@ widget_render(wibox_t *wibox)
             if(prop_r->value_len
                && (data = xcb_get_property_value(prop_r))
                && (rootpix = *(xcb_pixmap_t *) data))
-               switch(wibox->orientation)
-               {
-                 case North:
-                   draw_rotate(ctx,
-                               rootpix, ctx->pixmap,
-                               s->width_in_pixels, s->height_in_pixels,
-                               ctx->width, ctx->height,
-                               M_PI_2,
-                               y + ctx->width,
-                               - x);
-                   break;
-                 case South:
-                   draw_rotate(ctx,
-                               rootpix, ctx->pixmap,
-                               s->width_in_pixels, s->height_in_pixels,
-                               ctx->width, ctx->height,
-                               - M_PI_2,
-                               - y,
-                               x + ctx->height);
-                   break;
-                 case East:
-                   xcb_copy_area(globalconf.connection, rootpix,
-                                 wibox->pixmap, globalconf.gc,
-                                 x, y,
-                                 0, 0,
-                                 ctx->width, ctx->height);
-                   break;
-               }
+                xcb_copy_area(globalconf.connection, rootpix,
+                              wibox->pixmap, globalconf.gc,
+                              x, y,
+                              0, 0,
+                              ctx->width, ctx->height);
             p_delete(&prop_r);
         }
     }
@@ -333,24 +282,6 @@ widget_render(wibox_t *wibox)
         if(widgets->tab[i].widget->isvisible)
             widgets->tab[i].widget->draw(widgets->tab[i].widget,
                                          ctx, widgets->tab[i].geometry, wibox);
-
-    switch(wibox->orientation)
-    {
-        case South:
-          draw_rotate(ctx, ctx->pixmap, wibox->pixmap,
-                      ctx->width, ctx->height,
-                      ctx->height, ctx->width,
-                      M_PI_2, ctx->height, 0);
-          break;
-        case North:
-          draw_rotate(ctx, ctx->pixmap, wibox->pixmap,
-                      ctx->width, ctx->height,
-                      ctx->height, ctx->width,
-                      - M_PI_2, 0, ctx->width);
-          break;
-        case East:
-          break;
-    }
 }
 
 /** Invalidate widgets which should be refresh depending on their types.

@@ -173,35 +173,14 @@ wibox_shape_update(wibox_t *wibox)
 static void
 wibox_draw_context_update(wibox_t *w)
 {
-    xcb_screen_t *s = globalconf.screen;
     xcolor_t fg = w->ctx.fg, bg = w->ctx.bg;
 
     draw_context_wipe(&w->ctx);
 
-    /* update draw context */
-    switch(w->orientation)
-    {
-      case South:
-      case North:
-        /* we need a new pixmap this way [     ] to render */
-        w->ctx.pixmap = xcb_generate_id(globalconf.connection);
-        xcb_create_pixmap(globalconf.connection,
-                          s->root_depth,
-                          w->ctx.pixmap, s->root,
-                          w->geometry.height,
-                          w->geometry.width);
-        draw_context_init(&w->ctx,
-                          w->geometry.height,
-                          w->geometry.width,
-                          w->ctx.pixmap, &fg, &bg);
-        break;
-      case East:
-        draw_context_init(&w->ctx,
-                          w->geometry.width,
-                          w->geometry.height,
-                          w->pixmap, &fg, &bg);
-        break;
-    }
+    draw_context_init(&w->ctx,
+                      w->geometry.width,
+                      w->geometry.height,
+                      w->pixmap, &fg, &bg);
 }
 
 /** Initialize a wibox.
@@ -299,9 +278,6 @@ wibox_moveresize(lua_State *L, int udx, area_t geometry)
         if(mask_vals & (XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT))
         {
             xcb_free_pixmap(globalconf.connection, w->pixmap);
-            /* orientation != East */
-            if(w->pixmap != w->ctx.pixmap)
-                xcb_free_pixmap(globalconf.connection, w->ctx.pixmap);
             w->pixmap = xcb_generate_id(globalconf.connection);
             xcb_screen_t *s = globalconf.screen;
             xcb_create_pixmap(globalconf.connection, s->root_depth, w->pixmap, s->root,
@@ -364,26 +340,6 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
                   w, h);
 }
 
-/** Set wibox orientation.
- * \param L The Lua VM state.
- * \param udx The wibox to change orientation.
- * \param o The new orientation.
- */
-static void
-wibox_set_orientation(lua_State *L, int udx, orientation_t o)
-{
-    wibox_t *w = luaA_checkudata(L, udx, (lua_class_t *) &wibox_class);
-    if(o != w->orientation)
-    {
-        w->orientation = o;
-        /* orientation != East */
-        if(w->pixmap != w->ctx.pixmap)
-            xcb_free_pixmap(globalconf.connection, w->ctx.pixmap);
-        wibox_draw_context_update(w);
-        luaA_object_emit_signal(L, udx, "property::orientation", 0);
-    }
-}
-
 static void
 wibox_map(wibox_t *wibox)
 {
@@ -413,13 +369,21 @@ wibox_systray_refresh(wibox_t *wibox)
             uint32_t config_back[] = { wibox->ctx.bg.pixel };
             uint32_t config_win_vals[4];
             uint32_t config_win_vals_off[2] = { -512, -512 };
-            xembed_window_t *em;
 
             wibox->has_systray = true;
 
-            if(wibox->visible
-               && systray->widget->isvisible
-               && systray->geometry.width)
+            /* Set background of the systray window. */
+            xcb_change_window_attributes(globalconf.connection,
+                                         globalconf.systray.window,
+                                         XCB_CW_BACK_PIXEL, config_back);
+            /* Map it. */
+            xcb_map_window(globalconf.connection, globalconf.systray.window);
+            config_win_vals[0] = systray->geometry.x;
+            config_win_vals[1] = systray->geometry.y;
+            config_win_vals[2] = systray->geometry.width;
+            config_win_vals[3] = systray->geometry.height;
+            /* reparent */
+            if(globalconf.systray.parent != wibox->window)
             {
                 /* Set background of the systray window. */
                 xcb_change_window_attributes(globalconf.connection,
@@ -427,28 +391,10 @@ wibox_systray_refresh(wibox_t *wibox)
                                              XCB_CW_BACK_PIXEL, config_back);
                 /* Map it. */
                 xcb_map_window(globalconf.connection, globalconf.systray.window);
-                /* Move it. */
-                switch(wibox->orientation)
-                {
-                  case North:
-                    config_win_vals[0] = systray->geometry.y;
-                    config_win_vals[1] = wibox->geometry.height - systray->geometry.x - systray->geometry.width;
-                    config_win_vals[2] = systray->geometry.height;
-                    config_win_vals[3] = systray->geometry.width;
-                    break;
-                  case South:
-                    config_win_vals[0] = systray->geometry.y;
-                    config_win_vals[1] = systray->geometry.x;
-                    config_win_vals[2] = systray->geometry.height;
-                    config_win_vals[3] = systray->geometry.width;
-                    break;
-                  case East:
-                    config_win_vals[0] = systray->geometry.x;
-                    config_win_vals[1] = systray->geometry.y;
-                    config_win_vals[2] = systray->geometry.width;
-                    config_win_vals[3] = systray->geometry.height;
-                    break;
-                }
+                config_win_vals[0] = systray->geometry.y;
+                config_win_vals[1] = wibox->geometry.height - systray->geometry.x - systray->geometry.width;
+                config_win_vals[2] = systray->geometry.height;
+                config_win_vals[3] = systray->geometry.width;
                 /* reparent */
                 if(globalconf.systray.parent != wibox->window)
                 {
@@ -472,81 +418,27 @@ wibox_systray_refresh(wibox_t *wibox)
             else
                 return wibox_systray_kickout();
 
-            switch(wibox->orientation)
+            config_win_vals[1] = 0;
+            foreach(em, globalconf.embedded)
             {
-              case North:
-                config_win_vals[1] = systray->geometry.width - config_win_vals[3];
-                for(int j = 0; j < globalconf.embedded.len; j++)
+                /* if(x + width < systray.x + systray.width) */
+                if(config_win_vals[0] + config_win_vals[2] <= (uint32_t) AREA_RIGHT(systray->geometry) + wibox->geometry.x)
                 {
-                    em = &globalconf.embedded.tab[j];
-                    if(config_win_vals[1] - config_win_vals[2] >= (uint32_t) wibox->geometry.y)
-                    {
-                        xcb_map_window(globalconf.connection, em->win);
-                        xcb_configure_window(globalconf.connection, em->win,
-                                             XCB_CONFIG_WINDOW_X
-                                             | XCB_CONFIG_WINDOW_Y
-                                             | XCB_CONFIG_WINDOW_WIDTH
-                                             | XCB_CONFIG_WINDOW_HEIGHT,
-                                             config_win_vals);
-                        config_win_vals[1] -= config_win_vals[3];
-                    }
-                    else
-                        xcb_configure_window(globalconf.connection, em->win,
-                                             XCB_CONFIG_WINDOW_X
-                                             | XCB_CONFIG_WINDOW_Y,
-                                             config_win_vals_off);
+                    xcb_map_window(globalconf.connection, em->win);
+                    xcb_configure_window(globalconf.connection, em->win,
+                                         XCB_CONFIG_WINDOW_X
+                                         | XCB_CONFIG_WINDOW_Y
+                                         | XCB_CONFIG_WINDOW_WIDTH
+                                         | XCB_CONFIG_WINDOW_HEIGHT,
+                                         config_win_vals);
+                    config_win_vals[0] += config_win_vals[2];
                 }
-                break;
-              case South:
-                config_win_vals[1] = 0;
-                for(int j = 0; j < globalconf.embedded.len; j++)
-                {
-                    em = &globalconf.embedded.tab[j];
-                    /* if(y + width <= wibox.y + systray.right) */
-                    if(config_win_vals[1] + config_win_vals[3] <= (uint32_t) wibox->geometry.y + AREA_RIGHT(systray->geometry))
-                    {
-                        xcb_map_window(globalconf.connection, em->win);
-                        xcb_configure_window(globalconf.connection, em->win,
-                                             XCB_CONFIG_WINDOW_X
-                                             | XCB_CONFIG_WINDOW_Y
-                                             | XCB_CONFIG_WINDOW_WIDTH
-                                             | XCB_CONFIG_WINDOW_HEIGHT,
-                                             config_win_vals);
-                        config_win_vals[1] += config_win_vals[3];
-                    }
-                    else
-                        xcb_configure_window(globalconf.connection, em->win,
-                                             XCB_CONFIG_WINDOW_X
-                                             | XCB_CONFIG_WINDOW_Y,
-                                             config_win_vals_off);
-                }
-                break;
-              case East:
-                config_win_vals[1] = 0;
-                for(int j = 0; j < globalconf.embedded.len; j++)
-                {
-                    em = &globalconf.embedded.tab[j];
-                    /* if(x + width < systray.x + systray.width) */
-                    if(config_win_vals[0] + config_win_vals[2] <= (uint32_t) AREA_RIGHT(systray->geometry) + wibox->geometry.x)
-                    {
-                        xcb_map_window(globalconf.connection, em->win);
-                        xcb_configure_window(globalconf.connection, em->win,
-                                             XCB_CONFIG_WINDOW_X
-                                             | XCB_CONFIG_WINDOW_Y
-                                             | XCB_CONFIG_WINDOW_WIDTH
-                                             | XCB_CONFIG_WINDOW_HEIGHT,
-                                             config_win_vals);
-                        config_win_vals[0] += config_win_vals[2];
-                    }
-                    else
-                        xcb_configure_window(globalconf.connection, em->win,
-                                             XCB_CONFIG_WINDOW_X
-                                             | XCB_CONFIG_WINDOW_Y,
-                                             config_win_vals_off);
-                }
-                break;
+                else
+                    xcb_configure_window(globalconf.connection, em->win,
+                                         XCB_CONFIG_WINDOW_X
+                                         | XCB_CONFIG_WINDOW_Y,
+                                         config_win_vals_off);
             }
-            break;
         }
     }
 }
@@ -1060,36 +952,6 @@ luaA_wibox_get_screen(lua_State *L, wibox_t *wibox)
     return 1;
 }
 
-/** Set the wibox orientation.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_set_orientation(lua_State *L, wibox_t *wibox)
-{
-    size_t len;
-    const char *buf = luaL_checklstring(L, -1, &len);
-    if(buf)
-    {
-        wibox_set_orientation(L, -3, orientation_fromstr(buf, len));
-        wibox_need_update(wibox);
-    }
-    return 0;
-}
-
-/** Get the wibox orientation.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_get_orientation(lua_State *L, wibox_t *wibox)
-{
-    lua_pushstring(L, orientation_tostr(wibox->orientation));
-    return 1;
-}
-
 /** Set the wibox visibility.
  * \param L The Lua VM state.
  * \param wibox The wibox object.
@@ -1199,10 +1061,6 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_visible,
                             (lua_class_propfunc_t) luaA_wibox_get_visible,
                             (lua_class_propfunc_t) luaA_wibox_set_visible);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ORIENTATION,
-                            (lua_class_propfunc_t) luaA_wibox_set_orientation,
-                            (lua_class_propfunc_t) luaA_wibox_get_orientation,
-                            (lua_class_propfunc_t) luaA_wibox_set_orientation);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SCREEN,
                             NULL,
                             (lua_class_propfunc_t) luaA_wibox_get_screen,

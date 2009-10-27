@@ -113,7 +113,6 @@ bool draw_text_context_init(draw_text_context_t *, const char *, ssize_t);
 void draw_text(draw_context_t *, draw_text_context_t *, PangoEllipsizeMode, PangoWrapMode, alignment_t, alignment_t, area_t);
 void draw_rectangle(draw_context_t *, area_t, float, bool, const color_t *);
 void draw_image(draw_context_t *, int, int, double, image_t *);
-void draw_rotate(draw_context_t *, xcb_drawable_t, xcb_drawable_t, int, int, int, int, double, int, int);
 area_t draw_text_extents(draw_text_context_t *);
 alignment_t draw_align_fromstr(const char *, ssize_t);
 const char *draw_align_tostr(alignment_t);

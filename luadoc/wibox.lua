@@ -13,7 +13,6 @@ module("wibox")
 -- @field ontop On top of other windows.
 -- @field cursor The mouse cursor.
 -- @field visible Visibility.
--- @field orientation The drawing orientation: east, north or south.
 -- @field widgets A table with all widgets drawn on this wibox.
 -- @field opacity The opacity of the wibox, between 0 and 1.
 -- @field x The x coordinates.

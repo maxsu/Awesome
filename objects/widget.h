@@ -64,7 +64,7 @@ struct widget_node
 };
 DO_ARRAY(widget_node_t, widget_node, DO_NOTHING)
 
-widget_t *widget_getbycoords(orientation_t, widget_node_array_t *, int, int, int16_t *, int16_t *);
+widget_t *widget_getbycoords(widget_node_array_t *, int, int, int16_t *, int16_t *);
 void widget_render(wibox_t *);
 
 void widget_invalidate_bywidget(widget_t *);
