@@ -21,7 +21,6 @@ content
 Control
 Ctrl
 cursor
-east
 ellipsize
 end
 fg
@@ -66,7 +65,6 @@ name
 normal
 ontop
 opacity
-orientation
 outputs
 pid
 release
@@ -83,7 +81,6 @@ Shift
 size_hints
 size_hints_honor
 skip_taskbar
-south
 start
 started
 sticky

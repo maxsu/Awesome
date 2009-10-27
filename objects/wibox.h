@@ -51,8 +51,6 @@ struct wibox_t
     area_t geometry;
     /** Draw context */
     draw_context_t ctx;
-    /** Orientation */
-    orientation_t orientation;
     /** The window's shape */
     struct
     {

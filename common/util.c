@@ -95,41 +95,6 @@ position_tostr(position_t p)
     }
 }
 
-/** Get a orientation type from a string.
- * \param pos The orientation.
- * \param len The string length, -1 if unknown.
- * \return A orientation.
- */
-orientation_t
-orientation_fromstr(const char *pos, ssize_t len)
-{
-    switch(a_tokenize(pos, len))
-    {
-      default:
-        return North;
-      case A_TK_SOUTH:
-        return South;
-      case A_TK_EAST:
-        return East;
-    }
-}
-
-/** Convert a orientation type to a string.
- * \param p The orientation.
- * \return A orientation string.
- */
-const char *
-orientation_tostr(orientation_t p)
-{
-    switch(p)
-    {
-      case North: return "north";
-      case South: return "south";
-      case East:  return "east";
-      default:    return NULL;
-    }
-}
-
 /** \brief safe limited strcpy.
  *
  * Copies at most min(<tt>n-1</tt>, \c l) characters from \c src into \c dst,

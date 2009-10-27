@@ -290,47 +290,6 @@ draw_image(draw_context_t *ctx, int x, int y, double ratio, image_t *image)
     draw_image_from_argb_data(ctx, x, y, image_getwidth(image), image_getheight(image), ratio, image_getdata(image));
 }
 
-/** Rotate a pixmap.
- * \param ctx Draw context to draw with.
- * \param src Drawable to draw from.
- * \param dest Drawable to draw to.
- * \param src_w Drawable width.
- * \param src_h Drawable height.
- * \param dest_w Drawable width.
- * \param dest_h Drawable height.
- * \param angle angle to rotate.
- * \param tx Translate to this x coordinate.
- * \param ty Translate to this y coordinate.
- */
-void
-draw_rotate(draw_context_t *ctx,
-            xcb_pixmap_t src, xcb_pixmap_t dest,
-            int src_w, int src_h,
-            int dest_w, int dest_h,
-            double angle, int tx, int ty)
-{
-    cairo_surface_t *surface, *source;
-    cairo_t *cr;
-
-    surface = cairo_xcb_surface_create(globalconf.connection, dest,
-                                       ctx->pscreen->visual,
-                                       dest_w, dest_h);
-    source = cairo_xcb_surface_create(globalconf.connection, src,
-                                      ctx->pscreen->visual,
-                                      src_w, src_h);
-    cr = cairo_create (surface);
-
-    cairo_translate(cr, tx, ty);
-    cairo_rotate(cr, angle);
-
-    cairo_set_source_surface(cr, source, 0.0, 0.0);
-    cairo_paint(cr);
-
-    cairo_destroy(cr);
-    cairo_surface_destroy(source);
-    cairo_surface_destroy(surface);
-}
-
 /** Return the width and height of a text in pixel.
  * \param data The draw context text data.
  * \return Text height and width.
