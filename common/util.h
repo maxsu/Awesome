@@ -36,13 +36,6 @@
 #include <alloca.h>
 #endif
 
-typedef enum
-{
-    East = 0,
-    South,
-    North,
-} orientation_t;
-
 /** A list of possible position, not sex related */
 typedef enum
 {
@@ -340,8 +333,6 @@ void _warn(int, const char *, const char *, ...)
 
 position_t position_fromstr(const char *, ssize_t);
 const char * position_tostr(position_t);
-orientation_t orientation_fromstr(const char *, ssize_t);
-const char * orientation_tostr(orientation_t);
 void a_exec(const char *);
 
 #endif
