@@ -259,7 +259,7 @@ void
 luaA_object_emit_signal(lua_State *L, int oud,
                         const char *name, int nargs)
 {
-    int oud_abs = luaA_absindex(L, oud);
+    oud = luaA_absindex(L, oud);
     lua_object_t *obj = lua_touserdata(L, oud);
     if(!obj)
         luaL_error(L, "trying to emit signal on non-object");
@@ -272,12 +272,12 @@ luaA_object_emit_signal(lua_State *L, int oud,
         /* Push all functions and then execute, because this list can change
          * while executing funcs. */
         foreach(func, sigfound->sigfuncs)
-            luaA_object_push_item(L, oud_abs, (void *) *func);
+            luaA_object_push_item(L, oud, (void *) *func);
 
         for(int i = 0; i < nbfunc; i++)
         {
             /* push object */
-            lua_pushvalue(L, oud_abs);
+            lua_pushvalue(L, oud);
             /* push all args */
             for(int j = 0; j < nargs; j++)
                 lua_pushvalue(L, - nargs - nbfunc - 1 + i);
