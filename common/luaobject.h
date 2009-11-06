@@ -168,10 +168,6 @@ void luaA_object_connect_signal_from_stack(lua_State *, int, const char *, int);
 void luaA_object_disconnect_signal_from_stack(lua_State *, int, const char *, int);
 void luaA_object_emit_signal(lua_State *, int, const char *, int);
 
-int luaA_object_connect_signal_simple(lua_State *);
-int luaA_object_disconnect_signal_simple(lua_State *);
-int luaA_object_emit_signal_simple(lua_State *);
-
 #define LUA_OBJECT_FUNCS(lua_class, type, prefix)                              \
     LUA_CLASS_FUNCS(prefix, lua_class)                                         \
     static inline type *                                                       \
