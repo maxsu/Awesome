@@ -169,7 +169,6 @@ luaA_window_keys(lua_State *L)
     {
         luaA_key_array_set(L, 1, 2, &window->keys);
         luaA_object_emit_signal(L, 1, "property::keys", 0);
-        xcb_ungrab_key(globalconf.connection, XCB_GRAB_ANY, window->window, XCB_BUTTON_MASK_ANY);
         xwindow_grabkeys(window->window, &window->keys);
     }
 
