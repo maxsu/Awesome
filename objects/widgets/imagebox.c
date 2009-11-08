@@ -100,7 +100,7 @@ luaA_imagebox_index(lua_State *L, awesome_token_t token)
     switch(token)
     {
       case A_TK_IMAGE:
-        luaA_object_push_item(L, 1, d->image);
+        luaA_object_push(L, d->image);
         break;
       case A_TK_BG:
         luaA_pushcolor(L, &d->bg);

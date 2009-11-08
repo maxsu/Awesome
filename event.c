@@ -46,19 +46,14 @@
     static void \
     event_##xcbtype##_callback(xcb_##xcbtype##_press_event_t *ev, \
                                arraytype *arr, \
-                               int oud, \
                                int nargs, \
                                void *data) \
     { \
-        int abs_oud = oud < 0 ? ((lua_gettop(globalconf.L) + 1) + oud) : oud; \
         int item_matching = 0; \
         foreach(item, *arr) \
             if(match(ev, *item, data)) \
             { \
-                if(oud) \
-                    luaA_object_push_item(globalconf.L, abs_oud, *item); \
-                else \
-                    luaA_object_push(globalconf.L, *item); \
+                luaA_object_push(globalconf.L, *item); \
                 item_matching++; \
             } \
         for(; item_matching > 0; item_matching--) \
@@ -163,7 +158,7 @@ event_handle_button(xcb_button_press_event_t *ev)
         /* Duplicate the wibox */
         lua_pushvalue(globalconf.L, -1);
         /* Handle the button event on it */
-        event_button_callback(ev, &wibox->buttons, -1, 1, NULL);
+        event_button_callback(ev, &wibox->buttons, 1, NULL);
 
         /* then try to match a widget binding */
         widget_t *w = widget_getbycoords(&wibox->widgets,
@@ -173,10 +168,10 @@ event_handle_button(xcb_button_press_event_t *ev)
         if(w)
         {
             /* Push widget (the wibox is already on stack) */
-            luaA_object_push_item(globalconf.L, -1, w);
+            luaA_object_push(globalconf.L, w);
             /* Move widget before wibox */
             lua_insert(globalconf.L, -2);
-            event_button_callback(ev, &w->buttons, -2, 2, NULL);
+            event_button_callback(ev, &w->buttons, 2, NULL);
         }
         else
             /* Remove the wibox, we did not use it */
@@ -186,7 +181,7 @@ event_handle_button(xcb_button_press_event_t *ev)
     else if((c = client_getbyframewin(ev->event)))
     {
         luaA_object_push(globalconf.L, c);
-        event_button_callback(ev, &c->buttons, -1, 1, NULL);
+        event_button_callback(ev, &c->buttons, 1, NULL);
         xcb_allow_events(globalconf.connection,
                          XCB_ALLOW_REPLAY_POINTER,
                          XCB_CURRENT_TIME);
@@ -195,7 +190,7 @@ event_handle_button(xcb_button_press_event_t *ev)
         if(globalconf.screen->root == ev->event)
         {
             luaA_object_push(globalconf.L, globalconf.screens.tab[0].root);
-            event_button_callback(ev, &globalconf.screens.tab[0].root->buttons, -1, 1, NULL);
+            event_button_callback(ev, &globalconf.screens.tab[0].root->buttons, 1, NULL);
             return;
         }
 }
@@ -333,7 +328,7 @@ event_handle_widget_motionnotify(wibox_t *wibox,
              * - Push wibox.*/
             luaA_object_push(globalconf.L, wibox);
             /* - Push the widget the mouse was on */
-            luaA_object_push_item(globalconf.L, -1, wibox->mouse_over);
+            luaA_object_push(globalconf.L, wibox->mouse_over);
             /* - Invert wibox/widget */
             lua_insert(globalconf.L, -2);
             /* - Emit the signal mouse::leave with the wibox as argument */
@@ -354,13 +349,13 @@ event_handle_widget_motionnotify(wibox_t *wibox,
              * - Push the wibox */
             luaA_object_push(globalconf.L, wibox);
             /* - Push the widget */
-            luaA_object_push_item(globalconf.L, -1, widget);
+            luaA_object_push(globalconf.L, widget);
             /* - Reference the widget into the wibox */
             luaA_object_ref_item(globalconf.L, -2, -1);
 
             /* Emit mouse::enter signal on new widget:
              * - Push the widget */
-            luaA_object_push_item(globalconf.L, -1, widget);
+            luaA_object_push(globalconf.L, widget);
             /* - Move the widget before the wibox we pushed just above */
             lua_insert(globalconf.L, -2);
             /* - Emit the signal with the wibox as argument */
@@ -428,7 +423,7 @@ event_handle_leavenotify(xcb_leave_notify_event_t *ev)
             /* Push the wibox */
             luaA_object_push(globalconf.L, wibox);
             /* Push the widget the mouse is over in this wibox */
-            luaA_object_push_item(globalconf.L, -1, wibox->mouse_over);
+            luaA_object_push(globalconf.L, wibox->mouse_over);
             /* Move the widget before the wibox */
             lua_insert(globalconf.L, -2);
             /* Emit mouse::leave signal on widget the mouse was over with
@@ -597,7 +592,7 @@ event_handle_key(xcb_key_press_event_t *ev)
         {
             /* first emit key bindings */
             luaA_object_push(globalconf.L, window);
-            event_key_callback(ev, &window->keys, -1, 1, &keysym);
+            event_key_callback(ev, &window->keys, 1, &keysym);
             /* transfer event (keycode + modifiers) to keysym and then convert
              * keysym to string */
             char buf[MAX(MB_LEN_MAX, 32)];
@@ -622,7 +617,7 @@ event_handle_key(xcb_key_press_event_t *ev)
             if(globalconf.screen->root == ev->event)
             {
                 luaA_object_push(globalconf.L, globalconf.screens.tab[0].root);
-                event_key_callback(ev, &globalconf.screens.tab[0].root->keys, -1, 1, &keysym);
+                event_key_callback(ev, &globalconf.screens.tab[0].root->keys, 1, &keysym);
                 return;
             }
     }

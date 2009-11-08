@@ -153,7 +153,7 @@ luaA_window_buttons(lua_State *L)
         xwindow_buttons_grab(window->window, &window->buttons);
     }
 
-    return luaA_button_array_get(L, 1, &window->buttons);
+    return luaA_button_array_get(L, &window->buttons);
 }
 
 /** Get or set keys bindings for a window.
@@ -172,7 +172,7 @@ luaA_window_keys(lua_State *L)
         xwindow_grabkeys(window->window, &window->keys);
     }
 
-    return luaA_key_array_get(L, 1, &window->keys);
+    return luaA_key_array_get(L, &window->keys);
 }
 
 /** Check if a window is visible.

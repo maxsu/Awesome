@@ -614,7 +614,7 @@ client_unmanage(client_t *c)
     luaA_object_push(globalconf.L, c);
     foreach(tag, c->tags)
     {
-        luaA_object_push_item(globalconf.L, -1, *tag);
+        luaA_object_push(globalconf.L, *tag);
         untag_ewindow(globalconf.L, -2, -1);
         lua_pop(globalconf.L, 1);
     }
@@ -871,6 +871,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, hidden, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, size_hints_honor, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
 
 static int
 luaA_client_get_content(lua_State *L, client_t *c)
@@ -911,12 +912,6 @@ luaA_client_get_screen(lua_State *L, client_t *c)
         return 0;
     lua_pushnumber(L, 1 + screen_array_indexof(&globalconf.screens, c->screen));
     return 1;
-}
-
-static int
-luaA_client_get_icon(lua_State *L, client_t *c)
-{
-    return luaA_object_push_item(L, -2, c->icon);
 }
 
 static int
