@@ -93,17 +93,16 @@ luaA_key_array_set(lua_State *L, int oidx, int idx, key_array_t *keys)
 
 /** Push an array of key as an Lua table onto the stack.
  * \param L The Lua VM state.
- * \param oidx The index of the object to get items from.
  * \param keys The key array to push.
  * \return The number of elements pushed on stack.
  */
 int
-luaA_key_array_get(lua_State *L, int oidx, key_array_t *keys)
+luaA_key_array_get(lua_State *L, key_array_t *keys)
 {
     lua_createtable(L, keys->len, 0);
     for(int i = 0; i < keys->len; i++)
     {
-        luaA_object_push_item(L, oidx, keys->tab[i]);
+        luaA_object_push(L, keys->tab[i]);
         lua_rawseti(L, -2, i + 1);
     }
     return 1;

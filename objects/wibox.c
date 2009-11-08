@@ -127,8 +127,8 @@ wibox_shape_update(wibox_t *wibox)
         return;
     }
 
-    shape_update(wibox->window, XCB_SHAPE_SK_CLIP, wibox->shape.clip, 0);
-    shape_update(wibox->window, XCB_SHAPE_SK_BOUNDING, wibox->shape.bounding, - wibox->border_width);
+    shape_update(wibox->window, XCB_SHAPE_SK_CLIP, wibox->shape_clip, 0);
+    shape_update(wibox->window, XCB_SHAPE_SK_BOUNDING, wibox->shape_bounding, - wibox->border_width);
 
     wibox->need_shape_update = false;
 }
@@ -645,11 +645,12 @@ luaA_wibox_hasitem(lua_State *L, wibox_t *wibox, const void *item)
 {
     if(wibox->widgets_table)
     {
-        luaA_object_push(L, wibox);
-        luaA_object_push_item(L, -1, wibox->widgets_table);
-        lua_remove(L, -2);
-        if(lua_topointer(L, -1) == item || luaA_hasitem(L, item))
+        if(item == wibox->widgets_table)
             return true;
+        luaA_object_push(L, wibox->widgets_table);
+        bool ret = luaA_hasitem(L, item);
+        lua_pop(L, 1);
+        return ret;
     }
     return false;
 }
@@ -704,6 +705,9 @@ luaA_wibox_geometry(lua_State *L)
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, bg_image, luaA_object_push)
+static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_clip, luaA_object_push)
+static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_bounding, luaA_object_push)
 
 static int
 luaA_wibox_set_x(lua_State *L, wibox_t *wibox)
@@ -860,17 +864,6 @@ luaA_wibox_set_bg_image(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-/** Get the wibox background image.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_get_bg_image(lua_State *L, wibox_t *wibox)
-{
-    return luaA_object_push_item(L, 1, wibox->bg_image);
-}
-
 /** Set the wibox screen.
  * \param L The Lua VM state.
  * \param wibox The wibox object.
@@ -947,41 +940,29 @@ luaA_wibox_set_widgets(lua_State *L, wibox_t *wibox)
 static int
 luaA_wibox_get_widgets(lua_State *L, wibox_t *wibox)
 {
-    return luaA_object_push_item(L, 1, wibox->widgets_table);
+    return luaA_object_push(L, wibox->widgets_table);
 }
 
 static int
 luaA_wibox_set_shape_bounding(lua_State *L, wibox_t *wibox)
 {
     luaA_checkudata(L, -1, &image_class);
-    luaA_object_unref_item(L, -3, wibox->shape.bounding);
-    wibox->shape.bounding = luaA_object_ref_item(L, -3, -1);
+    luaA_object_unref_item(L, -3, wibox->shape_bounding);
+    wibox->shape_bounding = luaA_object_ref_item(L, -3, -1);
     wibox->need_shape_update = true;
     luaA_object_emit_signal(L, -2, "property::shape_bounding", 0);
     return 0;
 }
 
 static int
-luaA_wibox_get_shape_bounding(lua_State *L, wibox_t *wibox)
-{
-    return luaA_object_push_item(L, 1, wibox->shape.bounding);
-}
-
-static int
 luaA_wibox_set_shape_clip(lua_State *L, wibox_t *wibox)
 {
     luaA_checkudata(L, -1, &image_class);
-    luaA_object_unref_item(L, -3, wibox->shape.clip);
-    wibox->shape.clip = luaA_object_ref_item(L, -3, -1);
+    luaA_object_unref_item(L, -3, wibox->shape_clip);
+    wibox->shape_clip = luaA_object_ref_item(L, -3, -1);
     wibox->need_shape_update = true;
     luaA_object_emit_signal(L, -2, "property::shape_clip", 0);
     return 0;
-}
-
-static int
-luaA_wibox_get_shape_clip(lua_State *L, wibox_t *wibox)
-{
-    return luaA_object_push_item(L, 1, wibox->shape.clip);
 }
 
 void

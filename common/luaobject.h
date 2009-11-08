@@ -148,18 +148,6 @@ luaA_object_unref_item(lua_State *L, int ud, void *pointer)
     lua_pop(L, 1);
 }
 
-/** Push an object item on the stack.
- * \param L The Lua VM state.
- * \param ud The object index on the stack.
- * \param pointer The item pointer.
- * \return The number of element pushed on stack.
- */
-static inline int __attribute__ ((deprecated))
-luaA_object_push_item(lua_State *L, int ud, void *pointer)
-{
-    return luaA_object_push(L, pointer);
-}
-
 void signal_object_emit(lua_State *, signal_array_t *, const char *, int);
 
 void luaA_object_connect_signal(lua_State *, int, const char *, lua_CFunction);

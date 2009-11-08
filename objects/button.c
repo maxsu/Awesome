@@ -61,17 +61,16 @@ luaA_button_array_set(lua_State *L, int oidx, int idx, button_array_t *buttons)
 
 /** Push an array of button as an Lua table onto the stack.
  * \param L The Lua VM state.
- * \param oidx The index of the object to get items from.
  * \param buttons The button array to push.
  * \return The number of elements pushed on stack.
  */
 int
-luaA_button_array_get(lua_State *L, int oidx, button_array_t *buttons)
+luaA_button_array_get(lua_State *L, button_array_t *buttons)
 {
     lua_createtable(L, buttons->len, 0);
     for(int i = 0; i < buttons->len; i++)
     {
-        luaA_object_push_item(L, oidx, buttons->tab[i]);
+        luaA_object_push(L, buttons->tab[i]);
         lua_rawseti(L, -2, i + 1);
     }
     return 1;

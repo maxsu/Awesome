@@ -272,7 +272,7 @@ luaA_object_emit_signal(lua_State *L, int oud,
         /* Push all functions and then execute, because this list can change
          * while executing funcs. */
         foreach(func, sigfound->sigfuncs)
-            luaA_object_push_item(L, oud, (void *) *func);
+            luaA_object_push(L, (void *) *func);
 
         for(int i = 0; i < nbfunc; i++)
         {
