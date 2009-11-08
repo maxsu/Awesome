@@ -456,7 +456,7 @@ luaA_ewindow_tags(lua_State *L)
         luaA_checktable(L, 2);
         foreach(tag, c->tags)
         {
-            luaA_object_push_item(L, 1, *tag);
+            luaA_object_push(L, *tag);
             untag_ewindow(L, 1, -1);
             /* remove tag */
             lua_pop(L, 1);
@@ -474,7 +474,7 @@ luaA_ewindow_tags(lua_State *L)
     lua_createtable(L, c->tags.len, 0);
     foreach(tag, c->tags)
     {
-        luaA_object_push_item(L, 1, *tag);
+        luaA_object_push(L, *tag);
         lua_rawseti(L, -2, ++i);
     }
 
@@ -504,12 +504,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, above, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, below, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_horizontal, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_vertical, lua_pushboolean)
-
-int
-luaA_ewindow_get_transient_for(lua_State *L, ewindow_t *ewindow)
-{
-    return luaA_object_push_item(L, -2, ewindow->transient_for);
-}
+LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, transient_for, luaA_object_push)
 
 static int
 luaA_ewindow_set_transient_for(lua_State *L, ewindow_t *ewindow)

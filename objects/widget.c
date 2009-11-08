@@ -121,12 +121,8 @@ widget_geometries(wibox_t *wibox)
     /* get the layout field of the widget table */
     if(wibox->widgets_table)
     {
-        /* push wibox */
-        luaA_object_push(globalconf.L, wibox);
         /* push widgets table */
-        luaA_object_push_item(globalconf.L, -1, wibox->widgets_table);
-        /* remove wibox */
-        lua_remove(globalconf.L, -2);
+        luaA_object_push(globalconf.L, wibox->widgets_table);
         /* get layout field from the table */
         lua_getfield(globalconf.L, -1, "layout");
         /* remove the widget table */
@@ -144,9 +140,7 @@ widget_geometries(wibox_t *wibox)
         geometry.y = 0;
         luaA_pusharea(globalconf.L, geometry);
         /* Push 2nd argument: widget table */
-        luaA_object_push(globalconf.L, wibox);
-        luaA_object_push_item(globalconf.L, -1, wibox->widgets_table);
-        lua_remove(globalconf.L, -2);
+        luaA_object_push(globalconf.L, wibox->widgets_table);
         /* Push 3rd argument: wibox screen */
         lua_pushnumber(globalconf.L, screen_array_indexof(&globalconf.screens, wibox->screen) + 1);
         /* Re-push the layout function */
@@ -174,12 +168,8 @@ widget_geometries(wibox_t *wibox)
         widget_node_array_wipe(widgets);
         widget_node_array_init(widgets);
 
-        /* push wibox */
-        luaA_object_push(globalconf.L, wibox);
         /* push widgets table */
-        luaA_object_push_item(globalconf.L, -1, wibox->widgets_table);
-        /* remove wibox */
-        lua_remove(globalconf.L, -2);
+        luaA_object_push(globalconf.L, wibox->widgets_table);
         luaA_table2widgets(globalconf.L, widgets);
 
         lua_newtable(globalconf.L);
@@ -250,12 +240,8 @@ widget_render(wibox_t *wibox)
 
     widget_node_array_wipe(widgets);
     widget_node_array_init(widgets);
-    /* push wibox */
-    luaA_object_push(globalconf.L, wibox);
     /* push widgets table */
-    luaA_object_push_item(globalconf.L, -1, wibox->widgets_table);
-    /* remove wibox */
-    lua_remove(globalconf.L, -2);
+    luaA_object_push(globalconf.L, wibox->widgets_table);
     luaA_table2widgets(L, widgets);
 
     /* get computed geometries */
@@ -358,7 +344,7 @@ luaA_widget_buttons(lua_State *L)
         return 1;
     }
 
-    return luaA_button_array_get(L, 1, &widget->buttons);
+    return luaA_button_array_get(L, &widget->buttons);
 }
 
 /** Generic widget.

@@ -45,19 +45,14 @@
     static void \
     event_##xcbtype##_callback(xcb_##xcbtype##_press_event_t *ev, \
                                arraytype *arr, \
-                               int oud, \
                                int nargs, \
                                void *data) \
     { \
-        int abs_oud = oud < 0 ? ((lua_gettop(globalconf.L) + 1) + oud) : oud; \
         int item_matching = 0; \
         foreach(item, *arr) \
             if(match(ev, *item, data)) \
             { \
-                if(oud) \
-                    luaA_object_push_item(globalconf.L, abs_oud, *item); \
-                else \
-                    luaA_object_push(globalconf.L, *item); \
+                luaA_object_push(globalconf.L, *item); \
                 item_matching++; \
             } \
         for(; item_matching > 0; item_matching--) \
@@ -158,7 +153,7 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
         }
 
         luaA_object_push(globalconf.L, wibox);
-        event_button_callback(ev, &wibox->buttons, -1, 1, NULL);
+        event_button_callback(ev, &wibox->buttons, 1, NULL);
 
         /* then try to match a widget binding */
         widget_t *w = widget_getbycoords(&wibox->widgets,
@@ -169,13 +164,13 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
         {
             luaA_object_push(globalconf.L, w);
             luaA_object_push(globalconf.L, wibox);
-            event_button_callback(ev, &w->buttons, -2, 2, NULL);
+            event_button_callback(ev, &w->buttons, 2, NULL);
         }
     }
     else if((c = client_getbywin(ev->event)))
     {
         luaA_object_push(globalconf.L, c);
-        event_button_callback(ev, &c->buttons, -1, 1, NULL);
+        event_button_callback(ev, &c->buttons, 1, NULL);
         xcb_allow_events(globalconf.connection,
                          XCB_ALLOW_REPLAY_POINTER,
                          XCB_CURRENT_TIME);
@@ -185,7 +180,7 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
             if(screen->root->window == ev->event)
             {
                 luaA_object_push(globalconf.L, screen->root);
-                event_button_callback(ev, &screen->root->buttons, -1, 1, NULL);
+                event_button_callback(ev, &screen->root->buttons, 1, NULL);
                 return 0;
             }
 
@@ -607,7 +602,7 @@ event_handle_key(void *data __attribute__ ((unused)),
         {
             /* first emit key bindings */
             luaA_object_push(globalconf.L, window);
-            event_key_callback(ev, &window->keys, -1, 1, &keysym);
+            event_key_callback(ev, &window->keys, 1, &keysym);
             /* transfer event (keycode + modifiers) to keysym and then convert
              * keysym to string */
             char buf[MAX(MB_LEN_MAX, 32)];
@@ -633,7 +628,7 @@ event_handle_key(void *data __attribute__ ((unused)),
                 if(screen->root->window == ev->event)
                 {
                     luaA_object_push(globalconf.L, screen->root);
-                    event_key_callback(ev, &screen->root->keys, -1, 1, &keysym);
+                    event_key_callback(ev, &screen->root->keys, 1, &keysym);
                     return 0;
                 }
     }

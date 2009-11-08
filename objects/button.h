@@ -40,7 +40,7 @@ lua_class_t button_class;
 LUA_OBJECT_FUNCS(&button_class, button_t, button)
 DO_ARRAY(button_t *, button, DO_NOTHING)
 
-int luaA_button_array_get(lua_State *, int, button_array_t *);
+int luaA_button_array_get(lua_State *, button_array_t *);
 void luaA_button_array_set(lua_State *, int, int, button_array_t *);
 void button_class_setup(lua_State *);
 

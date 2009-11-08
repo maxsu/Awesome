@@ -49,14 +49,10 @@ struct wibox_t
     area_t geometry;
     /** Draw context */
     draw_context_t ctx;
-    /** The window's shape */
-    struct
-    {
-        /** The window's content */
-        image_t *clip;
-        /** The window's content and border */
-        image_t *bounding;
-    } shape;
+    /** The window's content (shape) */
+    image_t *shape_clip;
+    /** The window's content and border (shape) */
+    image_t *shape_bounding;
 };
 
 void wibox_unref_simplified(wibox_t **);

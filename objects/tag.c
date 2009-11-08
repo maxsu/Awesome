@@ -284,7 +284,7 @@ luaA_tag_windows(lua_State *L)
         luaA_checktable(L, 2);
         foreach(window, tag->windows)
         {
-            luaA_object_push_item(L, 1, *window);
+            luaA_object_push(L, *window);
             untag_ewindow(L, -1, 1);
             /* remove pushed windows */
             lua_pop(L, 1);
