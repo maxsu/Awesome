@@ -24,6 +24,7 @@
 
 #include "objects/widget.h"
 #include "screen.h"
+#include "luaa.h"
 #include "objects/wibox.h"
 #include "luaa.h"
 #include "globalconf.h"

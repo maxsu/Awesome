@@ -132,8 +132,7 @@ luaA_mouse_newindex(lua_State *L)
 {
     size_t len;
     const char *attr = luaL_checklstring(L, 2, &len);
-    int x, y = 0;
-    int screen;
+    int x, y, screen;
 
     switch(a_tokenize(attr, len))
     {

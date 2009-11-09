@@ -128,75 +128,12 @@ ewmh_update_net_client_list(lua_State *L)
 static int
 ewmh_update_net_current_desktop(lua_State *L)
 {
+    tag_t *tag = luaA_checkudata(L, 1, &tag_class);
+
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
                         globalconf.screen->root,
                         _NET_CURRENT_DESKTOP, CARDINAL, 32, 1,
-                        (uint32_t[]) { tags_get_first_selected_index(&globalconf.screens.tab[0]) });
-    return 0;
-}
-
-/** Update the client active desktop.
- * This is "wrong" since it can be on several tags, but EWMH has a strict view
- * of desktop system so just take the first tag.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-ewmh_client_update_desktop(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-
-    for(int i = 0; i < c->screen->tags.len; i++)
-        if(ewindow_is_tagged((ewindow_t *) c, c->screen->tags.tab[i]))
-        {
-            xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                                c->window, _NET_WM_DESKTOP, CARDINAL, 32, 1, &i);
-            break;
-        }
-    return 0;
-}
-
-static int
-ewmh_client_reset_urgent(lua_State *L)
-{
-    /* EWMH indicates that the WM must reset urgent when client gets attention,
-     * i.e. focus. */
-    client_set_urgent(L, 1, false);
-    return 0;
-}
-
-/** Update the client struts.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-ewmh_update_strut(lua_State *L)
-{
-    ewindow_t *ewindow = luaA_checkudata(L, 1, (lua_class_t *) &ewindow_class);
-
-    if(ewindow->window)
-    {
-        const uint32_t state[] =
-        {
-            ewindow->strut.left,
-            ewindow->strut.right,
-            ewindow->strut.top,
-            ewindow->strut.bottom,
-            ewindow->strut.left_start_y,
-            ewindow->strut.left_end_y,
-            ewindow->strut.right_start_y,
-            ewindow->strut.right_end_y,
-            ewindow->strut.top_start_x,
-            ewindow->strut.top_end_x,
-            ewindow->strut.bottom_start_x,
-            ewindow->strut.bottom_end_x
-        };
-
-        xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                            ewindow->window, _NET_WM_STRUT_PARTIAL,
-                            CARDINAL, 32, countof(state), state);
-    }
-
+                        (uint32_t[]) { tags_get_first_selected_index(tag->screen) });
     return 0;
 }
 
@@ -296,12 +233,7 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::below" , ewmh_client_update_hints);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::minimized" , ewmh_client_update_hints);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "property::urgent" , ewmh_client_update_hints);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "tagged", ewmh_client_update_desktop);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "untagged", ewmh_client_update_desktop);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", ewmh_update_net_current_desktop);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "focus", ewmh_client_reset_urgent);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::struts", ewmh_update_strut);
-    luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::window", ewmh_update_strut);
 }
 
 DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
