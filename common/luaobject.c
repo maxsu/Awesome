@@ -24,7 +24,7 @@
 static const int LUAA_OBJECT_REGISTRY_KEY;
 static const int LUAA_OBJECT_REGISTRY_REFCOUNT_KEY;
 
-static void
+void
 luaA_object_registry_push(lua_State *L)
 {
     lua_pushlightuserdata(L, (void *) &LUAA_OBJECT_REGISTRY_KEY);
@@ -92,6 +92,24 @@ luaA_object_set_refcount(lua_State *L, int tud, int oud, int count)
     lua_rawset(L, tud);
 }
 
+/** Store an object (value) in the registry, with its pointer (key).
+ * \param L The Lua VM state.
+ * \param oud The object index on the stack.
+ */
+void
+luaA_object_store_registry(lua_State *L, int oud)
+{
+    oud = luaA_absindex(L, oud);
+    /* Store into registry for futur use */
+    luaA_object_registry_push(L);
+    lua_pushlightuserdata(L, (void *) lua_topointer(L, oud));
+    lua_pushvalue(L, oud);
+    /* Set registry[data pointer] = data */
+    lua_rawset(L, -3);
+    /* Remove registry */
+    lua_pop(L, 1);
+}
+
 /** Increment a object reference in its store table.
  * \param L The Lua VM state.
  * \param tud The table index on the stack, where to store reference counting.
@@ -113,17 +131,7 @@ luaA_object_incref(lua_State *L, int tud, int oud)
 
         /* New guy! */
         if(count == 1)
-        {
-            oud = luaA_absindex(L, oud);
-            /* Store into registry for futur use */
-            luaA_object_registry_push(L);
-            lua_pushlightuserdata(L, pointer);
-            lua_pushvalue(L, oud);
-            /* Set registry[data pointer] = data */
-            lua_rawset(L, -3);
-            /* Remove registry */
-            lua_pop(L, 1);
-        }
+            luaA_object_store_registry(L, oud);
     }
 
     /* Remove referenced item */
@@ -151,10 +159,10 @@ luaA_object_decref(lua_State *L, int tud, int oud)
  * \return The number of element pushed on stack.
  */
 int
-luaA_object_push(lua_State *L, void *pointer)
+luaA_object_push(lua_State *L, const void *pointer)
 {
     luaA_object_registry_push(L);
-    lua_pushlightuserdata(L, pointer);
+    lua_pushlightuserdata(L, (void *) pointer);
     lua_rawget(L, -2);
     lua_remove(L, -2);
     return 1;
@@ -219,7 +227,7 @@ luaA_object_disconnect_signal_from_stack(lua_State *L, int oud,
 }
 
 void
-signal_object_emit(lua_State *L, signal_array_t *arr, const char *name, int nargs)
+signal_object_emit(lua_State *L, const signal_array_t *arr, const char *name, int nargs)
 {
     signal_t *sigfound = signal_array_getbyid(arr,
                                               a_strhash((const unsigned char *) name));
@@ -259,35 +267,18 @@ void
 luaA_object_emit_signal(lua_State *L, int oud,
                         const char *name, int nargs)
 {
-    oud = luaA_absindex(L, oud);
     lua_object_t *obj = lua_touserdata(L, oud);
     if(!obj)
-        luaL_error(L, "trying to emit signal on non-object");
-    signal_t *sigfound = signal_array_getbyid(&obj->signals,
-                                              a_strhash((const unsigned char *) name));
-    if(sigfound)
-    {
-        int nbfunc = sigfound->sigfuncs.len;
-        luaL_checkstack(L, lua_gettop(L) + nbfunc + nargs + 2, "too much signal");
-        /* Push all functions and then execute, because this list can change
-         * while executing funcs. */
-        foreach(func, sigfound->sigfuncs)
-            luaA_object_push(L, (void *) *func);
+        return;
 
-        for(int i = 0; i < nbfunc; i++)
-        {
-            /* push object */
-            lua_pushvalue(L, oud);
-            /* push all args */
-            for(int j = 0; j < nargs; j++)
-                lua_pushvalue(L, - nargs - nbfunc - 1 + i);
-            /* push first function */
-            lua_pushvalue(L, - nargs - nbfunc - 1 + i);
-            /* remove this first function */
-            lua_remove(L, - nargs - nbfunc - 2 + i);
-            luaA_dofunction(L, nargs + 1, 0);
-        }
-    }
+    /* Push object */
+    lua_pushvalue(L, oud);
+    /* duplicate args */
+    for(int i = 0; i < nargs; i++)
+        lua_pushvalue(L, - nargs - 1);
+    /* Emit signal */
+    signal_object_emit(L, &obj->signals, name, nargs + 1);
+
     /* Then emit signal on the class */
     lua_pushvalue(L, oud);
     lua_insert(L, - nargs - 1);
