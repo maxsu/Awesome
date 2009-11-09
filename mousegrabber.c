@@ -87,20 +87,21 @@ mousegrabber_handleevent(lua_State *L, int x, int y, uint16_t mask)
 static int
 luaA_mousegrabber_run(lua_State *L)
 {
-    if(globalconf.mousegrabber != LUA_REFNIL)
+    if(_G_mousegrabber)
         luaL_error(L, "mousegrabber already running");
 
     uint16_t cfont = xcursor_font_fromstr(luaL_checkstring(L, 2));
 
     if(cfont)
     {
+        luaA_checkfunction(L, 1);
         xcb_cursor_t cursor = xcursor_new(globalconf.connection, cfont);
 
-        luaA_registerfct(L, 1, &globalconf.mousegrabber);
+        _G_mousegrabber = luaA_object_ref(L, 1);
 
         if(!mousegrabber_grab(cursor))
         {
-            luaA_unregister(L, &globalconf.mousegrabber);
+            luaA_object_unref(L, _G_mousegrabber);
             luaL_error(L, "unable to grab mouse pointer");
         }
     }
@@ -118,7 +119,7 @@ int
 luaA_mousegrabber_stop(lua_State *L)
 {
     xcb_ungrab_pointer(globalconf.connection, XCB_CURRENT_TIME);
-    luaA_unregister(L, &globalconf.mousegrabber);
+    luaA_object_unref(L, _G_mousegrabber);
     return 0;
 }
 

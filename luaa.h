@@ -84,50 +84,6 @@ luaA_pusharea(lua_State *L, area_t geometry)
     return 1;
 }
 
-/** Register an Lua object.
- * \param L The Lua stack.
- * \param idx Index of the object in the stack.
- * \param ref A int address: it will be filled with the int
- * registered. If the address points to an already registered object, it will
- * be unregistered.
- * \return Always 0.
- */
-static inline int
-luaA_register(lua_State *L, int idx, int *ref)
-{
-    lua_pushvalue(L, idx);
-    if(*ref != LUA_REFNIL)
-        luaL_unref(L, LUA_REGISTRYINDEX, *ref);
-    *ref = luaL_ref(L, LUA_REGISTRYINDEX);
-    return 0;
-}
-
-/** Unregister a Lua object.
- * \param L The Lua stack.
- * \param ref A reference to an Lua object.
- */
-static inline void
-luaA_unregister(lua_State *L, int *ref)
-{
-    luaL_unref(L, LUA_REGISTRYINDEX, *ref);
-    *ref = LUA_REFNIL;
-}
-
-/** Register a function.
- * \param L The Lua stack.
- * \param idx Index of the function in the stack.
- * \param fct A int address: it will be filled with the int
- * registered. If the address points to an already registered function, it will
- * be unregistered.
- * \return luaA_register value.
- */
-static inline int
-luaA_registerfct(lua_State *L, int idx, int *fct)
-{
-    luaA_checkfunction(L, idx);
-    return luaA_register(L, idx, fct);
-}
-
 /** Print a warning about some Lua code.
  * This is less mean than luaL_error() which setjmp via lua_error() and kills
  * everything. This only warn, it's up to you to then do what's should be done.

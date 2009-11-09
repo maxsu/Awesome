@@ -105,9 +105,9 @@ DO_EVENT_HOOK_CALLBACK(keyb_t, key, XCB_KEY, key_array_t, event_key_match)
 static bool
 event_handle_mousegrabber(int x, int y, uint16_t mask)
 {
-    if(globalconf.mousegrabber != LUA_REFNIL)
+    if(_G_mousegrabber)
     {
-        lua_rawgeti(globalconf.L, LUA_REGISTRYINDEX, globalconf.mousegrabber);
+        luaA_object_push(globalconf.L, _G_mousegrabber);
         mousegrabber_handleevent(globalconf.L, x, y, mask);
         if(lua_pcall(globalconf.L, 1, 1, 0))
         {
@@ -566,9 +566,9 @@ event_handle_key(xcb_key_press_event_t *ev)
 {
     globalconf.timestamp = ev->time;
 
-    if(globalconf.keygrabber != LUA_REFNIL)
+    if(_G_keygrabber)
     {
-        lua_rawgeti(globalconf.L, LUA_REGISTRYINDEX, globalconf.keygrabber);
+        luaA_object_push(globalconf.L, _G_keygrabber);
         if(keygrabber_handlekpress(globalconf.L, ev))
         {
             if(lua_pcall(globalconf.L, 3, 1, 0))
