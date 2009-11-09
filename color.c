@@ -24,6 +24,7 @@
 
 #include "color.h"
 #include "globalconf.h"
+#include "awesome.h"
 #include "common/xutil.h"
 
 #define RGB_8TO16(i)   (0xffff * ((i) & 0xff) / 0xff)
@@ -87,7 +88,7 @@ color_parse(const char *colstr, ssize_t len,
 color_init_cookie_t
 color_init_unchecked(color_t *color, const char *colstr, ssize_t len)
 {
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, globalconf.default_screen);
+    xcb_screen_t *s = xutil_screen_get(globalconf.connection, _G_default_screen);
     color_init_cookie_t req;
 
     p_clear(&req, 1);
@@ -168,7 +169,7 @@ color_init_reply(color_init_cookie_t req)
 xcolor_init_request_t
 xcolor_init_unchecked(xcolor_t *color, const char *colstr, ssize_t len)
 {
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, globalconf.default_screen);
+    xcb_screen_t *s = xutil_screen_get(globalconf.connection, _G_default_screen);
     xcolor_init_request_t req;
     uint8_t red, green, blue, alpha;
 
