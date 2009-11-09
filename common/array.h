@@ -132,7 +132,7 @@
         pfx##_array_splice(arr, r, 0, &e, 1);                               \
     }                                                                       \
     static inline type_t *                                                  \
-    pfx##_array_lookup(pfx##_array_t *arr, type_t *e)                       \
+    pfx##_array_lookup(const pfx##_array_t *arr, type_t *e)                 \
     {                                                                       \
         return bsearch(e, arr->tab, arr->len, sizeof(type_t), cmp);         \
     }

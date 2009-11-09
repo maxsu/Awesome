@@ -29,7 +29,9 @@ void luaA_object_setup(lua_State *);
 void * luaA_object_incref(lua_State *, int, int);
 void luaA_object_decref(lua_State *, int, int);
 void luaA_object_registry_refcount_push(lua_State *);
-int luaA_object_push(lua_State *, void *);
+void luaA_object_registry_push(lua_State *);
+int luaA_object_push(lua_State *, const void *);
+void luaA_object_store_registry(lua_State *, int);
 
 /** Reference an object and return a pointer to it.
  * That only works with userdata, table, thread or function.
@@ -81,7 +83,7 @@ luaA_object_unref_from_stack(lua_State *L, int oud)
  * \param pointer The object pointer.
  */
 static inline void
-luaA_object_unref(lua_State *L, void *pointer)
+luaA_object_unref(lua_State *L, const void *pointer)
 {
     luaA_object_push(L, pointer);
     luaA_object_unref_from_stack(L, -1);
@@ -139,7 +141,7 @@ luaA_object_unref_item_from_stack(lua_State *L, int ud, int iud)
  * \param pointer The address of the object.
  */
 static inline void
-luaA_object_unref_item(lua_State *L, int ud, void *pointer)
+luaA_object_unref_item(lua_State *L, int ud, const void *pointer)
 {
     ud = luaA_absindex(L, ud);
     luaA_object_push(L, pointer);
@@ -148,7 +150,7 @@ luaA_object_unref_item(lua_State *L, int ud, void *pointer)
     lua_pop(L, 1);
 }
 
-void signal_object_emit(lua_State *, signal_array_t *, const char *, int);
+void signal_object_emit(lua_State *, const signal_array_t *, const char *, int);
 
 void luaA_object_connect_signal(lua_State *, int, const char *, lua_CFunction);
 void luaA_object_disconnect_signal(lua_State *, int, const char *, lua_CFunction);
@@ -177,7 +179,10 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
     {                                                                          \
         lua_pushlightuserdata(L, item);                                        \
         luaA_settype(L, (lua_class));                                          \
-        luaA_class_emit_signal(L, (lua_class), "new", 1);                      \
+        /* Store into registry for futur use */                                \
+        luaA_object_store_registry(L, -1);                                     \
+        /* Remove light userdata */                                            \
+        lua_pop(L, 1);                                                         \
         return item;                                                           \
     }                                                                          \
     static inline type *                                                       \
