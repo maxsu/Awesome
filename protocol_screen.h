@@ -22,6 +22,9 @@
 #ifndef AWESOME_PROTOCOL_SCREEN_H
 #define AWESOME_PROTOCOL_SCREEN_H
 
+#define SN_API_NOT_YET_FROZEN
+#include <libsn/sn.h>
+
 #include "objects/window.h"
 
 /** Structure defining a screen in the sense of the X protocol means it.  */

@@ -38,6 +38,7 @@
 #include "luaa.h"
 #include "systray.h"
 #include "screen.h"
+#include "spawn.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 
@@ -766,7 +767,7 @@ event_handle_clientmessage(void *data __attribute__ ((unused)),
                            xcb_client_message_event_t *ev)
 {
     /* check for startup notification messages */
-    if(sn_xcb_display_process_event(globalconf.sndisplay, (xcb_generic_event_t *) ev))
+    if(sn_xcb_display_process_event(_G_sndisplay, (xcb_generic_event_t *) ev))
         return 0;
 
     if(ev->type == WM_CHANGE_STATE)
