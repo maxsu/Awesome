@@ -413,7 +413,7 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &sa, 0);
 
     /* X stuff */
-    globalconf.connection = xcb_connect(NULL, &globalconf.default_screen);
+    globalconf.connection = xcb_connect(NULL, &_G_default_screen);
     if(xcb_connection_has_error(globalconf.connection))
         fatal("cannot open display");
 

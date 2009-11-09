@@ -30,6 +30,7 @@
 #include <math.h>
 
 #include "draw.h"
+#include "awesome.h"
 #include "globalconf.h"
 #include "screen.h"
 #include "font.h"
@@ -336,14 +337,14 @@ draw_text_extents(draw_text_context_t *data)
     cairo_t *cr;
     PangoLayout *layout;
     PangoRectangle ext;
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, globalconf.default_screen);
+    xcb_screen_t *s = xutil_screen_get(globalconf.connection, _G_default_screen);
     area_t geom = { 0, 0, 0, 0 };
 
     if(data->len <= 0)
         return geom;
 
     surface = cairo_xcb_surface_create(globalconf.connection,
-                                       globalconf.default_screen,
+                                       _G_default_screen,
                                        _G_protocol_screens.tab[0].visual,
                                        s->width_in_pixels,
                                        s->height_in_pixels);

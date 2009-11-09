@@ -53,8 +53,6 @@ typedef struct
     xcb_connection_t *connection;
     /** Event and error handlers */
     xcb_event_handlers_t evenths;
-    /** Default screen number */
-    int default_screen;
     /** Keys symbol table */
     xcb_key_symbols_t *keysyms;
     /** Logical screens */

@@ -25,6 +25,7 @@
 #include "font.h"
 #include "screen.h"
 #include "globalconf.h"
+#include "awesome.h"
 #include "protocol_screen.h"
 #include "common/xutil.h"
 
@@ -42,7 +43,7 @@ font_init(font_t *font, const char *fontname)
     /* Create a dummy cairo surface, cairo context and pango layout in
      * order to get font informations */
     surface = cairo_xcb_surface_create(globalconf.connection,
-                                       globalconf.default_screen,
+                                       _G_default_screen,
                                        _G_protocol_screens.tab[0].visual, 1, 1);
 
     cr = cairo_create(surface);
