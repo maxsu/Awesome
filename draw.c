@@ -32,6 +32,7 @@
 #include "draw.h"
 #include "globalconf.h"
 #include "screen.h"
+#include "font.h"
 
 #include "common/tokenize.h"
 #include "common/xutil.h"
@@ -199,7 +200,7 @@ draw_text(draw_context_t *ctx, draw_text_context_t *data,
     pango_layout_set_ellipsize(ctx->layout, ellip);
     pango_layout_set_wrap(ctx->layout, wrap);
     pango_layout_set_attributes(ctx->layout, data->attr_list);
-    pango_layout_set_font_description(ctx->layout, globalconf.font->desc);
+    pango_layout_set_font_description(ctx->layout, _G_font.desc);
 
     PangoRectangle ext;
     pango_layout_get_pixel_extents(ctx->layout, NULL, &ext);
@@ -351,7 +352,7 @@ draw_text_extents(draw_text_context_t *data)
     layout = pango_cairo_create_layout(cr);
     pango_layout_set_text(layout, data->text, data->len);
     pango_layout_set_attributes(layout, data->attr_list);
-    pango_layout_set_font_description(layout, globalconf.font->desc);
+    pango_layout_set_font_description(layout, _G_font.desc);
     pango_layout_get_pixel_extents(layout, NULL, &ext);
     g_object_unref(layout);
     cairo_destroy(cr);
