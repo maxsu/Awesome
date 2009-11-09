@@ -31,7 +31,6 @@
 #include <xcb/xcb_keysyms.h>
 
 #include "color.h"
-#include "font.h"
 #include "common/xembed.h"
 
 typedef struct wibox_t wibox_t;
@@ -75,8 +74,6 @@ typedef struct
     {
         xcolor_t fg, bg;
     } colors;
-    /** Default font */
-    font_t *font;
     /** The event loop */
     struct ev_loop *loop;
     /** The key grabber function */

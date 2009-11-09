@@ -43,6 +43,7 @@
 #include "screen.h"
 #include "event.h"
 #include "selection.h"
+#include "font.h"
 #include "common/xcursor.h"
 #include "common/xutil.h"
 #include "common/buffer.h"
@@ -658,13 +659,13 @@ luaA_awesome_index(lua_State *L)
     {
       case A_TK_FONT:
         {
-            char *font = pango_font_description_to_string(globalconf.font->desc);
+            char *font = pango_font_description_to_string(_G_font.desc);
             lua_pushstring(L, font);
             g_free(font);
         }
         break;
       case A_TK_FONT_HEIGHT:
-        lua_pushnumber(L, globalconf.font->height);
+        lua_pushnumber(L, _G_font.height);
         break;
       case A_TK_CONFFILE:
         lua_pushstring(L, conffile);
@@ -706,8 +707,8 @@ luaA_awesome_newindex(lua_State *L)
       case A_TK_FONT:
         {
             const char *newfont = luaL_checkstring(L, 3);
-            font_delete(&globalconf.font);
-            globalconf.font = font_new(newfont);
+            font_wipe(&_G_font);
+            font_init(&_G_font, newfont);
             /* refresh all wiboxes */
             foreach(wibox, globalconf.wiboxes)
                 (*wibox)->need_update = true;
