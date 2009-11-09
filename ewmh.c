@@ -144,12 +144,11 @@ static int
 ewmh_update_net_current_desktop(lua_State *L)
 {
     tag_t *tag = luaA_checkudata(L, 1, &tag_class);
-    int phys_screen = screen_virttophys(screen_array_indexof(&globalconf.screens, tag->screen));
 
     xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
-                        xutil_screen_get(globalconf.connection, phys_screen)->root,
+                        tag->screen->protocol_screen->root->window,
                         _NET_CURRENT_DESKTOP, CARDINAL, 32, 1,
-                        (uint32_t[]) { tags_get_first_selected_index(&globalconf.screens.tab[phys_screen]) });
+                        (uint32_t[]) { tags_get_first_selected_index(tag->screen) });
     return 0;
 }
 

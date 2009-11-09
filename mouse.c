@@ -139,24 +139,17 @@ luaA_mouse_newindex(lua_State *L)
 {
     size_t len;
     const char *attr = luaL_checklstring(L, 2, &len);
-    int x, y = 0;
-    xcb_window_t root;
-    int screen, phys_screen;
 
     switch(a_tokenize(attr, len))
     {
       case A_TK_SCREEN:
-        screen = luaL_checknumber(L, 3) - 1;
-        luaA_checkscreen(screen);
-
-        /* we need the physical one to get the root window */
-        phys_screen = screen_virttophys(screen);
-        root = xutil_screen_get(globalconf.connection, phys_screen)->root;
-
-        x = globalconf.screens.tab[screen].geometry.x;
-        y = globalconf.screens.tab[screen].geometry.y;
-
-        mouse_warp_pointer(root, x, y);
+        {
+            int screen = luaL_checknumber(L, 3) - 1;
+            luaA_checkscreen(screen);
+            mouse_warp_pointer(globalconf.screens.tab[screen].protocol_screen->root->window,
+                               globalconf.screens.tab[screen].geometry.x,
+                               globalconf.screens.tab[screen].geometry.y);
+        }
         break;
       default:
         return 0;

@@ -77,11 +77,11 @@ tag_append_to_screen(lua_State *L, int udx, screen_t *s)
         return;
     }
 
-    int screen_index = screen_array_indexof(&globalconf.screens, s);
-    int phys_screen = screen_virttophys(screen_index);
-
     tag->screen = s;
     tag_array_append(&s->tags, luaA_object_ref_class(globalconf.L, udx, &tag_class));
+
+    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens,
+                                                    s->protocol_screen);
     ewmh_update_net_numbers_of_desktop(phys_screen);
     ewmh_update_net_desktop_names(phys_screen);
     ewmh_update_workarea(phys_screen);
@@ -105,8 +105,6 @@ tag_remove_from_screen(tag_t *tag)
     if(!tag->screen)
         return;
 
-    int screen_index = screen_array_indexof(&globalconf.screens, tag->screen);
-    int phys_screen = screen_virttophys(screen_index);
     tag_array_t *tags = &tag->screen->tags;
 
     for(int i = 0; i < tags->len; i++)
@@ -116,6 +114,8 @@ tag_remove_from_screen(tag_t *tag)
             break;
         }
 
+    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens,
+                                                    tag->screen->protocol_screen);
     ewmh_update_net_numbers_of_desktop(phys_screen);
     ewmh_update_net_desktop_names(phys_screen);
     ewmh_update_workarea(phys_screen);
