@@ -376,19 +376,6 @@ screen_area_get(screen_t *screen, bool strut)
     return area;
 }
 
-/** This returns the real X screen number for a logical
- * screen if Xinerama is active.
- * \param screen The logical screen.
- * \return The X screen.
- */
-int
-screen_virttophys(int screen)
-{
-    if(globalconf.xinerama_is_active)
-        return globalconf.default_screen;
-    return screen;
-}
-
 /** Move a client to a virtual screen.
  * \param c The client to move.
  * \param new_screen The destination screen.

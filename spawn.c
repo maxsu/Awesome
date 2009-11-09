@@ -325,7 +325,8 @@ luaA_spawn(lua_State *L)
         else
             cmdname = a_strdup(cmd);
 
-        context = sn_launcher_context_new(globalconf.sndisplay, screen_virttophys(screen));
+        context = sn_launcher_context_new(globalconf.sndisplay,
+                                          protocol_screen_array_indexof(&_G_protocol_screens, globalconf.screens.tab[screen].protocol_screen));
         sn_launcher_context_set_name(context, "awesome");
         sn_launcher_context_set_description(context, "awesome spawn");
         sn_launcher_context_set_binary_name(context, cmdname);
