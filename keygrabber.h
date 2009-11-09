@@ -1,7 +1,7 @@
 /*
  * keygrabber.h - key grabbing header
  *
- * Copyright © 2008 Julien Danjou <julien@danjou.info>
+ * Copyright © 2008-2009 Julien Danjou <julien@danjou.info>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,13 @@
 #ifndef AWESOME_KEYGRABBER_H
 #define AWESOME_KEYGRABBER_H
 
-#include <lua.h>
 #include <xcb/xcb.h>
+#include <lua.h>
 
 int luaA_keygrabber_stop(lua_State *);
 bool keygrabber_handlekpress(lua_State *, xcb_key_press_event_t *);
+
+void *_G_keygrabber;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
