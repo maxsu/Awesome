@@ -76,10 +76,6 @@ typedef struct
     } colors;
     /** The event loop */
     struct ev_loop *loop;
-    /** The key grabber function */
-    int keygrabber;
-    /** The mouse pointer grabber function */
-    int mousegrabber;
     /** Wiboxes */
     wibox_array_t wiboxes;
     /** The startup notification display struct */
