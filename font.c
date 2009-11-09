@@ -27,17 +27,16 @@
 #include "globalconf.h"
 #include "common/xutil.h"
 
-/** Create a new Pango font.
+/** Init a new Pango font.
+ * \param font The font to init.
  * \param fontname Pango fontname (e.g. [FAMILY-LIST] [STYLE-OPTIONS] [SIZE]).
- * \return A new font.
  */
-font_t *
-font_new(const char *fontname)
+void
+font_init(font_t *font, const char *fontname)
 {
     cairo_surface_t *surface;
     cairo_t *cr;
     PangoLayout *layout;
-    font_t *font = p_new(font_t, 1);
 
     /* Create a dummy cairo surface, cairo context and pango layout in
      * order to get font informations */
@@ -58,21 +57,15 @@ font_new(const char *fontname)
     g_object_unref(layout);
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
-
-    return font;
 }
 
 /** Delete a font.
  * \param font Font to delete.
  */
 void
-font_delete(font_t **font)
+font_wipe(font_t *font)
 {
-    if(*font)
-    {
-        pango_font_description_free((*font)->desc);
-        p_delete(font);
-    }
+    pango_font_description_free(font->desc);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

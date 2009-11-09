@@ -34,6 +34,7 @@
 #include <xcb/xtest.h>
 
 #include "awesome.h"
+#include "font.h"
 #include "spawn.h"
 #include "objects/client.h"
 #include "xwindow.h"
@@ -435,7 +436,7 @@ main(int argc, char **argv)
     colors_reqs[1] = xcolor_init_unchecked(&globalconf.colors.bg,
                                            "white", sizeof("white") - 1);
 
-    globalconf.font = font_new("sans 8");
+    font_init(&_G_font, "sans 8");
 
     for(colors_nbr = 0; colors_nbr < 2; colors_nbr++)
         xcolor_init_reply(colors_reqs[colors_nbr]);
