@@ -22,13 +22,13 @@
 #ifndef AWESOME_GLOBALCONF_H
 #define AWESOME_GLOBALCONF_H
 
-#define SN_API_NOT_YET_FROZEN
-#include <libsn/sn.h>
-
 #include <ev.h>
 
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_keysyms.h>
+
+#define SN_API_NOT_YET_FROZEN
+#include <libsn/sn.h>
 
 #include "objects/key.h"
 #include "objects/button.h"
@@ -82,8 +82,6 @@ typedef struct
     struct ev_loop *loop;
     /** Wiboxes */
     wibox_array_t wiboxes;
-    /** The startup notification display struct */
-    SnDisplay *sndisplay;
     /** Latest timestamp we got from the X server */
     xcb_timestamp_t timestamp;
     /** Window that contains the systray */
