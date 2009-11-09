@@ -22,9 +22,6 @@
 #ifndef AWESOME_GLOBALCONF_H
 #define AWESOME_GLOBALCONF_H
 
-#define SN_API_NOT_YET_FROZEN
-#include <libsn/sn.h>
-
 #include <ev.h>
 
 #include <xcb/xcb_icccm.h>
@@ -76,8 +73,6 @@ typedef struct
     struct ev_loop *loop;
     /** Wiboxes */
     wibox_array_t wiboxes;
-    /** The startup notification display struct */
-    SnDisplay *sndisplay;
 } awesome_t;
 
 extern awesome_t globalconf;

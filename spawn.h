@@ -22,11 +22,17 @@
 #ifndef AWESOME_SPAWN_H
 #define AWESOME_SPAWN_H
 
+#define SN_API_NOT_YET_FROZEN
+#include <libsn/sn.h>
+
 #include "globalconf.h"
 
 void spawn_init(void);
 void spawn_start_notify(client_t *, const char *);
 int luaA_spawn(lua_State *);
+
+/** The startup notification display struct */
+SnDisplay *_G_sndisplay;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
