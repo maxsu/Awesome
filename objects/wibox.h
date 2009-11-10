@@ -43,8 +43,6 @@ struct wibox_t
     bool need_shape_update;
     /** Background image */
     image_t *bg_image;
-    /** The window geometry. */
-    area_t geometry;
     /** Draw context */
     draw_context_t ctx;
     /** The window's content (shape) */

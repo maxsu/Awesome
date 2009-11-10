@@ -27,6 +27,7 @@
 #include "config.h"
 #include "luaa.h"
 #include "common/luaobject.h"
+#include "globalconf.h"
 
 struct image
 {
