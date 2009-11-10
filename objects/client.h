@@ -45,8 +45,6 @@ struct client_t
     char *class, *instance;
     /** Has urgency hint */
     bool urgent;
-    /** True if the client is hidden */
-    bool hidden;
     /** true if the client must be skipped from task bar client list */
     bool skip_taskbar;
     /** Window of the group leader */
@@ -74,7 +72,6 @@ lua_interface_window_t client_class;
 
 LUA_OBJECT_FUNCS((lua_class_t *) &client_class, client_t, client)
 
-bool client_maybevisible(client_t *);
 client_t * client_getbywin(xcb_window_t);
 void client_manage(xcb_window_t, xcb_get_geometry_reply_t *, protocol_screen_t *, bool);
 area_t client_geometry_hints(client_t *, area_t);
