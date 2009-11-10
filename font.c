@@ -42,7 +42,7 @@ font_init(font_t *font, const char *fontname)
 
     /* Create a dummy cairo surface, cairo context and pango layout in
      * order to get font informations */
-    surface = cairo_xcb_surface_create(globalconf.connection,
+    surface = cairo_xcb_surface_create(_G_connection,
                                        _G_default_screen,
                                        _G_protocol_screens.tab[0].visual, 1, 1);
 

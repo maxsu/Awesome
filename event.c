@@ -172,7 +172,7 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
     {
         luaA_object_push(globalconf.L, c);
         event_button_callback(ev, &c->buttons, 1, NULL);
-        xcb_allow_events(globalconf.connection,
+        xcb_allow_events(_G_connection,
                          XCB_ALLOW_REPLAY_POINTER,
                          XCB_CURRENT_TIME);
     }
@@ -231,7 +231,7 @@ event_handle_configurerequest_configure_window(xcb_configure_request_event_t *ev
         config_win_vals[i++] = ev->stack_mode;
     }
 
-    xcb_configure_window(globalconf.connection, ev->window, config_win_mask, config_win_vals);
+    xcb_configure_window(_G_connection, ev->window, config_win_mask, config_win_vals);
 }
 
 /** The configure event handler.
@@ -812,13 +812,13 @@ event_handle_mappingnotify(void *data,
        || ev->request == XCB_MAPPING_KEYBOARD)
     {
         xcb_get_modifier_mapping_cookie_t xmapping_cookie =
-            xcb_get_modifier_mapping_unchecked(globalconf.connection);
+            xcb_get_modifier_mapping_unchecked(_G_connection);
 
         /* Free and then allocate the key symbols */
         xcb_key_symbols_free(globalconf.keysyms);
-        globalconf.keysyms = xcb_key_symbols_alloc(globalconf.connection);
+        globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
 
-        xutil_lock_mask_get(globalconf.connection, xmapping_cookie,
+        xutil_lock_mask_get(_G_connection, xmapping_cookie,
                             globalconf.keysyms, &globalconf.numlockmask,
                             &globalconf.shiftlockmask, &globalconf.capslockmask,
                             &globalconf.modeswitchmask);
@@ -871,7 +871,7 @@ void a_xcb_set_event_handlers(void)
     xcb_event_set_reparent_notify_handler(&globalconf.evenths, event_handle_reparentnotify, NULL);
 
     /* check for randr extension */
-    randr_query = xcb_get_extension_data(globalconf.connection, &xcb_randr_id);
+    randr_query = xcb_get_extension_data(_G_connection, &xcb_randr_id);
     if(randr_query->present)
         xcb_event_set_handler(&globalconf.evenths,
                               randr_query->first_event + XCB_RANDR_SCREEN_CHANGE_NOTIFY,

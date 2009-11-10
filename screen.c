@@ -25,6 +25,7 @@
 #include <xcb/xinerama.h>
 #include <xcb/randr.h>
 
+#include "awesome.h"
 #include "screen.h"
 #include "ewmh.h"
 #include "objects/tag.h"
@@ -78,9 +79,9 @@ screen_default_visual(xcb_screen_t *s)
 static void
 protocol_screen_scan(void)
 {
-    for(int screen = 0; screen < xcb_get_setup(globalconf.connection)->roots_len; screen++)
+    for(int screen = 0; screen < xcb_get_setup(_G_connection)->roots_len; screen++)
     {
-        xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, screen);
+        xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, screen);
         protocol_screen_t pscreen;
         p_clear(&pscreen, 1);
         pscreen.visual = screen_default_visual(xcb_screen);
@@ -103,13 +104,13 @@ static bool
 screen_scan_xrandr(protocol_screen_t *pscreen)
 {
     /* Check for extension before checking for XRandR */
-    if(!xcb_get_extension_data(globalconf.connection, &xcb_randr_id)->present)
+    if(!xcb_get_extension_data(_G_connection, &xcb_randr_id)->present)
         return false;
 
     /* We require at least version 1.1 */
     xcb_randr_query_version_reply_t *version_reply =
-        xcb_randr_query_version_reply(globalconf.connection,
-                                      xcb_randr_query_version(globalconf.connection, 1, 1), 0);
+        xcb_randr_query_version_reply(_G_connection,
+                                      xcb_randr_query_version(_G_connection, 1, 1), 0);
     if(!version_reply)
         return false;
 
@@ -122,8 +123,8 @@ screen_scan_xrandr(protocol_screen_t *pscreen)
     /* All this could be splitted in the Good Async Way.
      * Fact is most of the time, we always one or 2 pscreen so it's not
      * worth it. */
-    xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(globalconf.connection, pscreen->root->window);
-    xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(globalconf.connection, screen_res_c, NULL);
+    xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, pscreen->root->window);
+    xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(_G_connection, screen_res_c, NULL);
 
     /* We go through CRTC, and build a screen for each one. */
     xcb_randr_crtc_t *randr_crtcs = xcb_randr_get_screen_resources_crtcs(screen_res_r);
@@ -131,8 +132,8 @@ screen_scan_xrandr(protocol_screen_t *pscreen)
     for(int i = 0; i < screen_res_r->num_crtcs; i++)
     {
         /* Get info on the output crtc */
-        xcb_randr_get_crtc_info_cookie_t crtc_info_c = xcb_randr_get_crtc_info(globalconf.connection, randr_crtcs[i], XCB_CURRENT_TIME);
-        xcb_randr_get_crtc_info_reply_t *crtc_info_r = xcb_randr_get_crtc_info_reply(globalconf.connection, crtc_info_c, NULL);
+        xcb_randr_get_crtc_info_cookie_t crtc_info_c = xcb_randr_get_crtc_info(_G_connection, randr_crtcs[i], XCB_CURRENT_TIME);
+        xcb_randr_get_crtc_info_reply_t *crtc_info_r = xcb_randr_get_crtc_info_reply(_G_connection, crtc_info_c, NULL);
 
         /* If CRTC has no OUTPUT, ignore it */
         if(!xcb_randr_get_crtc_info_outputs_length(crtc_info_r))
@@ -151,8 +152,8 @@ screen_scan_xrandr(protocol_screen_t *pscreen)
 
         for(int j = 0; j < xcb_randr_get_crtc_info_outputs_length(crtc_info_r); j++)
         {
-            xcb_randr_get_output_info_cookie_t output_info_c = xcb_randr_get_output_info(globalconf.connection, randr_outputs[j], XCB_CURRENT_TIME);
-            xcb_randr_get_output_info_reply_t *output_info_r = xcb_randr_get_output_info_reply(globalconf.connection, output_info_c, NULL);
+            xcb_randr_get_output_info_cookie_t output_info_c = xcb_randr_get_output_info(_G_connection, randr_outputs[j], XCB_CURRENT_TIME);
+            xcb_randr_get_output_info_reply_t *output_info_r = xcb_randr_get_output_info_reply(_G_connection, output_info_c, NULL);
 
             int len = xcb_randr_get_output_info_name_length(output_info_r);
             /* name is not NULL terminated */
@@ -189,10 +190,10 @@ static bool
 screen_scan_xinerama(protocol_screen_t *pscreen)
 {
     /* Check for extension before checking for Xinerama */
-    if(xcb_get_extension_data(globalconf.connection, &xcb_xinerama_id)->present)
+    if(xcb_get_extension_data(_G_connection, &xcb_xinerama_id)->present)
     {
         xcb_xinerama_is_active_reply_t *xia;
-        xia = xcb_xinerama_is_active_reply(globalconf.connection, xcb_xinerama_is_active(globalconf.connection), NULL);
+        xia = xcb_xinerama_is_active_reply(_G_connection, xcb_xinerama_is_active(_G_connection), NULL);
         globalconf.xinerama_is_active = xia->state;
         p_delete(&xia);
     }
@@ -204,8 +205,8 @@ screen_scan_xinerama(protocol_screen_t *pscreen)
     xcb_xinerama_screen_info_t *xsi;
     int xinerama_screen_number;
 
-    xsq = xcb_xinerama_query_screens_reply(globalconf.connection,
-                                           xcb_xinerama_query_screens_unchecked(globalconf.connection),
+    xsq = xcb_xinerama_query_screens_reply(_G_connection,
+                                           xcb_xinerama_query_screens_unchecked(_G_connection),
                                            NULL);
 
     xsi = xcb_xinerama_query_screens_screen_info(xsq);
@@ -260,7 +261,7 @@ screen_scan(void)
                 /* ... or then try the good old standard way */
             {
                 int pscreen_index = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
-                xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, pscreen_index);
+                xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, pscreen_index);
                 screen_t s;
                 p_clear(&s, 1);
                 s.geometry.x = 0;

@@ -46,8 +46,6 @@ ARRAY_TYPE(ewindow_t *, ewindow)
 /** Main configuration structure */
 typedef struct
 {
-    /** Connection ref */
-    xcb_connection_t *connection;
     /** Event and error handlers */
     xcb_event_handlers_t evenths;
     /** Keys symbol table */

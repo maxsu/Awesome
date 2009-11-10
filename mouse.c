@@ -23,6 +23,7 @@
 #include "screen.h"
 #include "objects/client.h"
 #include "globalconf.h"
+#include "awesome.h"
 #include "objects/wibox.h"
 #include "luaa.h"
 #include "common/tokenize.h"
@@ -42,8 +43,8 @@ mouse_query_pointer(xcb_window_t window, int16_t *x, int16_t *y, xcb_window_t *c
     xcb_query_pointer_cookie_t query_ptr_c;
     xcb_query_pointer_reply_t *query_ptr_r;
 
-    query_ptr_c = xcb_query_pointer_unchecked(globalconf.connection, window);
-    query_ptr_r = xcb_query_pointer_reply(globalconf.connection, query_ptr_c, NULL);
+    query_ptr_c = xcb_query_pointer_unchecked(_G_connection, window);
+    query_ptr_r = xcb_query_pointer_reply(_G_connection, query_ptr_c, NULL);
 
     if(!query_ptr_r || !query_ptr_r->same_screen)
         return false;
@@ -72,10 +73,10 @@ static bool
 mouse_query_pointer_root(screen_t **s, int16_t *x, int16_t *y, xcb_window_t *child, uint16_t *mask)
 {
     for(int screen = 0;
-        screen < xcb_setup_roots_length(xcb_get_setup(globalconf.connection));
+        screen < xcb_setup_roots_length(xcb_get_setup(_G_connection));
         screen++)
     {
-        xcb_window_t root = xutil_screen_get(globalconf.connection, screen)->root;
+        xcb_window_t root = xutil_screen_get(_G_connection, screen)->root;
 
         if(mouse_query_pointer(root, x, y, child, mask))
         {
@@ -94,7 +95,7 @@ mouse_query_pointer_root(screen_t **s, int16_t *x, int16_t *y, xcb_window_t *chi
 static inline void
 mouse_warp_pointer(xcb_window_t window, int x, int y)
 {
-    xcb_warp_pointer(globalconf.connection, XCB_NONE, window,
+    xcb_warp_pointer(_G_connection, XCB_NONE, window,
                      0, 0, 0, 0, x, y );
 }
 
@@ -214,7 +215,7 @@ luaA_mouse_coords(lua_State *L)
         x = luaA_getopt_number(L, 1, "x", mouse_x);
         y = luaA_getopt_number(L, 1, "y", mouse_y);
 
-        root = xutil_screen_get(globalconf.connection,
+        root = xutil_screen_get(_G_connection,
                                 screen_array_indexof(&globalconf.screens, screen))->root;
 
         if(ignore_enter_notify)

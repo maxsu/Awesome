@@ -21,7 +21,7 @@
 
 #include <unistd.h>
 
-#include "globalconf.h"
+#include "awesome.h"
 #include "mouse.h"
 #include "mousegrabber.h"
 #include "luaa.h"
@@ -38,13 +38,13 @@ mousegrabber_grab(xcb_cursor_t cursor)
     xcb_window_t root = XCB_NONE;
 
     for(int screen = 0;
-        screen < xcb_setup_roots_length(xcb_get_setup(globalconf.connection));
+        screen < xcb_setup_roots_length(xcb_get_setup(_G_connection));
         screen++)
     {
         int16_t x, y;
         uint16_t mask;
 
-        root = xutil_screen_get(globalconf.connection, screen)->root;
+        root = xutil_screen_get(_G_connection, screen)->root;
         if(mouse_query_pointer(root, &x, &y, NULL, &mask))
             break;
     }
@@ -53,7 +53,7 @@ mousegrabber_grab(xcb_cursor_t cursor)
     {
         xcb_grab_pointer_reply_t *grab_ptr_r;
         xcb_grab_pointer_cookie_t grab_ptr_c =
-            xcb_grab_pointer_unchecked(globalconf.connection, false, root,
+            xcb_grab_pointer_unchecked(_G_connection, false, root,
                                        XCB_EVENT_MASK_BUTTON_PRESS
                                        | XCB_EVENT_MASK_BUTTON_RELEASE
                                        | XCB_EVENT_MASK_POINTER_MOTION,
@@ -61,7 +61,7 @@ mousegrabber_grab(xcb_cursor_t cursor)
                                        XCB_GRAB_MODE_ASYNC,
                                        root, cursor, XCB_CURRENT_TIME);
 
-        if((grab_ptr_r = xcb_grab_pointer_reply(globalconf.connection, grab_ptr_c, NULL)))
+        if((grab_ptr_r = xcb_grab_pointer_reply(_G_connection, grab_ptr_c, NULL)))
         {
             p_delete(&grab_ptr_r);
             return true;
@@ -107,7 +107,7 @@ luaA_mousegrabber_run(lua_State *L)
     if(cfont)
     {
         luaA_checkfunction(L, 1);
-        xcb_cursor_t cursor = xcursor_new(globalconf.connection, cfont);
+        xcb_cursor_t cursor = xcursor_new(_G_connection, cfont);
 
         _G_mousegrabber = luaA_object_ref(L, 1);
 
@@ -130,7 +130,7 @@ luaA_mousegrabber_run(lua_State *L)
 int
 luaA_mousegrabber_stop(lua_State *L)
 {
-    xcb_ungrab_pointer(globalconf.connection, XCB_CURRENT_TIME);
+    xcb_ungrab_pointer(_G_connection, XCB_CURRENT_TIME);
     luaA_object_unref(L, _G_mousegrabber);
     return 0;
 }

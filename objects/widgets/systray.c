@@ -22,6 +22,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 
+#include "awesome.h"
 #include "objects/widget.h"
 #include "screen.h"
 #include "luaa.h"
@@ -72,7 +73,7 @@ systray_draw(widget_t *widget, draw_context_t *ctx,
 
     /* set wibox orientation */
     /** \todo stop setting that property on each redraw */
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         p->ctx.pscreen->systray.window,
                         _NET_SYSTEM_TRAY_ORIENTATION, CARDINAL, 32, 1, &orient);
 }

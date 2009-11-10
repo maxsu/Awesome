@@ -24,6 +24,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 
+#include "awesome.h"
 #include "screen.h"
 #include "mouse.h"
 #include "widget.h"
@@ -219,15 +220,15 @@ widget_render(wibox_t *wibox)
         xcb_pixmap_t rootpix;
         xcb_get_property_cookie_t prop_c;
         int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, wibox->ctx.pscreen);
-        xcb_screen_t *s = xutil_screen_get(globalconf.connection, phys_screen);
-        prop_c = xcb_get_property_unchecked(globalconf.connection, false, s->root, _XROOTPMAP_ID,
+        xcb_screen_t *s = xutil_screen_get(_G_connection, phys_screen);
+        prop_c = xcb_get_property_unchecked(_G_connection, false, s->root, _XROOTPMAP_ID,
                                             PIXMAP, 0, 1);
-        if((prop_r = xcb_get_property_reply(globalconf.connection, prop_c, NULL)))
+        if((prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL)))
         {
             if(prop_r->value_len
                && (data = xcb_get_property_value(prop_r))
                && (rootpix = *(xcb_pixmap_t *) data))
-                xcb_copy_area(globalconf.connection, rootpix,
+                xcb_copy_area(_G_connection, rootpix,
                               wibox->ctx.pixmap, wibox->gc,
                               x, y,
                               0, 0,

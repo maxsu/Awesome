@@ -234,7 +234,7 @@ spawn_start_notify(client_t *c, const char * startup_id)
 void
 spawn_init(void)
 {
-    _G_sndisplay = sn_xcb_display_new(globalconf.connection, NULL, NULL);
+    _G_sndisplay = sn_xcb_display_new(_G_connection, NULL, NULL);
 
     foreach(screen, _G_protocol_screens)
         screen->snmonitor = sn_monitor_context_new(_G_sndisplay,

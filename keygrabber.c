@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include "globalconf.h"
+#include "awesome.h"
 #include "keygrabber.h"
 #include "objects/key.h"
 #include "luaa.h"
@@ -40,8 +41,8 @@ keygrabber_grab(void)
 
     for(i = 1000; i; i--)
     {
-        if((xgb = xcb_grab_keyboard_reply(globalconf.connection,
-                                          xcb_grab_keyboard(globalconf.connection, true,
+        if((xgb = xcb_grab_keyboard_reply(_G_connection,
+                                          xcb_grab_keyboard(_G_connection, true,
                                                             _G_protocol_screens.tab[0].root->window,
                                                             XCB_CURRENT_TIME, XCB_GRAB_MODE_ASYNC,
                                                             XCB_GRAB_MODE_ASYNC),
@@ -127,7 +128,7 @@ luaA_keygrabber_run(lua_State *L)
 int
 luaA_keygrabber_stop(lua_State *L)
 {
-    xcb_ungrab_keyboard(globalconf.connection, XCB_CURRENT_TIME);
+    xcb_ungrab_keyboard(_G_connection, XCB_CURRENT_TIME);
     luaA_object_unref(L, _G_keygrabber);
     return 0;
 }

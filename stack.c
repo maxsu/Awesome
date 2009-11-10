@@ -19,6 +19,7 @@
  *
  */
 
+#include "awesome.h"
 #include "ewmh.h"
 #include "stack.h"
 #include "objects/client.h"
@@ -89,7 +90,7 @@ stack_ewindow_raise(lua_State *L, int idx)
 static xcb_window_t
 stack_ewindow_above(ewindow_t *ewindow, xcb_window_t previous)
 {
-    xcb_configure_window(globalconf.connection, ewindow->window,
+    xcb_configure_window(_G_connection, ewindow->window,
                          XCB_CONFIG_WINDOW_SIBLING | XCB_CONFIG_WINDOW_STACK_MODE,
                          (uint32_t[]) { previous, XCB_STACK_MODE_ABOVE });
 

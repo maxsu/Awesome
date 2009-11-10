@@ -21,6 +21,7 @@
 
 #include <xcb/xcb_atom.h>
 
+#include "awesome.h"
 #include "screen.h"
 #include "property.h"
 #include "objects/client.h"
@@ -38,8 +39,8 @@
     { \
         bool no_reply = !reply; \
         if(no_reply) \
-            reply = xcb_get_property_reply(globalconf.connection, \
-                                           xcb_get_any_property(globalconf.connection, \
+            reply = xcb_get_property_reply(_G_connection, \
+                                           xcb_get_any_property(_G_connection, \
                                                                 false, \
                                                                 c->window, \
                                                                 atom, \
@@ -112,8 +113,8 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_reply_t *reply)
     }
     else
     {
-        if(!xcb_get_wm_transient_for_reply(globalconf.connection,
-                                            xcb_get_wm_transient_for_unchecked(globalconf.connection,
+        if(!xcb_get_wm_transient_for_reply(_G_connection,
+                                            xcb_get_wm_transient_for_unchecked(_G_connection,
                                                                                c->window),
                                             &trans, NULL))
             return;
@@ -140,10 +141,10 @@ property_update_wm_client_leader(client_t *c, xcb_get_property_reply_t *reply)
 
     if(no_reply)
     {
-        client_leader_q = xcb_get_property_unchecked(globalconf.connection, false, c->window,
+        client_leader_q = xcb_get_property_unchecked(_G_connection, false, c->window,
                                                      WM_CLIENT_LEADER, WINDOW, 0, 32);
 
-        reply = xcb_get_property_reply(globalconf.connection, client_leader_q, NULL);
+        reply = xcb_get_property_reply(_G_connection, client_leader_q, NULL);
     }
 
     if(reply && reply->value_len && (data = xcb_get_property_value(reply)))
@@ -168,8 +169,8 @@ property_update_wm_normal_hints(client_t *c, xcb_get_property_reply_t *reply)
     }
     else
     {
-        if(!xcb_get_wm_normal_hints_reply(globalconf.connection,
-                                          xcb_get_wm_normal_hints_unchecked(globalconf.connection,
+        if(!xcb_get_wm_normal_hints_reply(_G_connection,
+                                          xcb_get_wm_normal_hints_unchecked(_G_connection,
                                                                             c->window),
                                           &c->size_hints, NULL))
             return;
@@ -192,8 +193,8 @@ property_update_wm_hints(client_t *c, xcb_get_property_reply_t *reply)
     }
     else
     {
-        if(!xcb_get_wm_hints_reply(globalconf.connection,
-                                  xcb_get_wm_hints_unchecked(globalconf.connection, c->window),
+        if(!xcb_get_wm_hints_reply(_G_connection,
+                                  xcb_get_wm_hints_unchecked(_G_connection, c->window),
                                   &wmh, NULL))
             return;
     }
@@ -224,8 +225,8 @@ property_update_wm_class(client_t *c, xcb_get_property_reply_t *reply)
     }
     else
     {
-        if(!xcb_get_wm_class_reply(globalconf.connection,
-                                   xcb_get_wm_class_unchecked(globalconf.connection, c->window),
+        if(!xcb_get_wm_class_reply(_G_connection,
+                                   xcb_get_wm_class_unchecked(_G_connection, c->window),
                                    &hint, NULL))
             return;
     }
@@ -282,8 +283,8 @@ property_update_net_wm_pid(client_t *c,
     if(no_reply)
     {
         xcb_get_property_cookie_t prop_c =
-            xcb_get_property_unchecked(globalconf.connection, false, c->window, _NET_WM_PID, CARDINAL, 0L, 1L);
-        reply = xcb_get_property_reply(globalconf.connection, prop_c, NULL);
+            xcb_get_property_unchecked(_G_connection, false, c->window, _NET_WM_PID, CARDINAL, 0L, 1L);
+        reply = xcb_get_property_reply(_G_connection, prop_c, NULL);
     }
 
     if(reply && reply->value_len)
@@ -318,8 +319,8 @@ property_update_wm_protocols(client_t *c, xcb_get_property_reply_t *reply)
     else
     {
         /* If this fails for any reason, we still got the old value */
-        if(!xcb_get_wm_protocols_reply(globalconf.connection,
-                                      xcb_get_wm_protocols_unchecked(globalconf.connection,
+        if(!xcb_get_wm_protocols_reply(_G_connection,
+                                      xcb_get_wm_protocols_unchecked(_G_connection,
                                                                      c->window, WM_PROTOCOLS),
                                       &protocols, NULL))
             return;
