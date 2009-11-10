@@ -20,7 +20,6 @@ module("client")
 -- invisible in taskbar.
 -- @field minimized Define it the client must be iconify, i.e. only visible in
 -- taskbar.
--- @field size_hints_honor Honor size hints, i.e. respect size ratio.
 -- @field border_width The client border width.
 -- @field border_color The client border color.
 -- @field urgent The client urgent state.

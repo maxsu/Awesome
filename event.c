@@ -265,7 +265,7 @@ event_handle_configurerequest(void *data __attribute__ ((unused)),
             lua_pop(globalconf.L, 1);
         }
 
-        if(!client_resize(c, geometry, false))
+        if(!client_resize(c, geometry))
             xwindow_configure(c->window, geometry, c->border_width);
     }
     else
