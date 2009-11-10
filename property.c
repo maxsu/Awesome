@@ -22,6 +22,7 @@
 #include <xcb/xcb_atom.h>
 
 #include "awesome.h"
+#include "event.h"
 #include "screen.h"
 #include "property.h"
 #include "objects/client.h"
@@ -412,7 +413,7 @@ void a_xcb_set_property_handlers(void)
     static xcb_property_handlers_t prophs;
 
     /* init */
-    xcb_property_handlers_init(&prophs, &globalconf.evenths);
+    xcb_property_handlers_init(&prophs, &_G_evenths);
 
     /* Xembed stuff */
     xcb_property_set_handler(&prophs, _XEMBED_INFO, UINT_MAX,
