@@ -273,25 +273,25 @@ wibox_moveresize(lua_State *L, int udx, area_t geometry)
             mask_vals |= XCB_CONFIG_WINDOW_HEIGHT;
         }
 
-        /* Activate BMA */
-        client_ignore_enterleave_events();
-
         if(mask_vals)
+        {
+            /* Activate BMA */
+            client_ignore_enterleave_events();
             xcb_configure_window(_G_connection, w->window, mask_vals, moveresize_win_vals);
+            /* Deactivate BMA */
+            client_restore_enterleave_events();
 
-        /* Deactivate BMA */
-        client_restore_enterleave_events();
+            w->screen = screen_getbycoord(w->geometry.x, w->geometry.y);
 
-        w->screen = screen_getbycoord(w->geometry.x, w->geometry.y);
-
-        if(mask_vals & XCB_CONFIG_WINDOW_X)
-            luaA_object_emit_signal(L, udx, "property::x", 0);
-        if(mask_vals & XCB_CONFIG_WINDOW_Y)
-            luaA_object_emit_signal(L, udx, "property::y", 0);
-        if(mask_vals & XCB_CONFIG_WINDOW_WIDTH)
-            luaA_object_emit_signal(L, udx, "property::width", 0);
-        if(mask_vals & XCB_CONFIG_WINDOW_HEIGHT)
-            luaA_object_emit_signal(L, udx, "property::height", 0);
+            if(mask_vals & XCB_CONFIG_WINDOW_X)
+                luaA_object_emit_signal(L, udx, "property::x", 0);
+            if(mask_vals & XCB_CONFIG_WINDOW_Y)
+                luaA_object_emit_signal(L, udx, "property::y", 0);
+            if(mask_vals & XCB_CONFIG_WINDOW_WIDTH)
+                luaA_object_emit_signal(L, udx, "property::width", 0);
+            if(mask_vals & XCB_CONFIG_WINDOW_HEIGHT)
+                luaA_object_emit_signal(L, udx, "property::height", 0);
+        }
     }
     else
     {
