@@ -27,6 +27,8 @@
 #include "draw.h"
 #include "common/tokenize.h"
 
+typedef struct widget_t widget_t;
+
 typedef widget_t *(widget_constructor_t)(widget_t *);
 typedef void (widget_destructor_t)(widget_t *);
 typedef struct widget_node widget_node_t;
