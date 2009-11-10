@@ -291,21 +291,28 @@ wibox_moveresize(lua_State *L, int udx, area_t geometry)
                 luaA_object_emit_signal(L, udx, "property::width", 0);
             if(mask_vals & XCB_CONFIG_WINDOW_HEIGHT)
                 luaA_object_emit_signal(L, udx, "property::height", 0);
+
+            luaA_object_emit_signal(L, udx, "property::geometry", 0);
         }
     }
     else
     {
+        bool changed = false;
 #define DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(prop) \
         if(w->geometry.prop != geometry.prop) \
         { \
             w->geometry.prop = geometry.prop; \
             luaA_object_emit_signal(L, udx, "property::" #prop, 0); \
+            changed = true; \
         }
         DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(x)
         DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(y)
         DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(width)
         DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(height)
 #undef DO_WIBOX_GEOMETRY_CHECK_AND_EMIT
+
+        if(changed)
+            luaA_object_emit_signal(L, udx, "property::geometry", 0);
     }
 
     wibox_need_update(w);
