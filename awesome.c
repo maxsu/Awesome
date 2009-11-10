@@ -337,18 +337,18 @@ main(int argc, char **argv)
             break;
         }
 
-    globalconf.loop = ev_default_loop(EVFLAG_NOSIGFD);
+    _G_loop = ev_default_loop(EVFLAG_NOSIGFD);
 
     /* register function for signals */
     ev_signal_init(&sigint, exit_on_signal, SIGINT);
     ev_signal_init(&sigterm, exit_on_signal, SIGTERM);
     ev_signal_init(&sighup, restart_on_signal, SIGHUP);
-    ev_signal_start(globalconf.loop, &sigint);
-    ev_signal_start(globalconf.loop, &sigterm);
-    ev_signal_start(globalconf.loop, &sighup);
-    ev_unref(globalconf.loop);
-    ev_unref(globalconf.loop);
-    ev_unref(globalconf.loop);
+    ev_signal_start(_G_loop, &sigint);
+    ev_signal_start(_G_loop, &sigterm);
+    ev_signal_start(_G_loop, &sighup);
+    ev_unref(_G_loop);
+    ev_unref(_G_loop);
+    ev_unref(_G_loop);
 
     struct sigaction sa = { .sa_handler = signal_fatal, .sa_flags = 0 };
     sigemptyset(&sa.sa_mask);
@@ -384,13 +384,13 @@ main(int argc, char **argv)
     /* Get the file descriptor corresponding to the X connection */
     xfd = xcb_get_file_descriptor(_G_connection);
     ev_io_init(&xio, &a_xcb_io_cb, xfd, EV_READ);
-    ev_io_start(globalconf.loop, &xio);
+    ev_io_start(_G_loop, &xio);
     ev_check_init(&xcheck, &a_xcb_check_cb);
-    ev_check_start(globalconf.loop, &xcheck);
-    ev_unref(globalconf.loop);
+    ev_check_start(_G_loop, &xcheck);
+    ev_unref(_G_loop);
     ev_prepare_init(&a_refresh, &a_refresh_cb);
-    ev_prepare_start(globalconf.loop, &a_refresh);
-    ev_unref(globalconf.loop);
+    ev_prepare_start(_G_loop, &a_refresh);
+    ev_unref(_G_loop);
 
     {
         const uint32_t select_input_val = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT;
@@ -479,15 +479,15 @@ main(int argc, char **argv)
     xcb_flush(_G_connection);
 
     /* main event loop */
-    ev_loop(globalconf.loop, 0);
+    ev_loop(_G_loop, 0);
 
     /* cleanup event loop */
-    ev_ref(globalconf.loop);
-    ev_check_stop(globalconf.loop, &xcheck);
-    ev_ref(globalconf.loop);
-    ev_prepare_stop(globalconf.loop, &a_refresh);
-    ev_ref(globalconf.loop);
-    ev_io_stop(globalconf.loop, &xio);
+    ev_ref(_G_loop);
+    ev_check_stop(_G_loop, &xcheck);
+    ev_ref(_G_loop);
+    ev_prepare_stop(_G_loop, &a_refresh);
+    ev_ref(_G_loop);
+    ev_io_stop(_G_loop, &xio);
 
     awesome_atexit();
 

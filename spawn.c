@@ -117,7 +117,7 @@ spawn_monitor_event(SnMonitorEvent *event, void *data)
         /* ref the sequence for the callback event */
         sn_startup_sequence_ref(sequence);
         ev_timeout->data = sequence;
-        ev_timer_start(globalconf.loop, ev_timeout);
+        ev_timer_start(_G_loop, ev_timeout);
         break;
       case SN_MONITOR_EVENT_CHANGED:
         event_type_str = "spawn::change";
@@ -322,7 +322,7 @@ luaA_spawn(lua_State *L)
         struct ev_timer *ev_timeout = p_new(struct ev_timer, 1);
         ev_timer_init(ev_timeout, spawn_launchee_timeout, AWESOME_SPAWN_TIMEOUT, 0.);
         ev_timeout->data = context;
-        ev_timer_start(globalconf.loop, ev_timeout);
+        ev_timer_start(_G_loop, ev_timeout);
         sn_launcher_context_setup_child_process(context);
     }
 
