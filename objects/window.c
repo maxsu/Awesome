@@ -231,6 +231,7 @@ luaA_window_focus(lua_State *L)
 
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, cursor, lua_pushstring)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, parent, luaA_object_push)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
 
 /** Get the window screen.
@@ -280,6 +281,10 @@ window_class_setup(lua_State *L)
     luaA_class_add_property(&window_class, A_TK_SCREEN,
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_screen,
+                            NULL);
+    luaA_class_add_property(&window_class, A_TK_PARENT,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_window_get_parent,
                             NULL);
 }
 
