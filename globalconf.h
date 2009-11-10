@@ -57,10 +57,6 @@ typedef struct
     screen_array_t screens;
     /** Root window key bindings */
     key_array_t keys;
-    /** Root window mouse bindings */
-    button_array_t buttons;
-    /** Modifiers masks */
-    uint16_t numlockmask, shiftlockmask, capslockmask, modeswitchmask;
     /** Clients list */
     client_array_t clients;
     /** Embedded windows */

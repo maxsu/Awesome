@@ -27,6 +27,11 @@
 #include "globalconf.h"
 #include "keyresolv.h"
 
+static uint16_t numlockmask;
+static uint16_t shiftlockmask;
+static uint16_t capslockmask;
+static uint16_t modeswitchmask;
+
 /** XCB equivalent of XLookupString which translate the keycode given
  * by PressEvent to a KeySym and a string
  * \todo use XKB!
@@ -875,7 +880,7 @@ keyresolv_get_keysym(xcb_keycode_t detail, uint16_t state)
      *
      * If Mode_Switch is ON we look into second group.
      */
-    if(state & globalconf.modeswitchmask)
+    if(state & modeswitchmask)
     {
         k0 = xcb_key_symbols_get_keysym(globalconf.keysyms, detail, 4);
         k1 = xcb_key_symbols_get_keysym(globalconf.keysyms, detail, 5);
@@ -892,12 +897,12 @@ keyresolv_get_keysym(xcb_keycode_t detail, uint16_t state)
 
     /* The numlock modifier is on and the second KeySym is a keypad
      * KeySym */
-    if((state & globalconf.numlockmask) && xcb_is_keypad_key(k1))
+    if((state & numlockmask) && xcb_is_keypad_key(k1))
     {
         /* The Shift modifier is on, or if the Lock modifier is on and
          * is interpreted as ShiftLock, use the first KeySym */
         if((state & XCB_MOD_MASK_SHIFT)
-           || (state & XCB_MOD_MASK_LOCK && (state & globalconf.shiftlockmask)))
+           || (state & XCB_MOD_MASK_LOCK && (state & shiftlockmask)))
             return k0;
         else
             return k1;
@@ -911,7 +916,7 @@ keyresolv_get_keysym(xcb_keycode_t detail, uint16_t state)
     /* The Shift modifier is off and the Lock modifier is on and is
      * interpreted as CapsLock */
     else if(!(state & XCB_MOD_MASK_SHIFT)
-            && (state & XCB_MOD_MASK_LOCK && (state & globalconf.capslockmask)))
+            && (state & XCB_MOD_MASK_LOCK && (state & capslockmask)))
         /* The first Keysym is used but if that KeySym is lowercase
          * alphabetic, then the corresponding uppercase KeySym is used
          * instead */
@@ -920,7 +925,7 @@ keyresolv_get_keysym(xcb_keycode_t detail, uint16_t state)
     /* The Shift modifier is on, and the Lock modifier is on and is
      * interpreted as CapsLock */
     else if((state & XCB_MOD_MASK_SHIFT)
-            && (state & XCB_MOD_MASK_LOCK && (state & globalconf.capslockmask)))
+            && (state & XCB_MOD_MASK_LOCK && (state & capslockmask)))
         /* The second Keysym is used but if that KeySym is lowercase
          * alphabetic, then the corresponding uppercase KeySym is used
          * instead */
@@ -929,10 +934,62 @@ keyresolv_get_keysym(xcb_keycode_t detail, uint16_t state)
     /* The Shift modifier is on, or the Lock modifier is on and is
      * interpreted as ShiftLock, or both */
     else if((state & XCB_MOD_MASK_SHIFT)
-            || (state & XCB_MOD_MASK_LOCK && (state & globalconf.shiftlockmask)))
+            || (state & XCB_MOD_MASK_LOCK && (state & shiftlockmask)))
         return k1;
 
     return XCB_NO_SYMBOL;
+}
+
+/** Get the lock masks (shiftlock, numlock, capslock, modeswitch).
+ * \param connection The X connection.
+ * \param cookie The cookie of the request.
+ * \param keysyms Key symbols.
+ * \todo Split this.
+ */
+void
+keyresolv_lock_mask_refresh(xcb_connection_t *connection,
+                            xcb_get_modifier_mapping_cookie_t cookie,
+                            xcb_key_symbols_t *keysyms)
+{
+    xcb_get_modifier_mapping_reply_t *modmap_r;
+    xcb_keycode_t *modmap, kc;
+    xcb_keycode_t *numlockcodes = xcb_key_symbols_get_keycode(keysyms, XK_Num_Lock);
+    xcb_keycode_t *shiftlockcodes = xcb_key_symbols_get_keycode(keysyms, XK_Shift_Lock);
+    xcb_keycode_t *capslockcodes = xcb_key_symbols_get_keycode(keysyms, XK_Caps_Lock);
+    xcb_keycode_t *modeswitchcodes = xcb_key_symbols_get_keycode(keysyms, XK_Mode_switch);
+
+    modmap_r = xcb_get_modifier_mapping_reply(connection, cookie, NULL);
+    modmap = xcb_get_modifier_mapping_keycodes(modmap_r);
+
+    /* reset */
+    numlockmask = shiftlockmask = capslockmask = modeswitchmask = 0;
+
+    int i;
+    for(i = 0; i < 8; i++)
+        for(int j = 0; j < modmap_r->keycodes_per_modifier; j++)
+        {
+            kc = modmap[i * modmap_r->keycodes_per_modifier + j];
+
+#define LOOK_FOR(mask, codes) \
+            if(mask == 0 && codes) \
+                for(xcb_keycode_t *ktest = codes; *ktest; ktest++) \
+                    if(*ktest == kc) \
+                    { \
+                        mask = (1 << i); \
+                        break; \
+                    }
+
+            LOOK_FOR(numlockmask, numlockcodes)
+            LOOK_FOR(shiftlockmask, shiftlockcodes)
+            LOOK_FOR(capslockmask, capslockcodes)
+            LOOK_FOR(modeswitchmask, modeswitchcodes)
+#undef LOOK_FOR
+        }
+    p_delete(&numlockcodes);
+    p_delete(&shiftlockcodes);
+    p_delete(&capslockcodes);
+    p_delete(&modeswitchcodes);
+    p_delete(&modmap_r);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
