@@ -411,11 +411,6 @@ main(int argc, char **argv)
     /* Prefetch the maximum request length */
     xcb_prefetch_maximum_request_length(_G_connection);
 
-    /* check for xtest extension */
-    const xcb_query_extension_reply_t *xtest_query;
-    xtest_query = xcb_get_extension_data(_G_connection, &xcb_test_id);
-    globalconf.have_xtest = xtest_query->present;
-
     /* Allocate the key symbols */
     globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
     xcb_get_modifier_mapping_cookie_t xmapping_cookie =

@@ -61,8 +61,6 @@ typedef struct
     button_array_t buttons;
     /** Modifiers masks */
     uint16_t numlockmask, shiftlockmask, capslockmask, modeswitchmask;
-    /** Check for XTest extension */
-    bool have_xtest;
     /** Clients list */
     client_array_t clients;
     /** Embedded windows */

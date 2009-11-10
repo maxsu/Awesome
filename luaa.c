@@ -101,7 +101,17 @@ luaA_restart(lua_State *L)
 static int
 luaA_awesome_fake_input(lua_State *L)
 {
-    if(!globalconf.have_xtest)
+    static int have_xtest = -11;
+
+    if(have_xtest == -1)
+    {
+        /* check for xtest extension */
+        const xcb_query_extension_reply_t *xtest_query;
+        xtest_query = xcb_get_extension_data(_G_connection, &xcb_test_id);
+        have_xtest = xtest_query->present;
+    }
+
+    if(!have_xtest)
     {
         luaA_warn(L, "XTest extension is not available, cannot fake input.");
         return 0;
