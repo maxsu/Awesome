@@ -664,7 +664,7 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
     if((c = client_getbywin(ev->window)))
     {
         /* Check that it may be visible, but not asked to be hidden */
-        if(client_maybevisible(c) && !c->hidden)
+        if(ewindow_isvisible((ewindow_t *) c))
         {
             luaA_object_push(globalconf.L, c);
             ewindow_set_minimized(globalconf.L, -1, false);

@@ -55,18 +55,6 @@ client_wipe(client_t *c)
     p_delete(&c->alt_name);
 }
 
-/** Returns true if a client is visible.
- * Banned client are considered as visible even if they are not (yet) mapped.
- * \param c The client to check.
- * \param screen Virtual screen number.
- * \return True if the client is visible, false otherwise.
- */
-static bool
-client_isvisible(client_t *c)
-{
-    return (!c->hidden && client_maybevisible(c));
-}
-
 /** Change the clients urgency flag.
  * \param L The Lua VM state.
  * \param cidx The client index on the stack.
@@ -130,18 +118,6 @@ client_set_class_instance(lua_State *L, int cidx, const char *class, const char 
     luaA_object_emit_signal(L, cidx, "property::class", 0);
     c->instance = a_strdup(instance);
     luaA_object_emit_signal(L, cidx, "property::instance", 0);
-}
-
-/** Returns true if a client is tagged
- * with one of the tags of the specified screen.
- * \param c The client to check.
- * \param screen Virtual screen.
- * \return true if the client is visible, false otherwise.
- */
-bool
-client_maybevisible(client_t *c)
-{
-    return ewindow_isvisible((ewindow_t *) c);
 }
 
 /** Get a client by its window.
@@ -650,24 +626,6 @@ luaA_client_geometry(lua_State *L)
 }
 
 static int
-luaA_client_set_hidden(lua_State *L, client_t *c)
-{
-    bool b = luaA_checkboolean(L, -1);
-    if(b != c->hidden)
-    {
-        c->hidden = b;
-        if(strut_has_value(&c->strut))
-        {
-            lua_pushlightuserdata(globalconf.L, c->screen);
-            luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
-            lua_pop(globalconf.L, 1);
-        }
-        luaA_object_emit_signal(L, -3, "property::hidden", 0);
-    }
-    return 0;
-}
-
-static int
 luaA_client_set_icon(lua_State *L, client_t *c)
 {
     client_set_icon(L, -3, -1);
@@ -710,7 +668,6 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, skip_taskbar, lua_pushboolea
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, leader_window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, hidden, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
 
@@ -970,10 +927,6 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_icon_name,
                             NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_HIDDEN,
-                            (lua_class_propfunc_t) luaA_client_set_hidden,
-                            (lua_class_propfunc_t) luaA_client_get_hidden,
-                            (lua_class_propfunc_t) luaA_client_set_hidden);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_GROUP_WINDOW,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_group_window,
@@ -1008,7 +961,7 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_ewindow_get_type,
                             NULL);
 
-    client_class.isvisible = (lua_interface_window_isvisible_t) client_isvisible;
+    client_class.isvisible = (lua_interface_window_isvisible_t) ewindow_isvisible;
     luaA_class_connect_signal(L, (lua_class_t *) &client_class, "focus", client_take_focus);
 }
 
