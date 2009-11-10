@@ -893,15 +893,6 @@ luaA_client_get_content(lua_State *L, client_t *c)
 }
 
 static int
-luaA_client_get_screen(lua_State *L, client_t *c)
-{
-    if(!c->screen)
-        return 0;
-    lua_pushnumber(L, 1 + screen_array_indexof(&globalconf.screens, c->screen));
-    return 1;
-}
-
-static int
 luaA_client_get_size_hints(lua_State *L, client_t *c)
 {
     const char *u_or_p = NULL;
@@ -1127,7 +1118,7 @@ client_class_setup(lua_State *L)
                             NULL);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_SCREEN,
                             NULL,
-                            (lua_class_propfunc_t) luaA_client_get_screen,
+                            (lua_class_propfunc_t) luaA_window_get_screen,
                             (lua_class_propfunc_t) luaA_client_set_screen);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_HIDDEN,
                             (lua_class_propfunc_t) luaA_client_set_hidden,

@@ -233,6 +233,20 @@ static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, cursor, lua_pushstring)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
 
+/** Get the window screen.
+ * \param L The Lua VM state.
+ * \param window The window object.
+ * \return The number of elements pushed on stack.
+ */
+int
+luaA_window_get_screen(lua_State *L, window_t *window)
+{
+    if(!window->screen)
+        return 0;
+    lua_pushnumber(L, screen_array_indexof(&globalconf.screens, window->screen) + 1);
+    return 1;
+}
+
 void
 window_class_setup(lua_State *L)
 {
@@ -263,6 +277,10 @@ window_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_set_cursor,
                             (lua_class_propfunc_t) luaA_window_get_cursor,
                             (lua_class_propfunc_t) luaA_window_set_cursor);
+    luaA_class_add_property(&window_class, A_TK_SCREEN,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_window_get_screen,
+                            NULL);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
