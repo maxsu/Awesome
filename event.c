@@ -810,10 +810,7 @@ event_handle_mappingnotify(void *data,
         xcb_key_symbols_free(globalconf.keysyms);
         globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
 
-        xutil_lock_mask_get(_G_connection, xmapping_cookie,
-                            globalconf.keysyms, &globalconf.numlockmask,
-                            &globalconf.shiftlockmask, &globalconf.capslockmask,
-                            &globalconf.modeswitchmask);
+        keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
 
         /* regrab everything */
         foreach(screen, _G_protocol_screens)
