@@ -840,29 +840,29 @@ void a_xcb_set_event_handlers(void)
 {
     const xcb_query_extension_reply_t *randr_query;
 
-    xcb_event_set_button_press_handler(&globalconf.evenths, event_handle_button, NULL);
-    xcb_event_set_button_release_handler(&globalconf.evenths, event_handle_button, NULL);
-    xcb_event_set_configure_request_handler(&globalconf.evenths, event_handle_configurerequest, NULL);
-    xcb_event_set_configure_notify_handler(&globalconf.evenths, event_handle_configurenotify, NULL);
-    xcb_event_set_destroy_notify_handler(&globalconf.evenths, event_handle_destroynotify, NULL);
-    xcb_event_set_enter_notify_handler(&globalconf.evenths, event_handle_enternotify, NULL);
-    xcb_event_set_leave_notify_handler(&globalconf.evenths, event_handle_leavenotify, NULL);
-    xcb_event_set_focus_in_handler(&globalconf.evenths, event_handle_focusin, NULL);
-    xcb_event_set_focus_out_handler(&globalconf.evenths, event_handle_focusout, NULL);
-    xcb_event_set_motion_notify_handler(&globalconf.evenths, event_handle_motionnotify, NULL);
-    xcb_event_set_expose_handler(&globalconf.evenths, event_handle_expose, NULL);
-    xcb_event_set_key_press_handler(&globalconf.evenths, event_handle_key, NULL);
-    xcb_event_set_key_release_handler(&globalconf.evenths, event_handle_key, NULL);
-    xcb_event_set_map_request_handler(&globalconf.evenths, event_handle_maprequest, NULL);
-    xcb_event_set_unmap_notify_handler(&globalconf.evenths, event_handle_unmapnotify, NULL);
-    xcb_event_set_client_message_handler(&globalconf.evenths, event_handle_clientmessage, NULL);
-    xcb_event_set_mapping_notify_handler(&globalconf.evenths, event_handle_mappingnotify, NULL);
-    xcb_event_set_reparent_notify_handler(&globalconf.evenths, event_handle_reparentnotify, NULL);
+    xcb_event_set_button_press_handler(&_G_evenths, event_handle_button, NULL);
+    xcb_event_set_button_release_handler(&_G_evenths, event_handle_button, NULL);
+    xcb_event_set_configure_request_handler(&_G_evenths, event_handle_configurerequest, NULL);
+    xcb_event_set_configure_notify_handler(&_G_evenths, event_handle_configurenotify, NULL);
+    xcb_event_set_destroy_notify_handler(&_G_evenths, event_handle_destroynotify, NULL);
+    xcb_event_set_enter_notify_handler(&_G_evenths, event_handle_enternotify, NULL);
+    xcb_event_set_leave_notify_handler(&_G_evenths, event_handle_leavenotify, NULL);
+    xcb_event_set_focus_in_handler(&_G_evenths, event_handle_focusin, NULL);
+    xcb_event_set_focus_out_handler(&_G_evenths, event_handle_focusout, NULL);
+    xcb_event_set_motion_notify_handler(&_G_evenths, event_handle_motionnotify, NULL);
+    xcb_event_set_expose_handler(&_G_evenths, event_handle_expose, NULL);
+    xcb_event_set_key_press_handler(&_G_evenths, event_handle_key, NULL);
+    xcb_event_set_key_release_handler(&_G_evenths, event_handle_key, NULL);
+    xcb_event_set_map_request_handler(&_G_evenths, event_handle_maprequest, NULL);
+    xcb_event_set_unmap_notify_handler(&_G_evenths, event_handle_unmapnotify, NULL);
+    xcb_event_set_client_message_handler(&_G_evenths, event_handle_clientmessage, NULL);
+    xcb_event_set_mapping_notify_handler(&_G_evenths, event_handle_mappingnotify, NULL);
+    xcb_event_set_reparent_notify_handler(&_G_evenths, event_handle_reparentnotify, NULL);
 
     /* check for randr extension */
     randr_query = xcb_get_extension_data(_G_connection, &xcb_randr_id);
     if(randr_query->present)
-        xcb_event_set_handler(&globalconf.evenths,
+        xcb_event_set_handler(&_G_evenths,
                               randr_query->first_event + XCB_RANDR_SCREEN_CHANGE_NOTIFY,
                               (xcb_generic_event_handler_t) event_handle_randr_screen_change_notify,
                               NULL);

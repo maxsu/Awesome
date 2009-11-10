@@ -197,14 +197,14 @@ a_xcb_check_cb(EV_P_ ev_check *w, int revents)
         }
         else
         {
-            xcb_event_handle(&globalconf.evenths, event);
+            xcb_event_handle(&_G_evenths, event);
             p_delete(&event);
         }
     }
 
     if(mouse)
     {
-        xcb_event_handle(&globalconf.evenths, mouse);
+        xcb_event_handle(&_G_evenths, mouse);
         p_delete(&mouse);
     }
 }
@@ -437,8 +437,8 @@ main(int argc, char **argv)
     ev_unref(_G_loop);
 
     /* Allocate a handler which will holds all errors and events */
-    xcb_event_handlers_init(_G_connection, &globalconf.evenths);
-    xutil_error_handler_catch_all_set(&globalconf.evenths, xerrorstart, NULL);
+    xcb_event_handlers_init(_G_connection, &_G_evenths);
+    xutil_error_handler_catch_all_set(&_G_evenths, xerrorstart, NULL);
 
     for(screen_nbr = 0;
         screen_nbr < xcb_setup_roots_length(xcb_get_setup(_G_connection));
@@ -456,10 +456,10 @@ main(int argc, char **argv)
     xcb_aux_sync(_G_connection);
 
     /* Process all errors in the queue if any */
-    xcb_event_poll_for_event_loop(&globalconf.evenths);
+    xcb_event_poll_for_event_loop(&_G_evenths);
 
     /* Set the default xerror handler */
-    xutil_error_handler_catch_all_set(&globalconf.evenths, xerror, NULL);
+    xutil_error_handler_catch_all_set(&_G_evenths, xerror, NULL);
 
     /* Allocate the key symbols */
     globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
@@ -521,7 +521,7 @@ main(int argc, char **argv)
     scan();
 
     /* process all errors in the queue if any */
-    xcb_event_poll_for_event_loop(&globalconf.evenths);
+    xcb_event_poll_for_event_loop(&_G_evenths);
     a_xcb_set_event_handlers();
     a_xcb_set_property_handlers();
 

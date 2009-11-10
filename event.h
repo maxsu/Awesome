@@ -36,5 +36,8 @@ awesome_refresh(void)
 
 void a_xcb_set_event_handlers(void);
 
+/** Event and error handlers */
+xcb_event_handlers_t _G_evenths;
+
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
