@@ -87,7 +87,6 @@ struct client_t
     image_t *icon;
     /** Size hints */
     xcb_size_hints_t size_hints;
-    bool size_hints_honor;
     /** Machine the client is running on. */
     char *machine;
     /** Role of the client */
@@ -109,7 +108,7 @@ client_t * client_getbyframewin(xcb_window_t);
 
 void client_manage(xcb_window_t, xcb_get_geometry_reply_t *, bool);
 area_t client_geometry_hints(client_t *, area_t);
-bool client_resize(client_t *, area_t, bool);
+bool client_resize(client_t *, area_t);
 void client_unmanage(client_t *);
 void client_kill(client_t *);
 void client_set_urgent(lua_State *, int, bool);
@@ -141,8 +140,7 @@ client_isfixed(client_t *c)
             && c->size_hints.max_width == c->size_hints.min_width
             && c->size_hints.max_height == c->size_hints.min_height
             && c->size_hints.max_width
-            && c->size_hints.max_height
-            && c->size_hints_honor);
+            && c->size_hints.max_height);
 }
 
 #endif

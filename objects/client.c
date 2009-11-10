@@ -362,10 +362,6 @@ HANDLE_GEOM(height)
     /* Set border width */
     ewindow_set_border_width(globalconf.L, -1, wgeom->border_width);
 
-    /* we honor size hints by default */
-    c->size_hints_honor = true;
-    luaA_object_emit_signal(globalconf.L, -1, "property::size_hints_honor", 0);
-
     /* update all properties */
     client_update_properties(c);
 
@@ -521,11 +517,10 @@ client_geometry_hints(client_t *c, area_t geometry)
  * The sizes given as parameters are with borders!
  * \param c Client to resize.
  * \param geometry New window geometry.
- * \param hints Use size hints.
  * \return true if an actual resize occurred.
  */
 bool
-client_resize(client_t *c, area_t geometry, bool hints)
+client_resize(client_t *c, area_t geometry)
 {
     area_t area;
 
@@ -541,7 +536,7 @@ client_resize(client_t *c, area_t geometry, bool hints)
     if(geometry.y + geometry.height < 0)
         geometry.y = 0;
 
-    if(hints && !c->fullscreen)
+    if(!c->fullscreen)
         geometry = client_geometry_hints(c, geometry);
 
     if(geometry.width == 0 || geometry.height == 0)
@@ -784,7 +779,7 @@ luaA_client_geometry(lua_State *L)
             geometry.height = luaA_getopt_number(L, 2, "height", c->geometry.height);
         }
 
-        client_resize(c, geometry, c->size_hints_honor);
+        client_resize(c, geometry);
     }
 
     return luaA_pusharea(L, c->geometry);
@@ -826,14 +821,6 @@ luaA_client_set_icon(lua_State *L, client_t *c)
 }
 
 static int
-luaA_client_set_size_hints_honor(lua_State *L, client_t *c)
-{
-    c->size_hints_honor = luaA_checkboolean(L, -1);
-    luaA_object_emit_signal(L, -3, "property::size_hints_honor", 0);
-    return 0;
-}
-
-static int
 luaA_client_set_urgent(lua_State *L, client_t *c)
 {
     client_set_urgent(L, -3, luaA_checkboolean(L, -1));
@@ -871,7 +858,6 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, hidden, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, size_hints_honor, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
 
 static int
@@ -1155,10 +1141,6 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_client_set_icon,
                             (lua_class_propfunc_t) luaA_client_get_icon,
                             (lua_class_propfunc_t) luaA_client_set_icon);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_SIZE_HINTS_HONOR,
-                            (lua_class_propfunc_t) luaA_client_set_size_hints_honor,
-                            (lua_class_propfunc_t) luaA_client_get_size_hints_honor,
-                            (lua_class_propfunc_t) luaA_client_set_size_hints_honor);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_URGENT,
                             (lua_class_propfunc_t) luaA_client_set_urgent,
                             (lua_class_propfunc_t) luaA_client_get_urgent,
