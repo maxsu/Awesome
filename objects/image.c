@@ -24,7 +24,6 @@
 #include <Imlib2.h>
 
 #include "awesome.h"
-#include "globalconf.h"
 #include "config.h"
 #include "luaa.h"
 #include "common/luaobject.h"
@@ -187,6 +186,7 @@ image_draw_to_1bit_ximage(image_t *image, xcb_image_t *img)
 }
 
 // Convert an image to a 1bit pixmap
+#include "globalconf.h"
 xcb_pixmap_t
 image_to_1bit_pixmap(image_t *image, xcb_drawable_t d)
 {
