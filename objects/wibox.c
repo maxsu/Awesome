@@ -908,20 +908,6 @@ luaA_wibox_set_screen(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-/** Get the wibox screen.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_get_screen(lua_State *L, wibox_t *wibox)
-{
-    if(!wibox->screen)
-        return 0;
-    lua_pushnumber(L, screen_array_indexof(&globalconf.screens, wibox->screen) + 1);
-    return 1;
-}
-
 /** Set the wibox visibility.
  * \param L The Lua VM state.
  * \param wibox The wibox object.
@@ -1021,7 +1007,7 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_visible);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SCREEN,
                             NULL,
-                            (lua_class_propfunc_t) luaA_wibox_get_screen,
+                            (lua_class_propfunc_t) luaA_window_get_screen,
                             (lua_class_propfunc_t) luaA_wibox_set_screen);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_FG,
                             (lua_class_propfunc_t) luaA_wibox_set_fg,
