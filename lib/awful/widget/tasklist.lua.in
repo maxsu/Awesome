@@ -69,7 +69,7 @@ end
 local function tasklist_update(s, w, buttons, filter, data, style, template)
     local clients = {}
     for k, c in ipairs(capi.client.get()) do
-        if not (c.skip_taskbar or c.hidden
+        if not (c.skip_taskbar
             or c.type == "splash" or c.type == "dock" or c.type == "desktop")
             and filter(c, s) then
             table.insert(clients, c)
@@ -146,7 +146,6 @@ function new(screen, filter, buttons, style, template)
         c:connect_signal("property::icon_name", u)
         c:connect_signal("property::icon", u)
         c:connect_signal("property::skip_taskbar", u)
-        c:connect_signal("property::hidden", u)
         c:connect_signal("tagged", u)
         c:connect_signal("untagged", u)
     end)
