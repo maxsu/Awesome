@@ -141,10 +141,18 @@ wibox_draw_context_update(wibox_t *w)
 
     draw_context_wipe(&w->ctx);
 
-    draw_context_init(&w->ctx, w->ctx.pscreen,
-                      w->geometry.width,
-                      w->geometry.height,
-                      &fg, &bg);
+    if(w->ctx.pscreen)
+        draw_context_init(&w->ctx, w->ctx.pscreen,
+                          w->geometry.width,
+                          w->geometry.height,
+                          &fg, &bg);
+}
+
+static int
+luaA_wibox_draw_context_update(lua_State *L)
+{
+    wibox_draw_context_update(luaA_checkudata(L, 1, (lua_class_t *) &wibox_class));
+    return 0;
 }
 
 /** Initialize a wibox.
@@ -241,9 +249,6 @@ wibox_moveresize(lua_State *L, int udx, area_t geometry)
             w->geometry.height = moveresize_win_vals[number_of_vals++] = geometry.height;
             mask_vals |= XCB_CONFIG_WINDOW_HEIGHT;
         }
-
-        if(mask_vals & (XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT))
-            wibox_draw_context_update(w);
 
         /* Activate BMA */
         client_ignore_enterleave_events();
@@ -1039,6 +1044,8 @@ wibox_class_setup(lua_State *L)
 
     wibox_class.isvisible = (lua_interface_window_isvisible_t) window_isvisible;
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::width", luaA_wibox_draw_context_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::height", luaA_wibox_draw_context_update);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
