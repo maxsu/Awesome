@@ -54,8 +54,6 @@ typedef struct
     screen_array_t screens;
     /** True if xinerama is active */
     bool xinerama_is_active;
-    /** Modifiers masks */
-    uint16_t numlockmask, shiftlockmask, capslockmask, modeswitchmask;
     /** Clients list */
     client_array_t clients;
     /** Lua VM state */

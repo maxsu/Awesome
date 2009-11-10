@@ -52,10 +52,6 @@ xutil_get_text_property_from_reply(xcb_get_property_reply_t *reply)
     return NULL;
 }
 
-void xutil_lock_mask_get(xcb_connection_t *, xcb_get_modifier_mapping_cookie_t,
-                         xcb_key_symbols_t *,
-                         uint16_t *, uint16_t *, uint16_t *, uint16_t *);
-
 /** Set the same handler for all errors */
 void xutil_error_handler_catch_all_set(xcb_event_handlers_t *,
                                        xcb_generic_error_handler_t, void *);

@@ -1,7 +1,7 @@
 /*
  * awesome.c - awesome main functions
  *
- * Copyright © 2007-2008 Julien Danjou <julien@danjou.info>
+ * Copyright © 2007-2009 Julien Danjou <julien@danjou.info>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include <xcb/xcb_event.h>
 
 #include "awesome.h"
+#include "keyresolv.h"
 #include "font.h"
 #include "spawn.h"
 #include "objects/client.h"
@@ -483,10 +484,7 @@ main(int argc, char **argv)
     for(colors_nbr = 0; colors_nbr < 2; colors_nbr++)
         xcolor_init_reply(colors_reqs[colors_nbr]);
 
-    xutil_lock_mask_get(_G_connection, xmapping_cookie,
-                        globalconf.keysyms, &globalconf.numlockmask,
-                        &globalconf.shiftlockmask, &globalconf.capslockmask,
-                        &globalconf.modeswitchmask);
+    keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
 
     /* do this only for real screen */
     foreach(screen, _G_protocol_screens)
