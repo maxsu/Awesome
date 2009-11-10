@@ -22,9 +22,13 @@
 #ifndef AWESOME_AWESOME_H
 #define AWESOME_AWESOME_H
 
+#include <xcb/xcb.h>
+
 void awesome_restart(void);
 void awesome_atexit(void);
 
+/** Connection ref */
+xcb_connection_t *_G_connection;
 /** Default screen number */
 int _G_default_screen;
 

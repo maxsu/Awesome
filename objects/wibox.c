@@ -21,6 +21,7 @@
 
 #include <xcb/shape.h>
 
+#include "awesome.h"
 #include "screen.h"
 #include "wibox.h"
 #include "objects/client.h"
@@ -44,14 +45,14 @@ wibox_wipe_resources(wibox_t *w)
     {
         /* Activate BMA */
         client_ignore_enterleave_events();
-        xcb_destroy_window(globalconf.connection, w->window);
+        xcb_destroy_window(_G_connection, w->window);
         /* Deactivate BMA */
         client_restore_enterleave_events();
         w->window = XCB_NONE;
     }
     if(w->gc)
     {
-        xcb_free_gc(globalconf.connection, w->gc);
+        xcb_free_gc(_G_connection, w->gc);
         w->gc = XCB_NONE;
     }
     draw_context_wipe(&w->ctx);
@@ -82,7 +83,7 @@ have_shape(void)
 {
     const xcb_query_extension_reply_t *reply;
 
-    reply = xcb_get_extension_data(globalconf.connection, &xcb_shape_id);
+    reply = xcb_get_extension_data(_G_connection, &xcb_shape_id);
     if (!reply || !reply->present)
         return 0;
 
@@ -101,11 +102,11 @@ shape_update(xcb_window_t win, xcb_shape_kind_t kind, image_t *image, int offset
         /* Reset the shape */
         shape = XCB_NONE;
 
-    xcb_shape_mask(globalconf.connection, XCB_SHAPE_SO_SET, kind,
+    xcb_shape_mask(_G_connection, XCB_SHAPE_SO_SET, kind,
                    win, offset, offset, shape);
 
     if (shape != XCB_NONE)
-        xcb_free_pixmap(globalconf.connection, shape);
+        xcb_free_pixmap(_G_connection, shape);
 }
 
 /** Update the window's shape.
@@ -154,10 +155,10 @@ static void
 wibox_init(wibox_t *w, protocol_screen_t *pscreen)
 {
     int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, phys_screen);
+    xcb_screen_t *s = xutil_screen_get(_G_connection, phys_screen);
 
-    w->window = xcb_generate_id(globalconf.connection);
-    xcb_create_window(globalconf.connection, s->root_depth, w->window, s->root,
+    w->window = xcb_generate_id(_G_connection);
+    xcb_create_window(_G_connection, s->root_depth, w->window, s->root,
                       w->geometry.x, w->geometry.y,
                       w->geometry.width, w->geometry.height,
                       w->border_width, XCB_COPY_FROM_PARENT, s->root_visual,
@@ -181,8 +182,8 @@ wibox_init(wibox_t *w, protocol_screen_t *pscreen)
     wibox_draw_context_update(w);
 
     /* The default GC is just a newly created associated to the root window */
-    w->gc = xcb_generate_id(globalconf.connection);
-    xcb_create_gc(globalconf.connection, w->gc, s->root, XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
+    w->gc = xcb_generate_id(_G_connection);
+    xcb_create_gc(_G_connection, w->gc, s->root, XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
                   (const uint32_t[]) { s->black_pixel, s->white_pixel });
 
     luaA_object_push(globalconf.L, w);
@@ -248,7 +249,7 @@ wibox_moveresize(lua_State *L, int udx, area_t geometry)
         client_ignore_enterleave_events();
 
         if(mask_vals)
-            xcb_configure_window(globalconf.connection, w->window, mask_vals, moveresize_win_vals);
+            xcb_configure_window(_G_connection, w->window, mask_vals, moveresize_win_vals);
 
         /* Deactivate BMA */
         client_restore_enterleave_events();
@@ -295,7 +296,7 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
                              uint16_t w, uint16_t h)
 {
     if(wibox->ctx.pixmap && wibox->window)
-        xcb_copy_area(globalconf.connection, wibox->ctx.pixmap,
+        xcb_copy_area(_G_connection, wibox->ctx.pixmap,
                       wibox->window, wibox->gc, x, y, x, y,
                       w, h);
 }
@@ -306,7 +307,7 @@ wibox_map(wibox_t *wibox)
     /* Activate BMA */
     client_ignore_enterleave_events();
     /* Map the wibox */
-    xcb_map_window(globalconf.connection, wibox->window);
+    xcb_map_window(_G_connection, wibox->window);
     /* Deactivate BMA */
     client_restore_enterleave_events();
     /* We must make sure the wibox does not display garbage */
@@ -324,7 +325,7 @@ wibox_systray_kickout(protocol_screen_t *pscreen)
         /* Who! Check that we're not deleting a wibox with a systray, because it
          * may be its parent. If so, we reparent to root before, otherwise it will
          * hurt very much. */
-        xcb_reparent_window(globalconf.connection,
+        xcb_reparent_window(_G_connection,
                             pscreen->systray.parent,
                             pscreen->root->window, -512, -512);
 
@@ -352,11 +353,11 @@ wibox_systray_refresh(wibox_t *wibox)
            && systray->geometry.width)
         {
             /* Set background of the systray window. */
-            xcb_change_window_attributes(globalconf.connection,
+            xcb_change_window_attributes(_G_connection,
                                          wibox->screen->protocol_screen->systray.window,
                                          XCB_CW_BACK_PIXEL, config_back);
             /* Map it. */
-            xcb_map_window(globalconf.connection, wibox->screen->protocol_screen->systray.window);
+            xcb_map_window(_G_connection, wibox->screen->protocol_screen->systray.window);
             config_win_vals[0] = systray->geometry.x;
             config_win_vals[1] = systray->geometry.y;
             config_win_vals[2] = systray->geometry.width;
@@ -364,13 +365,13 @@ wibox_systray_refresh(wibox_t *wibox)
             /* reparent */
             if(wibox->screen->protocol_screen->systray.parent != wibox->window)
             {
-                xcb_reparent_window(globalconf.connection,
+                xcb_reparent_window(_G_connection,
                                     wibox->screen->protocol_screen->systray.window,
                                     wibox->window,
                                     config_win_vals[0], config_win_vals[1]);
                 wibox->screen->protocol_screen->systray.parent = wibox->window;
             }
-            xcb_configure_window(globalconf.connection,
+            xcb_configure_window(_G_connection,
                                  wibox->screen->protocol_screen->systray.window,
                                  XCB_CONFIG_WINDOW_X
                                  | XCB_CONFIG_WINDOW_Y
@@ -390,8 +391,8 @@ wibox_systray_refresh(wibox_t *wibox)
             /* if(x + width < systray.x + systray.width) */
             if(config_win_vals[0] + config_win_vals[2] <= (uint32_t) AREA_RIGHT(systray->geometry) + wibox->geometry.x)
             {
-                xcb_map_window(globalconf.connection, em->window);
-                xcb_configure_window(globalconf.connection, em->window,
+                xcb_map_window(_G_connection, em->window);
+                xcb_configure_window(_G_connection, em->window,
                                      XCB_CONFIG_WINDOW_X
                                      | XCB_CONFIG_WINDOW_Y
                                      | XCB_CONFIG_WINDOW_WIDTH
@@ -400,7 +401,7 @@ wibox_systray_refresh(wibox_t *wibox)
                 config_win_vals[0] += config_win_vals[2];
             }
             else
-                xcb_configure_window(globalconf.connection, em->window,
+                xcb_configure_window(_G_connection, em->window,
                                      XCB_CONFIG_WINDOW_X
                                      | XCB_CONFIG_WINDOW_Y,
                                      config_win_vals_off);
@@ -476,7 +477,7 @@ wibox_set_visible(lua_State *L, int udx, bool v)
                 /* Active BMA */
                 client_ignore_enterleave_events();
                 /* Unmap window */
-                xcb_unmap_window(globalconf.connection, wibox->window);
+                xcb_unmap_window(_G_connection, wibox->window);
                 /* Active BMA */
                 client_restore_enterleave_events();
             }
@@ -574,7 +575,7 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
     wibox_init(wibox, s->protocol_screen);
 
     xwindow_set_cursor(wibox->window,
-                       xcursor_new(globalconf.connection, xcursor_font_fromstr(wibox->cursor)));
+                       xcursor_new(_G_connection, xcursor_font_fromstr(wibox->cursor)));
 
     if(wibox->opacity != -1)
         xwindow_set_opacity(wibox->window, wibox->opacity);
@@ -828,7 +829,7 @@ luaA_wibox_set_bg(lua_State *L, wibox_t *wibox)
         wibox->need_update = true;
 
         if (wibox->window != XCB_NONE)
-            xcb_change_window_attributes(globalconf.connection,
+            xcb_change_window_attributes(_G_connection,
                                          wibox->window,
                                          mask,
                                          values);

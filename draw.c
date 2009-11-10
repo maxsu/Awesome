@@ -134,16 +134,16 @@ draw_context_init(draw_context_t *d, protocol_screen_t *pscreen,
 {
     /* Create a pixmap. */
     int pscreen_index = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
-    xcb_screen_t *xcb_screen = xutil_screen_get(globalconf.connection, pscreen_index);
-    d->pixmap = xcb_generate_id(globalconf.connection);
-    xcb_create_pixmap(globalconf.connection, xcb_screen->root_depth,
+    xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, pscreen_index);
+    d->pixmap = xcb_generate_id(_G_connection);
+    xcb_create_pixmap(_G_connection, xcb_screen->root_depth,
                       d->pixmap, xcb_screen->root,
                       width, height);
 
     d->pscreen = pscreen;
     d->width = width;
     d->height = height;
-    d->surface = cairo_xcb_surface_create(globalconf.connection,
+    d->surface = cairo_xcb_surface_create(_G_connection,
                                           d->pixmap, pscreen->visual,
                                           width, height);
     d->cr = cairo_create(d->surface);
@@ -160,7 +160,7 @@ draw_context_wipe(draw_context_t *ctx)
 {
     if(ctx->pixmap)
     {
-        xcb_free_pixmap(globalconf.connection, ctx->pixmap);
+        xcb_free_pixmap(_G_connection, ctx->pixmap);
         ctx->pixmap = XCB_NONE;
     }
     if(ctx->layout)
@@ -337,13 +337,13 @@ draw_text_extents(draw_text_context_t *data)
     cairo_t *cr;
     PangoLayout *layout;
     PangoRectangle ext;
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, _G_default_screen);
+    xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
     area_t geom = { 0, 0, 0, 0 };
 
     if(data->len <= 0)
         return geom;
 
-    surface = cairo_xcb_surface_create(globalconf.connection,
+    surface = cairo_xcb_surface_create(_G_connection,
                                        _G_default_screen,
                                        _G_protocol_screens.tab[0].visual,
                                        s->width_in_pixels,

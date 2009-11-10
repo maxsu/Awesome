@@ -19,6 +19,7 @@
  *
  */
 
+#include "awesome.h"
 #include "luaa.h"
 #include "xwindow.h"
 #include "ewmh.h"
@@ -421,7 +422,7 @@ ewindow_set_border_width(lua_State *L, int idx, int width)
     if(width == ewindow->border_width || width < 0)
         return;
 
-    xcb_configure_window(globalconf.connection, ewindow->window,
+    xcb_configure_window(_G_connection, ewindow->window,
                          XCB_CONFIG_WINDOW_BORDER_WIDTH,
                          (uint32_t[]) { width });
 

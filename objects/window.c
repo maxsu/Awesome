@@ -20,6 +20,7 @@
  */
 
 #include "luaa.h"
+#include "awesome.h"
 #include "xwindow.h"
 #include "ewmh.h"
 #include "screen.h"
@@ -59,7 +60,7 @@ window_ban_unfocus(window_t *window)
     /* Wait until the last moment to take away the focus from the window. */
     if(_G_window_focused == window)
         /* Set focus on root window, so no events leak to the current window. */
-        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
+        xcb_set_input_focus(_G_connection, XCB_INPUT_FOCUS_PARENT,
                             window->screen->protocol_screen->root->window, XCB_CURRENT_TIME);
 }
 
@@ -71,7 +72,7 @@ window_ban(window_t *window)
 {
     if(!window->banned)
     {
-        xcb_unmap_window(globalconf.connection, window->window);
+        xcb_unmap_window(_G_connection, window->window);
         window->banned = true;
         window_ban_unfocus(window);
     }
@@ -86,7 +87,7 @@ window_unban(window_t *window)
 {
     if(window->banned)
     {
-        xcb_map_window(globalconf.connection, window->window);
+        xcb_map_window(_G_connection, window->window);
         window->banned = false;
     }
 }
@@ -132,7 +133,7 @@ window_focus(lua_State *L, int idx)
 
     /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
     if(window->focusable)
-        xcb_set_input_focus(globalconf.connection, XCB_INPUT_FOCUS_PARENT,
+        xcb_set_input_focus(_G_connection, XCB_INPUT_FOCUS_PARENT,
                             window->window, XCB_CURRENT_TIME);
 
 }
@@ -197,7 +198,7 @@ luaA_window_set_cursor(lua_State *L, window_t *window)
         uint16_t cursor_font = xcursor_font_fromstr(buf);
         if(cursor_font)
         {
-            xcb_cursor_t cursor = xcursor_new(globalconf.connection, cursor_font);
+            xcb_cursor_t cursor = xcursor_new(_G_connection, cursor_font);
             p_delete(&window->cursor);
             window->cursor = a_strdup(buf);
             xwindow_set_cursor(window->window, cursor);

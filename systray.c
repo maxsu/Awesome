@@ -23,6 +23,7 @@
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_atom.h>
 
+#include "awesome.h"
 #include "screen.h"
 #include "systray.h"
 #include "xwindow.h"
@@ -40,7 +41,7 @@ systray_init(protocol_screen_t *pscreen)
 {
     xcb_client_message_event_t ev;
     int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
-    xcb_screen_t *xscreen = xutil_screen_get(globalconf.connection, phys_screen);
+    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, phys_screen);
     char *atom_name;
     xcb_intern_atom_cookie_t atom_systray_q;
     xcb_intern_atom_reply_t *atom_systray_r;
@@ -53,13 +54,13 @@ systray_init(protocol_screen_t *pscreen)
         return;
     }
 
-    atom_systray_q = xcb_intern_atom_unchecked(globalconf.connection, false,
+    atom_systray_q = xcb_intern_atom_unchecked(_G_connection, false,
                                                a_strlen(atom_name), atom_name);
 
     p_delete(&atom_name);
 
-    pscreen->systray.window = xcb_generate_id(globalconf.connection);
-    xcb_create_window(globalconf.connection, xscreen->root_depth,
+    pscreen->systray.window = xcb_generate_id(_G_connection);
+    xcb_create_window(_G_connection, xscreen->root_depth,
                       pscreen->systray.window, xscreen->root,
                       -1, -1, 1, 1, 0,
                       XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
@@ -74,7 +75,7 @@ systray_init(protocol_screen_t *pscreen)
     ev.data.data32[2] = pscreen->systray.window;
     ev.data.data32[3] = ev.data.data32[4] = 0;
 
-    if(!(atom_systray_r = xcb_intern_atom_reply(globalconf.connection, atom_systray_q, NULL)))
+    if(!(atom_systray_r = xcb_intern_atom_reply(_G_connection, atom_systray_q, NULL)))
     {
         warn("error getting systray atom");
         return;
@@ -84,12 +85,12 @@ systray_init(protocol_screen_t *pscreen)
 
     p_delete(&atom_systray_r);
 
-    xcb_set_selection_owner(globalconf.connection,
+    xcb_set_selection_owner(_G_connection,
                             pscreen->systray.window,
                             atom_systray,
                             XCB_CURRENT_TIME);
 
-    xcb_send_event(globalconf.connection, false, xscreen->root, 0xFFFFFF, (char *) &ev);
+    xcb_send_event(_G_connection, false, xscreen->root, 0xFFFFFF, (char *) &ev);
 }
 
 /** Remove systray information in X.
@@ -103,8 +104,8 @@ systray_cleanup(protocol_screen_t *pscreen)
     char *atom_name;
 
     if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", phys_screen))
-       || !(atom_systray_r = xcb_intern_atom_reply(globalconf.connection,
-                                                   xcb_intern_atom_unchecked(globalconf.connection,
+       || !(atom_systray_r = xcb_intern_atom_reply(_G_connection,
+                                                   xcb_intern_atom_unchecked(_G_connection,
                                                                              false,
                                                                              a_strlen(atom_name),
                                                                              atom_name),
@@ -117,7 +118,7 @@ systray_cleanup(protocol_screen_t *pscreen)
 
     p_delete(&atom_name);
 
-    xcb_set_selection_owner(globalconf.connection,
+    xcb_set_selection_owner(_G_connection,
                             XCB_NONE,
                             atom_systray_r->atom,
                             XCB_CURRENT_TIME);
@@ -150,13 +151,13 @@ systray_request_handle(xcb_window_t embed_win, protocol_screen_t *pscreen, xembe
     p_clear(&em_cookie, 1);
 
     if(!info)
-        em_cookie = xembed_info_get_unchecked(globalconf.connection, embed_win);
+        em_cookie = xembed_info_get_unchecked(_G_connection, embed_win);
 
-    xcb_change_window_attributes(globalconf.connection, embed_win, XCB_CW_EVENT_MASK,
+    xcb_change_window_attributes(_G_connection, embed_win, XCB_CW_EVENT_MASK,
                                  select_input_val);
     xwindow_set_state(embed_win, XCB_WM_STATE_WITHDRAWN);
 
-    xcb_reparent_window(globalconf.connection, embed_win,
+    xcb_reparent_window(_G_connection, embed_win,
                         pscreen->systray.window, 0, 0);
 
     em.window = embed_win;
@@ -164,9 +165,9 @@ systray_request_handle(xcb_window_t embed_win, protocol_screen_t *pscreen, xembe
     if(info)
         em.info = *info;
     else
-        xembed_info_get_reply(globalconf.connection, em_cookie, &em.info);
+        xembed_info_get_reply(_G_connection, em_cookie, &em.info);
 
-    xembed_embedded_notify(globalconf.connection, em.window, pscreen->systray.window,
+    xembed_embedded_notify(_G_connection, em.window, pscreen->systray.window,
                            MIN(XEMBED_VERSION, em.info.version));
 
     xembed_window_array_append(&pscreen->embedded, em);
@@ -190,9 +191,9 @@ systray_process_client_message(xcb_client_message_event_t *ev)
     switch(ev->data.data32[1])
     {
       case SYSTEM_TRAY_REQUEST_DOCK:
-        geom_c = xcb_get_geometry_unchecked(globalconf.connection, ev->window);
+        geom_c = xcb_get_geometry_unchecked(_G_connection, ev->window);
 
-        if(!(geom_r = xcb_get_geometry_reply(globalconf.connection, geom_c, NULL)))
+        if(!(geom_r = xcb_get_geometry_reply(_G_connection, geom_c, NULL)))
             return -1;
 
         foreach(screen, _G_protocol_screens)
@@ -222,11 +223,11 @@ systray_iskdedockapp(xcb_window_t w)
 
     /* Check if that is a KDE tray because it does not respect fdo standards,
      * thanks KDE. */
-    kde_check_q = xcb_get_property_unchecked(globalconf.connection, false, w,
+    kde_check_q = xcb_get_property_unchecked(_G_connection, false, w,
                                              _KDE_NET_WM_SYSTEM_TRAY_WINDOW_FOR,
                                              WINDOW, 0, 1);
 
-    kde_check = xcb_get_property_reply(globalconf.connection, kde_check_q, NULL);
+    kde_check = xcb_get_property_reply(_G_connection, kde_check_q, NULL);
 
     /* it's a KDE systray ?*/
     ret = (kde_check && kde_check->value_len);
@@ -246,7 +247,7 @@ xembed_process_client_message(xcb_client_message_event_t *ev)
     switch(ev->data.data32[1])
     {
       case XEMBED_REQUEST_FOCUS:
-        xembed_focus_in(globalconf.connection, ev->window, XEMBED_FOCUS_CURRENT);
+        xembed_focus_in(_G_connection, ev->window, XEMBED_FOCUS_CURRENT);
         break;
     }
     return 0;

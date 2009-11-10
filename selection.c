@@ -41,26 +41,26 @@ luaA_selection_get(lua_State *L)
 {
     if(selection_window == XCB_NONE)
     {
-        xcb_screen_t *screen = xutil_screen_get(globalconf.connection, _G_default_screen);
+        xcb_screen_t *screen = xutil_screen_get(_G_connection, _G_default_screen);
         uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
         uint32_t values[] = { screen->black_pixel, 1, XCB_EVENT_MASK_PROPERTY_CHANGE };
 
-        selection_window = xcb_generate_id(globalconf.connection);
+        selection_window = xcb_generate_id(_G_connection);
 
-        xcb_create_window(globalconf.connection, screen->root_depth, selection_window, screen->root,
+        xcb_create_window(_G_connection, screen->root_depth, selection_window, screen->root,
                           0, 0, 1, 1, 0, XCB_COPY_FROM_PARENT, screen->root_visual,
                           mask, values);
     }
 
-    xcb_convert_selection(globalconf.connection, selection_window,
+    xcb_convert_selection(_G_connection, selection_window,
                           PRIMARY, UTF8_STRING, XSEL_DATA, XCB_CURRENT_TIME);
-    xcb_flush(globalconf.connection);
+    xcb_flush(_G_connection);
 
     xcb_generic_event_t *event;
 
     while(true)
     {
-        event = xcb_wait_for_event(globalconf.connection);
+        event = xcb_wait_for_event(_G_connection);
 
         if(!event)
             return 0;
@@ -89,18 +89,18 @@ luaA_selection_get(lua_State *L)
         {
             xcb_get_text_property_reply_t prop;
             xcb_get_property_cookie_t cookie =
-                xcb_get_text_property(globalconf.connection,
+                xcb_get_text_property(_G_connection,
                                       event_notify->requestor,
                                       event_notify->property);
 
-            if(xcb_get_text_property_reply(globalconf.connection,
+            if(xcb_get_text_property_reply(_G_connection,
                                            cookie, &prop, NULL))
             {
                 lua_pushlstring(L, prop.name, prop.name_len);
 
                 xcb_get_text_property_reply_wipe(&prop);
 
-                xcb_delete_property(globalconf.connection,
+                xcb_delete_property(_G_connection,
                                     event_notify->requestor,
                                     event_notify->property);
 

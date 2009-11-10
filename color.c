@@ -88,7 +88,7 @@ color_parse(const char *colstr, ssize_t len,
 color_init_cookie_t
 color_init_unchecked(color_t *color, const char *colstr, ssize_t len)
 {
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, _G_default_screen);
+    xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
     color_init_cookie_t req;
 
     p_clear(&req, 1);
@@ -117,7 +117,7 @@ color_init_unchecked(color_t *color, const char *colstr, ssize_t len)
     {
         req.color = color;
         req.colstr = colstr;
-        req.cookie = xcb_alloc_named_color_unchecked(globalconf.connection,
+        req.cookie = xcb_alloc_named_color_unchecked(_G_connection,
                                                      s->default_colormap, len,
                                                      colstr);
     }
@@ -142,7 +142,7 @@ color_init_reply(color_init_cookie_t req)
 
     xcb_alloc_named_color_reply_t *named_color;
 
-    if((named_color = xcb_alloc_named_color_reply(globalconf.connection,
+    if((named_color = xcb_alloc_named_color_reply(_G_connection,
                                                   req.cookie, NULL)))
     {
         req.color->red   = named_color->visual_red;
@@ -169,7 +169,7 @@ color_init_reply(color_init_cookie_t req)
 xcolor_init_request_t
 xcolor_init_unchecked(xcolor_t *color, const char *colstr, ssize_t len)
 {
-    xcb_screen_t *s = xutil_screen_get(globalconf.connection, _G_default_screen);
+    xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
     xcolor_init_request_t req;
     uint8_t red, green, blue, alpha;
 
@@ -197,7 +197,7 @@ xcolor_init_unchecked(xcolor_t *color, const char *colstr, ssize_t len)
         req.alpha = RGB_8TO16(alpha);
 
         req.is_hexa = true;
-        req.cookie_hexa = xcb_alloc_color_unchecked(globalconf.connection,
+        req.cookie_hexa = xcb_alloc_color_unchecked(_G_connection,
                                                     s->default_colormap,
                                                     RGB_8TO16(red),
                                                     RGB_8TO16(green),
@@ -206,7 +206,7 @@ xcolor_init_unchecked(xcolor_t *color, const char *colstr, ssize_t len)
     else
     {
         req.is_hexa = false;
-        req.cookie_named = xcb_alloc_named_color_unchecked(globalconf.connection,
+        req.cookie_named = xcb_alloc_named_color_unchecked(_G_connection,
                                                            s->default_colormap, len,
                                                            colstr);
     }
@@ -231,7 +231,7 @@ xcolor_init_reply(xcolor_init_request_t req)
     {
         xcb_alloc_color_reply_t *hexa_color;
 
-        if((hexa_color = xcb_alloc_color_reply(globalconf.connection,
+        if((hexa_color = xcb_alloc_color_reply(_G_connection,
                                                req.cookie_hexa, NULL)))
         {
             req.color->pixel = hexa_color->pixel;
@@ -248,7 +248,7 @@ xcolor_init_reply(xcolor_init_request_t req)
     {
         xcb_alloc_named_color_reply_t *named_color;
 
-        if((named_color = xcb_alloc_named_color_reply(globalconf.connection,
+        if((named_color = xcb_alloc_named_color_reply(_G_connection,
                                                       req.cookie_named, NULL)))
         {
             req.color->pixel = named_color->pixel;

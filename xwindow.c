@@ -22,6 +22,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 
+#include "awesome.h"
 #include "globalconf.h"
 #include "xwindow.h"
 #include "common/atoms.h"
@@ -37,7 +38,7 @@ void
 xwindow_set_state(xcb_window_t win, long state)
 {
     long data[] = { state, XCB_NONE };
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE, win,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE, win,
                         WM_STATE, WM_STATE, 32, 2, data);
 }
 
@@ -48,7 +49,7 @@ xwindow_set_state(xcb_window_t win, long state)
 xcb_get_property_cookie_t
 xwindow_get_state_unchecked(xcb_window_t w)
 {
-    return xcb_get_property_unchecked(globalconf.connection, false, w, WM_STATE,
+    return xcb_get_property_unchecked(_G_connection, false, w, WM_STATE,
                                       WM_STATE, 0L, 2L);
 }
 
@@ -62,7 +63,7 @@ xwindow_get_state_reply(xcb_get_property_cookie_t cookie)
     uint32_t result = 0;
     xcb_get_property_reply_t *prop_r;
 
-    if((prop_r = xcb_get_property_reply(globalconf.connection, cookie, NULL)))
+    if((prop_r = xcb_get_property_reply(_G_connection, cookie, NULL)))
     {
         if(xcb_get_property_value_length(prop_r))
             result = *(uint32_t *) xcb_get_property_value(prop_r);
@@ -93,7 +94,7 @@ xwindow_configure(xcb_window_t win, area_t geometry, int border)
     ce.border_width = border;
     ce.above_sibling = XCB_NONE;
     ce.override_redirect = false;
-    xcb_send_event(globalconf.connection, false, win, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (char *) &ce);
+    xcb_send_event(_G_connection, false, win, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (char *) &ce);
 }
 
 /** Grab or ungrab buttons on a window.
@@ -106,10 +107,10 @@ xwindow_buttons_grab(xcb_window_t win, button_array_t *buttons)
     if(win)
     {
         /* Ungrab everything first */
-        xcb_ungrab_button(globalconf.connection, XCB_BUTTON_INDEX_ANY, win, XCB_BUTTON_MASK_ANY);
+        xcb_ungrab_button(_G_connection, XCB_BUTTON_INDEX_ANY, win, XCB_BUTTON_MASK_ANY);
 
         foreach(b, *buttons)
-            xcb_grab_button(globalconf.connection, false, win, BUTTONMASK,
+            xcb_grab_button(_G_connection, false, win, BUTTONMASK,
                             XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE,
                             (*b)->button, (*b)->modifiers);
     }
@@ -123,7 +124,7 @@ static void
 xwindow_grabkey(xcb_window_t win, keyb_t *k)
 {
     if(k->keycode)
-        xcb_grab_key(globalconf.connection, true, win,
+        xcb_grab_key(_G_connection, true, win,
                      k->modifiers, k->keycode, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
     else if(k->keysym)
     {
@@ -131,7 +132,7 @@ xwindow_grabkey(xcb_window_t win, keyb_t *k)
         if(keycodes)
         {
             for(xcb_keycode_t *kc = keycodes; *kc; kc++)
-                xcb_grab_key(globalconf.connection, true, win,
+                xcb_grab_key(_G_connection, true, win,
                              k->modifiers, *kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
             p_delete(&keycodes);
         }
@@ -144,7 +145,7 @@ xwindow_grabkeys(xcb_window_t win, key_array_t *keys)
     if(win)
     {
         /* Ungrab everything first */
-        xcb_ungrab_key(globalconf.connection, XCB_GRAB_ANY, win, XCB_BUTTON_MASK_ANY);
+        xcb_ungrab_key(_G_connection, XCB_GRAB_ANY, win, XCB_BUTTON_MASK_ANY);
 
         foreach(k, *keys)
             xwindow_grabkey(win, *k);
@@ -161,11 +162,11 @@ xwindow_get_opacity(xcb_window_t win)
     double ret;
 
     xcb_get_property_cookie_t prop_c =
-        xcb_get_property_unchecked(globalconf.connection, false, win,
+        xcb_get_property_unchecked(_G_connection, false, win,
                                    _NET_WM_WINDOW_OPACITY, CARDINAL, 0L, 1L);
 
     xcb_get_property_reply_t *prop_r =
-        xcb_get_property_reply(globalconf.connection, prop_c, NULL);
+        xcb_get_property_reply(_G_connection, prop_c, NULL);
 
     ret = xwindow_get_opacity_from_reply(prop_r);
     p_delete(&prop_r);
@@ -200,11 +201,11 @@ xwindow_set_opacity(xcb_window_t win, double opacity)
         if(opacity >= 0 && opacity <= 1)
         {
             uint32_t real_opacity = opacity * 0xffffffff;
-            xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE, win,
+            xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE, win,
                                 _NET_WM_WINDOW_OPACITY, CARDINAL, 32, 1L, &real_opacity);
         }
         else
-            xcb_delete_property(globalconf.connection, win, _NET_WM_WINDOW_OPACITY);
+            xcb_delete_property(_G_connection, win, _NET_WM_WINDOW_OPACITY);
     }
 }
 
@@ -226,7 +227,7 @@ xwindow_takefocus(xcb_window_t win)
     ev.type = WM_PROTOCOLS;
     ev.data.data32[0] = WM_TAKE_FOCUS;
 
-    xcb_send_event(globalconf.connection, false, win,
+    xcb_send_event(_G_connection, false, win,
                    XCB_EVENT_MASK_NO_EVENT, (char *) &ev);
 }
 
@@ -237,7 +238,7 @@ xwindow_takefocus(xcb_window_t win)
 void
 xwindow_set_cursor(xcb_window_t w, xcb_cursor_t c)
 {
-    xcb_change_window_attributes(globalconf.connection, w, XCB_CW_CURSOR,
+    xcb_change_window_attributes(_G_connection, w, XCB_CW_CURSOR,
                                  (const uint32_t[]) { c });
 }
 
@@ -249,7 +250,7 @@ void
 xwindow_set_border_color(xcb_window_t w, xcolor_t *color)
 {
     if(w)
-        xcb_change_window_attributes(globalconf.connection, w, XCB_CW_BORDER_PIXEL, &color->pixel);
+        xcb_change_window_attributes(_G_connection, w, XCB_CW_BORDER_PIXEL, &color->pixel);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

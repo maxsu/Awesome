@@ -140,14 +140,14 @@ luaA_awesome_fake_input(lua_State *L)
         {
             int screen = luaL_checknumber(L, 5) - 1;
             luaA_checkscreen(screen);
-            root = xutil_screen_get(globalconf.connection, screen)->root;
+            root = xutil_screen_get(_G_connection, screen)->root;
         }
         break;
       default:
         return 0;
     }
 
-    xcb_test_fake_input(globalconf.connection,
+    xcb_test_fake_input(_G_connection,
                         type,
                         detail,
                         XCB_CURRENT_TIME,

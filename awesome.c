@@ -65,7 +65,7 @@ awesome_atexit(void)
     {
         /* reparent systray windows, otherwise they may die with their master */
         foreach(embed, screen->embedded)
-            xembed_window_unembed(globalconf.connection,
+            xembed_window_unembed(_G_connection,
                                   embed->window, screen->root->window);
         systray_cleanup(screen);
     }
@@ -77,10 +77,10 @@ awesome_atexit(void)
     /* Close Lua */
     lua_close(globalconf.L);
 
-    xcb_flush(globalconf.connection);
+    xcb_flush(_G_connection);
 
     /* Disconnect *after* closing lua */
-    xcb_disconnect(globalconf.connection);
+    xcb_disconnect(_G_connection);
 
     ev_default_destroy();
 }
@@ -95,13 +95,13 @@ scan(void)
     foreach(screen, _G_protocol_screens)
         /* Get the window tree associated to this screen */
         tree_cookies[protocol_screen_array_indexof(&_G_protocol_screens, screen)] =
-            xcb_query_tree_unchecked(globalconf.connection, screen->root->window);
+            xcb_query_tree_unchecked(_G_connection, screen->root->window);
 
     foreach(screen, _G_protocol_screens)
     {
         int screen_index = protocol_screen_array_indexof(&_G_protocol_screens, screen);
 
-        xcb_query_tree_reply_t *tree_r = xcb_query_tree_reply(globalconf.connection,
+        xcb_query_tree_reply_t *tree_r = xcb_query_tree_reply(_G_connection,
                                                               tree_cookies[screen_index],
                                                               NULL);
 
@@ -120,7 +120,7 @@ scan(void)
 
         for(int i = 0; i < tree_c_len; i++)
         {
-            attr_wins[i] = xcb_get_window_attributes_unchecked(globalconf.connection,
+            attr_wins[i] = xcb_get_window_attributes_unchecked(_G_connection,
                                                                wins[i]);
             state_wins[i] = xwindow_get_state_unchecked(wins[i]);
         }
@@ -132,7 +132,7 @@ scan(void)
         for(int i = 0; i < tree_c_len; i++)
         {
             xcb_get_window_attributes_reply_t *attr_r =
-                xcb_get_window_attributes_reply(globalconf.connection,
+                xcb_get_window_attributes_reply(_G_connection,
                                                 attr_wins[i],
                                                 NULL);
 
@@ -149,19 +149,19 @@ scan(void)
             p_delete(&attr_r);
 
             /* Get the geometry of the current window */
-            geom_wins[i] = xcb_get_geometry_unchecked(globalconf.connection, wins[i]);
+            geom_wins[i] = xcb_get_geometry_unchecked(_G_connection, wins[i]);
         }
 
         for(int i = 0; i < tree_c_len; i++)
         {
             xcb_get_geometry_reply_t *geom_r;
             if(!geom_wins[i].sequence
-               || !(geom_r = xcb_get_geometry_reply(globalconf.connection,
+               || !(geom_r = xcb_get_geometry_reply(_G_connection,
                                                     geom_wins[i], NULL)))
                 continue;
 
             /* The window can be mapped, so force it to be undrawn for startup */
-            xcb_unmap_window(globalconf.connection, wins[i]);
+            xcb_unmap_window(_G_connection, wins[i]);
 
             client_manage(wins[i], geom_r, screen, true);
 
@@ -183,7 +183,7 @@ a_xcb_check_cb(EV_P_ ev_check *w, int revents)
 {
     xcb_generic_event_t *mouse = NULL, *event;
 
-    while((event = xcb_poll_for_event(globalconf.connection)))
+    while((event = xcb_poll_for_event(_G_connection)))
     {
         /* We will treat mouse events later.
          * We cannot afford to treat all mouse motion events,
@@ -413,24 +413,24 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &sa, 0);
 
     /* X stuff */
-    globalconf.connection = xcb_connect(NULL, &_G_default_screen);
-    if(xcb_connection_has_error(globalconf.connection))
+    _G_connection = xcb_connect(NULL, &_G_default_screen);
+    if(xcb_connection_has_error(_G_connection))
         fatal("cannot open display");
 
     /* check for xtest extension */
     const xcb_query_extension_reply_t *xtest_query;
-    xtest_query = xcb_get_extension_data(globalconf.connection, &xcb_test_id);
+    xtest_query = xcb_get_extension_data(_G_connection, &xcb_test_id);
     globalconf.have_xtest = xtest_query->present;
 
     /* initialize dbus */
     a_dbus_init();
 
     /* Grab server */
-    xcb_grab_server(globalconf.connection);
-    xcb_flush(globalconf.connection);
+    xcb_grab_server(_G_connection);
+    xcb_flush(_G_connection);
 
     /* Get the file descriptor corresponding to the X connection */
-    xfd = xcb_get_file_descriptor(globalconf.connection);
+    xfd = xcb_get_file_descriptor(_G_connection);
     ev_io_init(&xio, &a_xcb_io_cb, xfd, EV_READ);
     ev_io_start(globalconf.loop, &xio);
     ev_check_init(&xcheck, &a_xcb_check_cb);
@@ -441,23 +441,23 @@ main(int argc, char **argv)
     ev_unref(globalconf.loop);
 
     /* Allocate a handler which will holds all errors and events */
-    xcb_event_handlers_init(globalconf.connection, &globalconf.evenths);
+    xcb_event_handlers_init(_G_connection, &globalconf.evenths);
     xutil_error_handler_catch_all_set(&globalconf.evenths, xerrorstart, NULL);
 
     for(screen_nbr = 0;
-        screen_nbr < xcb_setup_roots_length(xcb_get_setup(globalconf.connection));
+        screen_nbr < xcb_setup_roots_length(xcb_get_setup(_G_connection));
         screen_nbr++)
     {
         const uint32_t select_input_val = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT;
 
         /* This causes an error if some other window manager is running */
-        xcb_change_window_attributes(globalconf.connection,
-                                     xutil_screen_get(globalconf.connection, screen_nbr)->root,
+        xcb_change_window_attributes(_G_connection,
+                                     xutil_screen_get(_G_connection, screen_nbr)->root,
                                      XCB_CW_EVENT_MASK, &select_input_val);
     }
 
     /* Need to xcb_flush to validate error handler */
-    xcb_aux_sync(globalconf.connection);
+    xcb_aux_sync(_G_connection);
 
     /* Process all errors in the queue if any */
     xcb_event_poll_for_event_loop(&globalconf.evenths);
@@ -466,12 +466,12 @@ main(int argc, char **argv)
     xutil_error_handler_catch_all_set(&globalconf.evenths, xerror, NULL);
 
     /* Allocate the key symbols */
-    globalconf.keysyms = xcb_key_symbols_alloc(globalconf.connection);
+    globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
     xcb_get_modifier_mapping_cookie_t xmapping_cookie =
-        xcb_get_modifier_mapping_unchecked(globalconf.connection);
+        xcb_get_modifier_mapping_unchecked(_G_connection);
 
     /* init atom cache */
-    atoms_init(globalconf.connection);
+    atoms_init(_G_connection);
 
     /* init screens information */
     screen_scan();
@@ -488,7 +488,7 @@ main(int argc, char **argv)
     for(colors_nbr = 0; colors_nbr < 2; colors_nbr++)
         xcolor_init_reply(colors_reqs[colors_nbr]);
 
-    xutil_lock_mask_get(globalconf.connection, xmapping_cookie,
+    xutil_lock_mask_get(_G_connection, xmapping_cookie,
                         globalconf.keysyms, &globalconf.numlockmask,
                         &globalconf.shiftlockmask, &globalconf.capslockmask,
                         &globalconf.modeswitchmask);
@@ -497,7 +497,7 @@ main(int argc, char **argv)
     foreach(screen, _G_protocol_screens)
     {
         /* select for events on root window */
-        xcb_change_window_attributes(globalconf.connection, screen->root->window,
+        xcb_change_window_attributes(_G_connection, screen->root->window,
                                      XCB_CW_EVENT_MASK,
                                      (const uint32_t[])
                                      {
@@ -533,8 +533,8 @@ main(int argc, char **argv)
     a_xcb_set_property_handlers();
 
     /* we will receive events, stop grabbing server */
-    xcb_ungrab_server(globalconf.connection);
-    xcb_flush(globalconf.connection);
+    xcb_ungrab_server(_G_connection);
+    xcb_flush(_G_connection);
 
     /* main event loop */
     ev_loop(globalconf.loop, 0);

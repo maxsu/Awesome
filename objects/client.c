@@ -22,6 +22,7 @@
 #include <xcb/xcb_atom.h>
 #include <xcb/xcb_image.h>
 
+#include "awesome.h"
 #include "ewmh.h"
 #include "screen.h"
 #include "wibox.h"
@@ -79,20 +80,20 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
     if(c->urgent != urgent)
     {
         xcb_get_property_cookie_t hints =
-            xcb_get_wm_hints_unchecked(globalconf.connection, c->window);
+            xcb_get_wm_hints_unchecked(_G_connection, c->window);
 
         c->urgent = urgent;
 
         /* update ICCCM hints */
         xcb_wm_hints_t wmh;
-        xcb_get_wm_hints_reply(globalconf.connection, hints, &wmh, NULL);
+        xcb_get_wm_hints_reply(_G_connection, hints, &wmh, NULL);
 
         if(urgent)
             wmh.flags |= XCB_WM_HINT_X_URGENCY;
         else
             wmh.flags &= ~XCB_WM_HINT_X_URGENCY;
 
-        xcb_set_wm_hints(globalconf.connection, c->window, &wmh);
+        xcb_set_wm_hints(_G_connection, c->window, &wmh);
 
         luaA_object_emit_signal(L, cidx, "property::urgent", 0);
     }
@@ -178,7 +179,7 @@ void
 client_ignore_enterleave_events(void)
 {
     foreach(c, globalconf.clients)
-        xcb_change_window_attributes(globalconf.connection,
+        xcb_change_window_attributes(_G_connection,
                                      (*c)->window,
                                      XCB_CW_EVENT_MASK,
                                      (const uint32_t []) { CLIENT_SELECT_INPUT_EVENT_MASK & ~(XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW) });
@@ -188,7 +189,7 @@ void
 client_restore_enterleave_events(void)
 {
     foreach(c, globalconf.clients)
-        xcb_change_window_attributes(globalconf.connection,
+        xcb_change_window_attributes(_G_connection,
                                      (*c)->window,
                                      XCB_CW_EVENT_MASK,
                                      (const uint32_t []) { CLIENT_SELECT_INPUT_EVENT_MASK });
@@ -215,10 +216,10 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t
      * startup id. */
     xcb_get_property_cookie_t startup_id_q = { 0 };
     if(!startup)
-        startup_id_q = xcb_get_any_property(globalconf.connection,
+        startup_id_q = xcb_get_any_property(_G_connection,
                                             false, w, _NET_STARTUP_ID, UINT_MAX);
 
-    xcb_change_window_attributes(globalconf.connection, w, XCB_CW_EVENT_MASK, select_input_val);
+    xcb_change_window_attributes(_G_connection, w, XCB_CW_EVENT_MASK, select_input_val);
 
     client_t *c = client_new(globalconf.L);
 
@@ -317,7 +318,7 @@ HANDLE_GEOM(height)
     {
         /* Request our response */
         xcb_get_property_reply_t *reply =
-            xcb_get_property_reply(globalconf.connection, startup_id_q, NULL);
+            xcb_get_property_reply(_G_connection, startup_id_q, NULL);
         /* Say spawn that a client has been started, with startup id as argument */
         char *startup_id = xutil_get_text_property_from_reply(reply);
         p_delete(&reply);
@@ -457,7 +458,7 @@ client_resize(client_t *c, area_t geometry, bool hints)
         /* Ignore all spurious enter/leave notify events */
         client_ignore_enterleave_events();
 
-        xcb_configure_window(globalconf.connection, c->window,
+        xcb_configure_window(_G_connection, c->window,
                              XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
                              | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
                              (uint32_t[]) { geometry.x, geometry.y, geometry.width, geometry.height });
@@ -545,11 +546,11 @@ client_kill(client_t *c)
         ev.type = WM_PROTOCOLS;
         ev.data.data32[0] = WM_DELETE_WINDOW;
 
-        xcb_send_event(globalconf.connection, false, c->window,
+        xcb_send_event(_G_connection, false, c->window,
                        XCB_EVENT_MASK_NO_EVENT, (char *) &ev);
     }
     else
-        xcb_kill_client(globalconf.connection, c->window);
+        xcb_kill_client(_G_connection, c->window);
 }
 
 /** Get all clients into a table.
@@ -743,7 +744,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
 static int
 luaA_client_get_content(lua_State *L, client_t *c)
 {
-    xcb_image_t *ximage = xcb_image_get(globalconf.connection,
+    xcb_image_t *ximage = xcb_image_get(_G_connection,
                                         c->window,
                                         0, 0,
                                         c->geometry.width,
