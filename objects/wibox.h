@@ -45,8 +45,6 @@ struct wibox_t
     image_t *bg_image;
     /** The graphic context. */
     xcb_gcontext_t gc;
-    /** The window geometry. */
-    area_t geometry;
     /** Draw context */
     draw_context_t ctx;
     /** The window's content (shape) */
