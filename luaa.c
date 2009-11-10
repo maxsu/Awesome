@@ -67,7 +67,7 @@ static char *conffile;
 static int
 luaA_quit(lua_State *L __attribute__ ((unused)))
 {
-    ev_unloop(globalconf.loop, 1);
+    ev_unloop(_G_loop, 1);
     return 0;
 }
 

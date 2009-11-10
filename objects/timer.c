@@ -21,6 +21,7 @@
 
 #include <ev.h>
 
+#include "awesome.h"
 #include "globalconf.h"
 #include "luaa.h"
 #include "timer.h"
@@ -79,7 +80,7 @@ luaA_timer_start(lua_State *L)
     else
     {
         luaA_object_ref(L, 1);
-        ev_timer_start(globalconf.loop, &timer->timer);
+        ev_timer_start(_G_loop, &timer->timer);
         timer->started = true;
     }
     return 0;
@@ -91,7 +92,7 @@ luaA_timer_stop(lua_State *L)
     atimer_t *timer = luaA_checkudata(L, 1, &timer_class);
     if(timer->started)
     {
-        ev_timer_stop(globalconf.loop, &timer->timer);
+        ev_timer_stop(_G_loop, &timer->timer);
         luaA_object_unref(L, timer);
         timer->started = false;
     }
