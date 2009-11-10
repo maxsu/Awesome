@@ -417,11 +417,6 @@ main(int argc, char **argv)
     if(xcb_connection_has_error(_G_connection))
         fatal("cannot open display");
 
-    /* check for xtest extension */
-    const xcb_query_extension_reply_t *xtest_query;
-    xtest_query = xcb_get_extension_data(_G_connection, &xcb_test_id);
-    globalconf.have_xtest = xtest_query->present;
-
     /* initialize dbus */
     a_dbus_init();
 

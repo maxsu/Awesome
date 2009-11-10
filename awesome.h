@@ -23,6 +23,7 @@
 #define AWESOME_AWESOME_H
 
 #include <xcb/xcb.h>
+#include <stdbool.h>
 
 void awesome_restart(void);
 void awesome_atexit(void);

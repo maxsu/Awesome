@@ -56,8 +56,6 @@ typedef struct
     bool xinerama_is_active;
     /** Modifiers masks */
     uint16_t numlockmask, shiftlockmask, capslockmask, modeswitchmask;
-    /** Check for XTest extension */
-    bool have_xtest;
     /** Clients list */
     client_array_t clients;
     /** Lua VM state */
