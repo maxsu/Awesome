@@ -63,8 +63,6 @@ typedef struct
     {
         xcolor_t fg, bg;
     } colors;
-    /** The event loop */
-    struct ev_loop *loop;
     /** Wiboxes */
     wibox_array_t wiboxes;
 } awesome_t;
