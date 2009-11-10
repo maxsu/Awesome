@@ -786,16 +786,6 @@ luaA_client_geometry(lua_State *L)
 }
 
 static int
-luaA_client_set_screen(lua_State *L, client_t *c)
-{
-    int screen = luaL_checknumber(L, -1) - 1;
-    luaA_checkscreen(screen);
-    screen_client_moveto(c, &globalconf.screens.tab[screen], true);
-
-    return 0;
-}
-
-static int
 luaA_client_set_hidden(lua_State *L, client_t *c)
 {
     bool b = luaA_checkboolean(L, -1);
@@ -1116,10 +1106,6 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_icon_name,
                             NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_SCREEN,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_screen,
-                            (lua_class_propfunc_t) luaA_client_set_screen);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_HIDDEN,
                             (lua_class_propfunc_t) luaA_client_set_hidden,
                             (lua_class_propfunc_t) luaA_client_get_hidden,
