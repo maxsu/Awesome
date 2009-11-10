@@ -126,6 +126,7 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
  * \param fg Foreground color.
  * \param bg Background color.
  */
+#include "awesome.h"
 void
 draw_context_init(draw_context_t *d,
                   int width, int height,
@@ -133,14 +134,14 @@ draw_context_init(draw_context_t *d,
 {
     /* Create a pixmap. */
     xcb_screen_t *xcb_screen = globalconf.screen;
-    d->pixmap = xcb_generate_id(globalconf.connection);
-    xcb_create_pixmap(globalconf.connection, xcb_screen->root_depth,
+    d->pixmap = xcb_generate_id(_G_connection);
+    xcb_create_pixmap(_G_connection, xcb_screen->root_depth,
                       d->pixmap, xcb_screen->root,
                       width, height);
 
     d->width = width;
     d->height = height;
-    d->surface = cairo_xcb_surface_create(globalconf.connection,
+    d->surface = cairo_xcb_surface_create(_G_connection,
                                           d->pixmap, globalconf.visual,
                                           width, height);
     d->cr = cairo_create(d->surface);
@@ -157,7 +158,7 @@ draw_context_wipe(draw_context_t *ctx)
 {
     if(ctx->pixmap)
     {
-        xcb_free_pixmap(globalconf.connection, ctx->pixmap);
+        xcb_free_pixmap(_G_connection, ctx->pixmap);
         ctx->pixmap = XCB_NONE;
     }
     if(ctx->layout)
@@ -335,8 +336,8 @@ draw_text_extents(draw_text_context_t *data)
     if(data->len <= 0)
         return geom;
 
-    surface = cairo_xcb_surface_create(globalconf.connection,
-                                       globalconf.default_screen,
+    surface = cairo_xcb_surface_create(_G_connection,
+                                       _G_default_screen,
                                        globalconf.visual,
                                        globalconf.screen->width_in_pixels,
                                        globalconf.screen->height_in_pixels);

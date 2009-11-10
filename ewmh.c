@@ -25,6 +25,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 
+#include "awesome.h"
 #include "ewmh.h"
 #include "objects/tag.h"
 #include "screen.h"
@@ -71,7 +72,7 @@ ewmh_client_update_hints(lua_State *L)
     if(c->urgent)
         state[i++] = _NET_WM_STATE_DEMANDS_ATTENTION;
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         c->window, _NET_WM_STATE, XCB_ATOM_ATOM, 32, i, state);
 
     return 0;
@@ -85,7 +86,7 @@ ewmh_update_desktop_geometry(void)
     area_t geom = screen_area_get(&globalconf.screens.tab[0], false);
     uint32_t sizes[] = { geom.width, geom.height };
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         globalconf.screen->root,
                         _NET_DESKTOP_GEOMETRY, XCB_ATOM_CARDINAL, 32, countof(sizes), sizes);
 }
@@ -94,7 +95,7 @@ static int
 ewmh_update_net_active_window(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         globalconf.screen->root,
                         _NET_ACTIVE_WINDOW, XCB_ATOM_WINDOW, 32, 1, (xcb_window_t[]) { c->window });
     return 0;
@@ -103,7 +104,7 @@ ewmh_update_net_active_window(lua_State *L)
 static int
 ewmh_reset_net_active_window(lua_State *L)
 {
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         globalconf.screen->root,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { XCB_NONE });
     return 0;
@@ -118,7 +119,7 @@ ewmh_update_net_client_list(lua_State *L)
     foreach(client, globalconf.clients)
         wins[n++] = (*client)->window;
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         globalconf.screen->root,
 			_NET_CLIENT_LIST, WINDOW, 32, n, wins);
 
@@ -130,7 +131,7 @@ ewmh_update_net_current_desktop(lua_State *L)
 {
     tag_t *tag = luaA_checkudata(L, 1, &tag_class);
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         globalconf.screen->root,
                         _NET_CURRENT_DESKTOP, CARDINAL, 32, 1,
                         (uint32_t[]) { tags_get_first_selected_index(tag->screen) });
@@ -190,31 +191,31 @@ ewmh_init(void)
     };
     int i;
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         xscreen->root, _NET_SUPPORTED, XCB_ATOM_ATOM, 32,
                         countof(atom), atom);
 
     /* create our own window */
-    father = xcb_generate_id(globalconf.connection);
-    xcb_create_window(globalconf.connection, xscreen->root_depth,
+    father = xcb_generate_id(_G_connection);
+    xcb_create_window(_G_connection, xscreen->root_depth,
                       father, xscreen->root, -1, -1, 1, 1, 0,
                       XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         xscreen->root, _NET_SUPPORTING_WM_CHECK, XCB_ATOM_WINDOW, 32,
                         1, &father);
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         father, _NET_SUPPORTING_WM_CHECK, XCB_ATOM_WINDOW, 32,
                         1, &father);
 
     /* set the window manager name */
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         father, _NET_WM_NAME, UTF8_STRING, 8, 7, "awesome");
 
     /* set the window manager PID */
     i = getpid();
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         father, _NET_WM_PID, XCB_ATOM_CARDINAL, 32, 1, &i);
 
     ewmh_update_desktop_geometry();
@@ -243,7 +244,7 @@ ewmh_update_net_numbers_of_desktop(void)
 {
     uint32_t count = globalconf.screens.tab[0].tags.len;
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
 			globalconf.screen->root,
 			_NET_NUMBER_OF_DESKTOPS, XCB_ATOM_CARDINAL, 32, 1, &count);
 }
@@ -261,7 +262,7 @@ ewmh_update_net_desktop_names(void)
         buffer_addc(&buf, '\0');
     }
 
-    xcb_change_property(globalconf.connection, XCB_PROP_MODE_REPLACE,
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
 			globalconf.screen->root,
 			_NET_DESKTOP_NAMES, UTF8_STRING, 8, buf.len, buf.s);
     buffer_wipe(&buf);
@@ -432,16 +433,16 @@ ewmh_client_check_hints(client_t *c)
     xcb_get_property_reply_t *reply;
 
     /* Send the GetProperty requests which will be processed later */
-    c0 = xcb_get_property_unchecked(globalconf.connection, false, c->window,
+    c0 = xcb_get_property_unchecked(_G_connection, false, c->window,
                                     _NET_WM_DESKTOP, XCB_GET_PROPERTY_TYPE_ANY, 0, 1);
 
-    c1 = xcb_get_property_unchecked(globalconf.connection, false, c->window,
+    c1 = xcb_get_property_unchecked(_G_connection, false, c->window,
                                     _NET_WM_STATE, XCB_ATOM_ATOM, 0, UINT32_MAX);
 
-    c2 = xcb_get_property_unchecked(globalconf.connection, false, c->window,
+    c2 = xcb_get_property_unchecked(_G_connection, false, c->window,
                                     _NET_WM_WINDOW_TYPE, XCB_ATOM_ATOM, 0, UINT32_MAX);
 
-    reply = xcb_get_property_reply(globalconf.connection, c0, NULL);
+    reply = xcb_get_property_reply(_G_connection, c0, NULL);
     if(reply && reply->value_len && (data = xcb_get_property_value(reply)))
     {
         tag_array_t *tags = &c->screen->tags;
@@ -476,7 +477,7 @@ ewmh_client_check_hints(client_t *c)
 
     p_delete(&reply);
 
-    reply = xcb_get_property_reply(globalconf.connection, c1, NULL);
+    reply = xcb_get_property_reply(_G_connection, c1, NULL);
     if(reply && (data = xcb_get_property_value(reply)))
     {
         state = (xcb_atom_t *) data;
@@ -486,7 +487,7 @@ ewmh_client_check_hints(client_t *c)
 
     p_delete(&reply);
 
-    reply = xcb_get_property_reply(globalconf.connection, c2, NULL);
+    reply = xcb_get_property_reply(_G_connection, c2, NULL);
     if(reply && (data = xcb_get_property_value(reply)))
     {
         state = (xcb_atom_t *) data;
@@ -525,9 +526,9 @@ ewmh_process_client_strut(client_t *c)
     void *data;
     xcb_get_property_reply_t *strut_r;
 
-    xcb_get_property_cookie_t strut_q = xcb_get_property_unchecked(globalconf.connection, false, c->window,
+    xcb_get_property_cookie_t strut_q = xcb_get_property_unchecked(_G_connection, false, c->window,
                                                                    _NET_WM_STRUT_PARTIAL, XCB_ATOM_CARDINAL, 0, 12);
-    strut_r = xcb_get_property_reply(globalconf.connection, strut_q, NULL);
+    strut_r = xcb_get_property_reply(_G_connection, strut_q, NULL);
 
     if(strut_r
        && strut_r->value_len
@@ -577,7 +578,7 @@ ewmh_process_client_strut(client_t *c)
 xcb_get_property_cookie_t
 ewmh_window_icon_get_unchecked(xcb_window_t w)
 {
-  return xcb_get_property_unchecked(globalconf.connection, false, w,
+  return xcb_get_property_unchecked(_G_connection, false, w,
                                     _NET_WM_ICON, XCB_ATOM_CARDINAL, 0, UINT32_MAX);
 }
 
@@ -612,7 +613,7 @@ ewmh_window_icon_from_reply(xcb_get_property_reply_t *r)
 int
 ewmh_window_icon_get_reply(xcb_get_property_cookie_t cookie)
 {
-    xcb_get_property_reply_t *r = xcb_get_property_reply(globalconf.connection, cookie, NULL);
+    xcb_get_property_reply_t *r = xcb_get_property_reply(_G_connection, cookie, NULL);
     int ret = ewmh_window_icon_from_reply(r);
     p_delete(&r);
     return ret;

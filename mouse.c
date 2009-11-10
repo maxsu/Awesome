@@ -23,6 +23,7 @@
 #include "screen.h"
 #include "objects/client.h"
 #include "globalconf.h"
+#include "awesome.h"
 #include "objects/wibox.h"
 #include "luaa.h"
 #include "common/tokenize.h"
@@ -42,8 +43,8 @@ mouse_query_pointer(xcb_window_t window, int16_t *x, int16_t *y, xcb_window_t *c
     xcb_query_pointer_cookie_t query_ptr_c;
     xcb_query_pointer_reply_t *query_ptr_r;
 
-    query_ptr_c = xcb_query_pointer_unchecked(globalconf.connection, window);
-    query_ptr_r = xcb_query_pointer_reply(globalconf.connection, query_ptr_c, NULL);
+    query_ptr_c = xcb_query_pointer_unchecked(_G_connection, window);
+    query_ptr_r = xcb_query_pointer_reply(_G_connection, query_ptr_c, NULL);
 
     if(!query_ptr_r || !query_ptr_r->same_screen)
         return false;
@@ -87,7 +88,7 @@ mouse_query_pointer_root(int16_t *x, int16_t *y, xcb_window_t *child, uint16_t *
 static inline void
 mouse_warp_pointer(xcb_window_t window, int x, int y)
 {
-    xcb_warp_pointer(globalconf.connection, XCB_NONE, window,
+    xcb_warp_pointer(_G_connection, XCB_NONE, window,
                      0, 0, 0, 0, x, y );
 }
 

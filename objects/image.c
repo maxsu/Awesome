@@ -23,6 +23,7 @@
 
 #include <Imlib2.h>
 
+#include "awesome.h"
 #include "globalconf.h"
 #include "config.h"
 #include "luaa.h"
@@ -197,16 +198,16 @@ image_to_1bit_pixmap(image_t *image, xcb_drawable_t d)
     height = image_getheight(image);
 
     /* Prepare the pixmap and gc */
-    pixmap = xcb_generate_id(globalconf.connection);
-    xcb_create_pixmap(globalconf.connection, 1, pixmap, d, width, height);
+    pixmap = xcb_generate_id(_G_connection);
+    xcb_create_pixmap(_G_connection, 1, pixmap, d, width, height);
 
     /* Prepare the image */
-    img = xcb_image_create_native(globalconf.connection, width, height,
+    img = xcb_image_create_native(_G_connection, width, height,
             XCB_IMAGE_FORMAT_XY_BITMAP, 1, NULL, 0, NULL);
     image_draw_to_1bit_ximage(image, img);
 
     /* Paint the image to the pixmap */
-    xcb_image_put(globalconf.connection, pixmap, globalconf.gc, img, 0, 0, 0);
+    xcb_image_put(_G_connection, pixmap, globalconf.gc, img, 0, 0, 0);
 
     xcb_image_destroy(img);
 

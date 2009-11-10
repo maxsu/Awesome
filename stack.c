@@ -19,6 +19,7 @@
  *
  */
 
+#include "awesome.h"
 #include "ewmh.h"
 #include "screen.h"
 #include "stack.h"
@@ -95,7 +96,7 @@ stack_window_above(xcb_window_t w, xcb_window_t previous)
          * themselves. Doing it like this is better. */
         return;
 
-    xcb_configure_window(globalconf.connection, w,
+    xcb_configure_window(_G_connection, w,
                          XCB_CONFIG_WINDOW_SIBLING | XCB_CONFIG_WINDOW_STACK_MODE,
                          (uint32_t[]) { previous, XCB_STACK_MODE_ABOVE });
 }

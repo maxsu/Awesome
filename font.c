@@ -31,6 +31,7 @@
  * \param font The font to init.
  * \param fontname Pango fontname (e.g. [FAMILY-LIST] [STYLE-OPTIONS] [SIZE]).
  */
+#include "awesome.h"
 void
 font_init(font_t *font, const char *fontname)
 {
@@ -40,8 +41,8 @@ font_init(font_t *font, const char *fontname)
 
     /* Create a dummy cairo surface, cairo context and pango layout in
      * order to get font informations */
-    surface = cairo_xcb_surface_create(globalconf.connection,
-                                       globalconf.default_screen,
+    surface = cairo_xcb_surface_create(_G_connection,
+                                       _G_default_screen,
                                        globalconf.visual, 1, 1);
 
     cr = cairo_create(surface);

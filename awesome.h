@@ -22,8 +22,15 @@
 #ifndef AWESOME_AWESOME_H
 #define AWESOME_AWESOME_H
 
+#include <xcb/xcb.h>
+
 void awesome_restart(void);
 void awesome_atexit(void);
+
+/** Connection ref */
+xcb_connection_t *_G_connection;
+/** Default screen number */
+int _G_default_screen;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

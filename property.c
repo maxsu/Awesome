@@ -21,6 +21,7 @@
 
 #include <xcb/xcb_atom.h>
 
+#include "awesome.h"
 #include "screen.h"
 #include "property.h"
 #include "objects/client.h"
@@ -35,7 +36,7 @@
     xcb_get_property_cookie_t \
     property_get_##funcname(client_t *c) \
     { \
-        return xcb_get_property(globalconf.connection, \
+        return xcb_get_property(_G_connection, \
                                 false, \
                                 c->window, \
                                 atom, \
@@ -47,7 +48,7 @@
     property_update_##funcname(client_t *c, xcb_get_property_cookie_t cookie) \
     { \
         xcb_get_property_reply_t * reply = \
-                    xcb_get_property_reply(globalconf.connection, cookie, NULL); \
+                    xcb_get_property_reply(_G_connection, cookie, NULL); \
         luaA_object_push(globalconf.L, c); \
         setfunc(globalconf.L, -1, xutil_get_text_property_from_reply(reply)); \
         lua_pop(globalconf.L, 1); \
@@ -98,7 +99,7 @@ HANDLE_PROPERTY(net_wm_pid)
 xcb_get_property_cookie_t
 property_get_wm_transient_for(client_t *c)
 {
-    return xcb_get_wm_transient_for_unchecked(globalconf.connection, c->window);
+    return xcb_get_wm_transient_for_unchecked(_G_connection, c->window);
 }
 
 void
@@ -106,7 +107,7 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_cookie_t cookie)
 {
     xcb_window_t trans;
 
-    if(!xcb_get_wm_transient_for_reply(globalconf.connection,
+    if(!xcb_get_wm_transient_for_reply(_G_connection,
                                        cookie,
                                        &trans, NULL))
             return;
@@ -122,7 +123,7 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_cookie_t cookie)
 xcb_get_property_cookie_t
 property_get_wm_client_leader(client_t *c)
 {
-    return xcb_get_property_unchecked(globalconf.connection, false, c->window,
+    return xcb_get_property_unchecked(_G_connection, false, c->window,
                                       WM_CLIENT_LEADER, XCB_ATOM_WINDOW, 1, 32);
 }
 
@@ -136,7 +137,7 @@ property_update_wm_client_leader(client_t *c, xcb_get_property_cookie_t cookie)
     xcb_get_property_reply_t *reply;
     void *data;
 
-    reply = xcb_get_property_reply(globalconf.connection, cookie, NULL);
+    reply = xcb_get_property_reply(_G_connection, cookie, NULL);
 
     if(reply && reply->value_len && (data = xcb_get_property_value(reply)))
         c->leader_window = *(xcb_window_t *) data;
@@ -147,7 +148,7 @@ property_update_wm_client_leader(client_t *c, xcb_get_property_cookie_t cookie)
 xcb_get_property_cookie_t
 property_get_wm_normal_hints(client_t *c)
 {
-    return xcb_get_wm_normal_hints_unchecked(globalconf.connection, c->window);
+    return xcb_get_wm_normal_hints_unchecked(_G_connection, c->window);
 }
 
 /** Update the size hints of a client.
@@ -157,15 +158,15 @@ property_get_wm_normal_hints(client_t *c)
 void
 property_update_wm_normal_hints(client_t *c, xcb_get_property_cookie_t cookie)
 {
-    xcb_get_wm_normal_hints_reply(globalconf.connection,
-                                      cookie,
-                                      &c->size_hints, NULL);
+    xcb_get_wm_normal_hints_reply(_G_connection,
+                                  cookie,
+                                  &c->size_hints, NULL);
 }
 
 xcb_get_property_cookie_t
 property_get_wm_hints(client_t *c)
 {
-    return xcb_get_wm_hints_unchecked(globalconf.connection, c->window);
+    return xcb_get_wm_hints_unchecked(_G_connection, c->window);
 }
 
 /** Update the WM hints of a client.
@@ -177,7 +178,7 @@ property_update_wm_hints(client_t *c, xcb_get_property_cookie_t cookie)
 {
     xcb_wm_hints_t wmh;
 
-    if(!xcb_get_wm_hints_reply(globalconf.connection,
+    if(!xcb_get_wm_hints_reply(_G_connection,
                                cookie,
                                &wmh, NULL))
         return;
@@ -197,7 +198,7 @@ property_update_wm_hints(client_t *c, xcb_get_property_cookie_t cookie)
 xcb_get_property_cookie_t
 property_get_wm_class(client_t *c)
 {
-    return xcb_get_wm_class_unchecked(globalconf.connection, c->window);
+    return xcb_get_wm_class_unchecked(_G_connection, c->window);
 }
 
 /** Update WM_CLASS of a client.
@@ -209,7 +210,7 @@ property_update_wm_class(client_t *c, xcb_get_property_cookie_t cookie)
 {
     xcb_get_wm_class_reply_t hint;
 
-    if(!xcb_get_wm_class_reply(globalconf.connection,
+    if(!xcb_get_wm_class_reply(_G_connection,
                                cookie,
                                &hint, NULL))
         return;
@@ -254,7 +255,7 @@ property_update_net_wm_icon(client_t *c, xcb_get_property_cookie_t cookie)
 xcb_get_property_cookie_t
 property_get_net_wm_pid(client_t *c)
 {
-    return xcb_get_property_unchecked(globalconf.connection, false, c->window, _NET_WM_PID, XCB_ATOM_CARDINAL, 0L, 1L);
+    return xcb_get_property_unchecked(_G_connection, false, c->window, _NET_WM_PID, XCB_ATOM_CARDINAL, 0L, 1L);
 }
 
 void
@@ -262,7 +263,7 @@ property_update_net_wm_pid(client_t *c, xcb_get_property_cookie_t cookie)
 {
     xcb_get_property_reply_t *reply;
 
-    reply = xcb_get_property_reply(globalconf.connection, cookie, NULL);
+    reply = xcb_get_property_reply(_G_connection, cookie, NULL);
 
     if(reply && reply->value_len)
     {
@@ -281,7 +282,7 @@ property_update_net_wm_pid(client_t *c, xcb_get_property_cookie_t cookie)
 xcb_get_property_cookie_t
 property_get_wm_protocols(client_t *c)
 {
-    return xcb_get_wm_protocols_unchecked(globalconf.connection, c->window, WM_PROTOCOLS);
+    return xcb_get_wm_protocols_unchecked(_G_connection, c->window, WM_PROTOCOLS);
 }
 
 /** Update the list of supported protocols for a client.
@@ -294,7 +295,7 @@ property_update_wm_protocols(client_t *c, xcb_get_property_cookie_t cookie)
     xcb_get_wm_protocols_reply_t protocols;
 
     /* If this fails for any reason, we still got the old value */
-    if(!xcb_get_wm_protocols_reply(globalconf.connection,
+    if(!xcb_get_wm_protocols_reply(_G_connection,
                                    cookie,
                                    &protocols, NULL))
         return;
@@ -318,11 +319,11 @@ property_handle_xembed_info(uint8_t state,
     if(emwin)
     {
         xcb_get_property_cookie_t cookie =
-            xcb_get_property(globalconf.connection, 0, window, _XEMBED_INFO,
+            xcb_get_property(_G_connection, 0, window, _XEMBED_INFO,
                              XCB_GET_PROPERTY_TYPE_ANY, 0, 3);
         xcb_get_property_reply_t *propr =
-            xcb_get_property_reply(globalconf.connection, cookie, 0);
-        xembed_property_update(globalconf.connection, emwin, propr);
+            xcb_get_property_reply(_G_connection, cookie, 0);
+        xembed_property_update(_G_connection, emwin, propr);
         p_delete(&propr);
     }
 

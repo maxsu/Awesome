@@ -51,10 +51,6 @@ ARRAY_TYPE(ewindow_t *, ewindow)
 /** Main configuration structure */
 typedef struct
 {
-    /** Connection ref */
-    xcb_connection_t *connection;
-    /** Default screen number */
-    int default_screen;
     /** Keys symbol table */
     xcb_key_symbols_t *keysyms;
     /** Logical screens */

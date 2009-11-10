@@ -183,7 +183,7 @@ event_handle_button(xcb_button_press_event_t *ev)
     {
         luaA_object_push(globalconf.L, c);
         event_button_callback(ev, &c->buttons, 1, NULL);
-        xcb_allow_events(globalconf.connection,
+        xcb_allow_events(_G_connection,
                          XCB_ALLOW_REPLAY_POINTER,
                          XCB_CURRENT_TIME);
     }
@@ -239,7 +239,7 @@ event_handle_configurerequest_configure_window(xcb_configure_request_event_t *ev
         config_win_vals[i++] = ev->stack_mode;
     }
 
-    xcb_configure_window(globalconf.connection, ev->window, config_win_mask, config_win_vals);
+    xcb_configure_window(_G_connection, ev->window, config_win_mask, config_win_vals);
 }
 
 /** The configure event handler.
@@ -636,9 +636,9 @@ event_handle_maprequest(xcb_map_request_event_t *ev)
     xcb_get_geometry_cookie_t geom_c;
     xcb_get_geometry_reply_t *geom_r;
 
-    wa_c = xcb_get_window_attributes_unchecked(globalconf.connection, ev->window);
+    wa_c = xcb_get_window_attributes_unchecked(_G_connection, ev->window);
 
-    if(!(wa_r = xcb_get_window_attributes_reply(globalconf.connection, wa_c, NULL)))
+    if(!(wa_r = xcb_get_window_attributes_reply(_G_connection, wa_c, NULL)))
         return;
 
     if(wa_r->override_redirect)
@@ -646,8 +646,8 @@ event_handle_maprequest(xcb_map_request_event_t *ev)
 
     if(xembed_getbywin(&globalconf.embedded, ev->window))
     {
-        xcb_map_window(globalconf.connection, ev->window);
-        xembed_window_activate(globalconf.connection, ev->window);
+        xcb_map_window(_G_connection, ev->window);
+        xembed_window_activate(_G_connection, ev->window);
     }
     else if((c = client_getbywin(ev->window)))
     {
@@ -663,9 +663,9 @@ event_handle_maprequest(xcb_map_request_event_t *ev)
     }
     else
     {
-        geom_c = xcb_get_geometry_unchecked(globalconf.connection, ev->window);
+        geom_c = xcb_get_geometry_unchecked(_G_connection, ev->window);
 
-        if(!(geom_r = xcb_get_geometry_reply(globalconf.connection, geom_c, NULL)))
+        if(!(geom_r = xcb_get_geometry_reply(_G_connection, geom_c, NULL)))
         {
             goto bailout;
         }
@@ -697,7 +697,7 @@ event_handle_unmapnotify(xcb_unmap_notify_event_t *ev)
             {
                 xembed_window_array_take(&globalconf.embedded, i);
                 widget_invalidate_bytype(widget_systray);
-                xcb_change_save_set(globalconf.connection, XCB_SET_MODE_DELETE, ev->window);
+                xcb_change_save_set(_G_connection, XCB_SET_MODE_DELETE, ev->window);
             }
 }
 
@@ -711,10 +711,10 @@ event_handle_randr_screen_change_notify(xcb_randr_screen_change_notify_event_t *
      * (only the code relevant  to RRScreenChangeNotify) as the latter
      * doesn't provide this kind of function */
     if(ev->rotation & (XCB_RANDR_ROTATION_ROTATE_90 | XCB_RANDR_ROTATION_ROTATE_270))
-        xcb_randr_set_screen_size(globalconf.connection, ev->root, ev->height, ev->width,
+        xcb_randr_set_screen_size(_G_connection, ev->root, ev->height, ev->width,
                                   ev->mheight, ev->mwidth);
     else
-        xcb_randr_set_screen_size(globalconf.connection, ev->root, ev->width, ev->height,
+        xcb_randr_set_screen_size(_G_connection, ev->root, ev->width, ev->height,
                                   ev->mwidth, ev->mheight);
 
     /* XRRUpdateConfiguration also executes the following instruction
@@ -767,13 +767,13 @@ event_handle_mappingnotify(xcb_mapping_notify_event_t *ev)
        || ev->request == XCB_MAPPING_KEYBOARD)
     {
         xcb_get_modifier_mapping_cookie_t xmapping_cookie =
-            xcb_get_modifier_mapping_unchecked(globalconf.connection);
+            xcb_get_modifier_mapping_unchecked(_G_connection);
 
         /* Free and then allocate the key symbols */
         xcb_key_symbols_free(globalconf.keysyms);
-        globalconf.keysyms = xcb_key_symbols_alloc(globalconf.connection);
+        globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
 
-        xutil_lock_mask_get(globalconf.connection, xmapping_cookie,
+        xutil_lock_mask_get(_G_connection, xmapping_cookie,
                             globalconf.keysyms, &globalconf.numlockmask,
                             &globalconf.shiftlockmask, &globalconf.capslockmask,
                             &globalconf.modeswitchmask);
@@ -868,7 +868,7 @@ void event_handle(xcb_generic_event_t *event)
     {
         /* check for randr extension */
         const xcb_query_extension_reply_t *randr_query;
-        randr_query = xcb_get_extension_data(globalconf.connection, &xcb_randr_id);
+        randr_query = xcb_get_extension_data(_G_connection, &xcb_randr_id);
         if(randr_query->present)
             randr_screen_change_notify = randr_query->first_event + XCB_RANDR_SCREEN_CHANGE_NOTIFY;
     }

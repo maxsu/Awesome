@@ -22,6 +22,7 @@
 #include <xcb/xcb_atom.h>
 #include <xcb/xcb_image.h>
 
+#include "awesome.h"
 #include "ewmh.h"
 #include "screen.h"
 #include "wibox.h"
@@ -79,20 +80,20 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
     if(c->urgent != urgent)
     {
         xcb_get_property_cookie_t hints =
-            xcb_get_wm_hints_unchecked(globalconf.connection, c->window);
+            xcb_get_wm_hints_unchecked(_G_connection, c->window);
 
         c->urgent = urgent;
 
         /* update ICCCM hints */
         xcb_wm_hints_t wmh;
-        xcb_get_wm_hints_reply(globalconf.connection, hints, &wmh, NULL);
+        xcb_get_wm_hints_reply(_G_connection, hints, &wmh, NULL);
 
         if(urgent)
             wmh.flags |= XCB_WM_HINT_X_URGENCY;
         else
             wmh.flags &= ~XCB_WM_HINT_X_URGENCY;
 
-        xcb_set_wm_hints(globalconf.connection, c->window, &wmh);
+        xcb_set_wm_hints(_G_connection, c->window, &wmh);
 
         luaA_object_emit_signal(L, cidx, "property::urgent", 0);
     }
@@ -193,11 +194,11 @@ client_ignore_enterleave_events(void)
 {
     foreach(c, globalconf.clients)
     {
-        xcb_change_window_attributes(globalconf.connection,
+        xcb_change_window_attributes(_G_connection,
                                      (*c)->window,
                                      XCB_CW_EVENT_MASK,
                                      (const uint32_t []) { CLIENT_SELECT_INPUT_EVENT_MASK & ~(XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW) });
-        xcb_change_window_attributes(globalconf.connection,
+        xcb_change_window_attributes(_G_connection,
                                      (*c)->frame_window,
                                      XCB_CW_EVENT_MASK,
                                      (const uint32_t []) { FRAME_SELECT_INPUT_EVENT_MASK & ~(XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW) });
@@ -209,11 +210,11 @@ client_restore_enterleave_events(void)
 {
     foreach(c, globalconf.clients)
     {
-        xcb_change_window_attributes(globalconf.connection,
+        xcb_change_window_attributes(_G_connection,
                                      (*c)->window,
                                      XCB_CW_EVENT_MASK,
                                      (const uint32_t []) { CLIENT_SELECT_INPUT_EVENT_MASK });
-        xcb_change_window_attributes(globalconf.connection,
+        xcb_change_window_attributes(_G_connection,
                                      (*c)->frame_window,
                                      XCB_CW_EVENT_MASK,
                                      (const uint32_t []) { FRAME_SELECT_INPUT_EVENT_MASK });
@@ -281,11 +282,11 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
      * startup id. */
     xcb_get_property_cookie_t startup_id_q = { 0 };
     if(!startup)
-        startup_id_q = xcb_get_property(globalconf.connection, false, w,
+        startup_id_q = xcb_get_property(_G_connection, false, w,
                                         _NET_STARTUP_ID, XCB_GET_PROPERTY_TYPE_ANY, 0, UINT_MAX);
 
     /* Make sure the window is automatically mapped if awesome exits or dies. */
-    xcb_change_save_set(globalconf.connection, XCB_SET_MODE_INSERT, w);
+    xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, w);
 
     client_t *c = client_new(globalconf.L);
     xcb_screen_t *s = globalconf.screen;
@@ -299,8 +300,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     /* Store parent */
     c->parent = globalconf.screens.tab[0].root;
 
-    c->frame_window = xcb_generate_id(globalconf.connection);
-    xcb_create_window(globalconf.connection, s->root_depth, c->frame_window, s->root,
+    c->frame_window = xcb_generate_id(_G_connection);
+    xcb_create_window(_G_connection, s->root_depth, c->frame_window, s->root,
                       wgeom->x, wgeom->y, wgeom->width, wgeom->height,
                       wgeom->border_width, XCB_COPY_FROM_PARENT, s->root_visual,
                       XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
@@ -314,19 +315,19 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
                           1,
                           FRAME_SELECT_INPUT_EVENT_MASK
                       });
-    xcb_reparent_window(globalconf.connection, w, c->frame_window, 0, 0);
-    xcb_map_window(globalconf.connection, w);
+    xcb_reparent_window(_G_connection, w, c->frame_window, 0, 0);
+    xcb_map_window(_G_connection, w);
 
     /* Do this now so that we don't get any events for the above
      * (Else, reparent could cause an UnmapNotify) */
-    xcb_change_window_attributes(globalconf.connection, w, XCB_CW_EVENT_MASK, select_input_val);
+    xcb_change_window_attributes(_G_connection, w, XCB_CW_EVENT_MASK, select_input_val);
 
     luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
     /* Consider window is focusable by default */
     c->focusable = true;
 
     /* The frame window gets the border, not the real client window */
-    xcb_configure_window(globalconf.connection, w,
+    xcb_configure_window(_G_connection, w,
                          XCB_CONFIG_WINDOW_BORDER_WIDTH,
                          (uint32_t[]) { 0 });
 
@@ -334,7 +335,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
      * other windows which will be above this one to redraw themselves because
      * this window occludes them for a tiny moment. The next stack_refresh()
      * will fix this up and move the window to its correct place. */
-    xcb_configure_window(globalconf.connection, c->frame_window,
+    xcb_configure_window(_G_connection, c->frame_window,
                          XCB_CONFIG_WINDOW_STACK_MODE,
                          (uint32_t[]) { XCB_STACK_MODE_BELOW});
 
@@ -396,7 +397,7 @@ HANDLE_GEOM(height)
     {
         /* Request our response */
         xcb_get_property_reply_t *reply =
-            xcb_get_property_reply(globalconf.connection, startup_id_q, NULL);
+            xcb_get_property_reply(_G_connection, startup_id_q, NULL);
         /* Say spawn that a client has been started, with startup id as argument */
         char *startup_id = xutil_get_text_property_from_reply(reply);
         p_delete(&reply);
@@ -564,10 +565,10 @@ client_resize(client_t *c, area_t geometry, bool hints)
         /* Ignore all spurious enter/leave notify events */
         client_ignore_enterleave_events();
 
-        xcb_configure_window(globalconf.connection, c->window,
+        xcb_configure_window(_G_connection, c->window,
                 XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
                 (uint32_t[]) { geometry.width, geometry.height });
-        xcb_configure_window(globalconf.connection, c->frame_window,
+        xcb_configure_window(_G_connection, c->frame_window,
                 XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
                 (uint32_t[]) { geometry.x, geometry.y, geometry.width, geometry.height });
 
@@ -631,23 +632,23 @@ client_unmanage(client_t *c)
 
     /* Clear our event mask so that we don't receive any events from now on,
      * especially not for the following requests. */
-    xcb_change_window_attributes(globalconf.connection,
+    xcb_change_window_attributes(_G_connection,
                                  c->window,
                                  XCB_CW_EVENT_MASK,
                                  (const uint32_t []) { 0 });
-    xcb_change_window_attributes(globalconf.connection,
+    xcb_change_window_attributes(_G_connection,
                                  c->frame_window,
                                  XCB_CW_EVENT_MASK,
                                  (const uint32_t []) { 0 });
 
-    xcb_unmap_window(globalconf.connection, c->window);
-    xcb_reparent_window(globalconf.connection, c->window, globalconf.screen->root,
+    xcb_unmap_window(_G_connection, c->window);
+    xcb_reparent_window(_G_connection, c->window, globalconf.screen->root,
             c->geometry.x, c->geometry.y);
-    xcb_destroy_window(globalconf.connection, c->frame_window);
+    xcb_destroy_window(_G_connection, c->frame_window);
 
     /* Remove this window from the save set since this shouldn't be made visible
      * after a restart anymore. */
-    xcb_change_save_set(globalconf.connection, XCB_SET_MODE_DELETE, c->window);
+    xcb_change_save_set(_G_connection, XCB_SET_MODE_DELETE, c->window);
 
     /* Do this last to avoid races with clients. According to ICCCM, clients
      * arent allowed to re-use the window until after this. */
@@ -680,11 +681,11 @@ client_kill(client_t *c)
         ev.type = WM_PROTOCOLS;
         ev.data.data32[0] = WM_DELETE_WINDOW;
 
-        xcb_send_event(globalconf.connection, false, c->window,
+        xcb_send_event(_G_connection, false, c->window,
                        XCB_EVENT_MASK_NO_EVENT, (char *) &ev);
     }
     else
-        xcb_kill_client(globalconf.connection, c->window);
+        xcb_kill_client(_G_connection, c->window);
 }
 
 /** Get all clients into a table.
@@ -876,7 +877,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
 static int
 luaA_client_get_content(lua_State *L, client_t *c)
 {
-    xcb_image_t *ximage = xcb_image_get(globalconf.connection,
+    xcb_image_t *ximage = xcb_image_get(_G_connection,
                                         c->window,
                                         0, 0,
                                         c->geometry.width,

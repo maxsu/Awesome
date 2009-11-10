@@ -25,6 +25,7 @@
 #include <xcb/xinerama.h>
 #include <xcb/randr.h>
 
+#include "awesome.h"
 #include "screen.h"
 #include "ewmh.h"
 #include "objects/tag.h"
@@ -79,11 +80,11 @@ static bool
 screen_scan_randr(void)
 {
     /* Check for extension before checking for XRandR */
-    if(xcb_get_extension_data(globalconf.connection, &xcb_randr_id)->present)
+    if(xcb_get_extension_data(_G_connection, &xcb_randr_id)->present)
     {
         xcb_randr_query_version_reply_t *version_reply =
-            xcb_randr_query_version_reply(globalconf.connection,
-                                          xcb_randr_query_version(globalconf.connection, 1, 1), 0);
+            xcb_randr_query_version_reply(_G_connection,
+                                          xcb_randr_query_version(_G_connection, 1, 1), 0);
         if(version_reply)
         {
             /* A quick XRandR recall:
@@ -94,8 +95,8 @@ screen_scan_randr(void)
             root->focusable = true;
             root->window = globalconf.screen->root;
 
-            xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(globalconf.connection, globalconf.screen->root);
-            xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(globalconf.connection, screen_res_c, NULL);
+            xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, globalconf.screen->root);
+            xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(_G_connection, screen_res_c, NULL);
 
             /* Only use the data from XRandR if there is more than one screen
              * defined. This should work around the broken nvidia driver.  */
@@ -111,8 +112,8 @@ screen_scan_randr(void)
             for(int i = 0; i < screen_res_r->num_crtcs; i++)
             {
                 /* Get info on the output crtc */
-                xcb_randr_get_crtc_info_cookie_t crtc_info_c = xcb_randr_get_crtc_info(globalconf.connection, randr_crtcs[i], XCB_CURRENT_TIME);
-                xcb_randr_get_crtc_info_reply_t *crtc_info_r = xcb_randr_get_crtc_info_reply(globalconf.connection, crtc_info_c, NULL);
+                xcb_randr_get_crtc_info_cookie_t crtc_info_c = xcb_randr_get_crtc_info(_G_connection, randr_crtcs[i], XCB_CURRENT_TIME);
+                xcb_randr_get_crtc_info_reply_t *crtc_info_r = xcb_randr_get_crtc_info_reply(_G_connection, crtc_info_c, NULL);
 
                 /* If CRTC has no OUTPUT, ignore it */
                 if(!xcb_randr_get_crtc_info_outputs_length(crtc_info_r))
@@ -131,8 +132,8 @@ screen_scan_randr(void)
 
                 for(int j = 0; j < xcb_randr_get_crtc_info_outputs_length(crtc_info_r); j++)
                 {
-                    xcb_randr_get_output_info_cookie_t output_info_c = xcb_randr_get_output_info(globalconf.connection, randr_outputs[j], XCB_CURRENT_TIME);
-                    xcb_randr_get_output_info_reply_t *output_info_r = xcb_randr_get_output_info_reply(globalconf.connection, output_info_c, NULL);
+                    xcb_randr_get_output_info_cookie_t output_info_c = xcb_randr_get_output_info(_G_connection, randr_outputs[j], XCB_CURRENT_TIME);
+                    xcb_randr_get_output_info_reply_t *output_info_r = xcb_randr_get_output_info_reply(_G_connection, output_info_c, NULL);
 
                     int len = xcb_randr_get_output_info_name_length(output_info_r);
                     /* name is not NULL terminated */
@@ -167,10 +168,10 @@ screen_scan_xinerama(void)
     bool xinerama_is_active = false;
 
     /* Check for extension before checking for Xinerama */
-    if(xcb_get_extension_data(globalconf.connection, &xcb_xinerama_id)->present)
+    if(xcb_get_extension_data(_G_connection, &xcb_xinerama_id)->present)
     {
         xcb_xinerama_is_active_reply_t *xia;
-        xia = xcb_xinerama_is_active_reply(globalconf.connection, xcb_xinerama_is_active(globalconf.connection), NULL);
+        xia = xcb_xinerama_is_active_reply(_G_connection, xcb_xinerama_is_active(_G_connection), NULL);
         xinerama_is_active = xia->state;
         p_delete(&xia);
     }
@@ -181,8 +182,8 @@ screen_scan_xinerama(void)
         xcb_xinerama_screen_info_t *xsi;
         int xinerama_screen_number;
 
-        xsq = xcb_xinerama_query_screens_reply(globalconf.connection,
-                                               xcb_xinerama_query_screens_unchecked(globalconf.connection),
+        xsq = xcb_xinerama_query_screens_reply(_G_connection,
+                                               xcb_xinerama_query_screens_unchecked(_G_connection),
                                                NULL);
 
         xsi = xcb_xinerama_query_screens_screen_info(xsq);

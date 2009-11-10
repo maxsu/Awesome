@@ -140,7 +140,7 @@ luaA_awesome_fake_input(lua_State *L)
         return 0;
     }
 
-    xcb_test_fake_input(globalconf.connection,
+    xcb_test_fake_input(_G_connection,
                         type,
                         detail,
                         XCB_CURRENT_TIME,
