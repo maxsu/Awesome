@@ -23,6 +23,7 @@
 #define AWESOME_OBJECTS_WINDOW_H
 
 #include "globalconf.h"
+#include "area.h"
 #include "objects/button.h"
 #include "objects/key.h"
 #include "common/luaclass.h"
@@ -45,6 +46,8 @@
     key_array_t keys; \
     /** Parent window */ \
     window_t *parent; \
+    /** Window geometry */ \
+    area_t geometry; \
     /** Window stack */ \
     ewindow_array_t stack;
 
