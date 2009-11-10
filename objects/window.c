@@ -70,7 +70,7 @@ window_ban_unfocus(window_t *window)
 void
 window_ban(window_t *window)
 {
-    if(!window->banned)
+    if(!window->banned && window->window)
     {
         xcb_unmap_window(_G_connection, window->window);
         window->banned = true;
@@ -85,7 +85,7 @@ window_ban(window_t *window)
 void
 window_unban(window_t *window)
 {
-    if(window->banned)
+    if(window->banned && window->window)
     {
         xcb_map_window(_G_connection, window->window);
         window->banned = false;
@@ -124,18 +124,21 @@ void
 window_focus(lua_State *L, int idx)
 {
     window_t *window = luaA_checkudata(L, idx, (lua_class_t *) &window_class);
-    /* If the window is banned but isvisible, unban it right now because you
-     * can't set focus on unmapped window */
-    if(window_isvisible(L, idx))
-        window_unban(window);
-    else
-        return;
 
-    /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
-    if(window->focusable)
-        xcb_set_input_focus(_G_connection, XCB_INPUT_FOCUS_PARENT,
-                            window->window, XCB_CURRENT_TIME);
+    if(window->window)
+    {
+        /* If the window is banned but isvisible, unban it right now because you
+         * can't set focus on unmapped window */
+        if(window_isvisible(L, idx))
+            window_unban(window);
+        else
+            return;
 
+        /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
+        if(window->focusable)
+            xcb_set_input_focus(_G_connection, XCB_INPUT_FOCUS_PARENT,
+                                window->window, XCB_CURRENT_TIME);
+    }
 }
 
 /** Get or set mouse buttons bindings on a window.
