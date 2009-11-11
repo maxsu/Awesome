@@ -26,28 +26,12 @@
 
 int luaA_settype(lua_State *, lua_class_t *);
 void luaA_object_setup(lua_State *);
-void * luaA_object_incref(lua_State *, int, int);
-void luaA_object_decref(lua_State *, int, int);
-void luaA_object_registry_refcount_push(lua_State *);
-void luaA_object_registry_push(lua_State *);
-int luaA_object_push(lua_State *, const void *);
 void luaA_object_store_registry(lua_State *, int);
-
-/** Reference an object and return a pointer to it.
- * That only works with userdata, table, thread or function.
- * \param L The Lua VM state.
- * \param oud The object index on the stack.
- * \return The object reference, or NULL if not referenceable.
- */
-static inline void *
-luaA_object_ref(lua_State *L, int oud)
-{
-    oud = luaA_absindex(L, oud);
-    luaA_object_registry_refcount_push(L);
-    void *p = luaA_object_incref(L, -1, oud);
-    lua_pop(L, 1);
-    return p;
-}
+int luaA_object_push(lua_State *, const void *);
+void * luaA_object_ref(lua_State *, int);
+void luaA_object_unref(lua_State *, const void *);
+void * luaA_object_ref_item(lua_State *, int, int);
+void luaA_object_unref_item(lua_State *, int, const void *);
 
 /** Reference an object and return a pointer to it checking its type.
  * That only works with userdata.
@@ -61,93 +45,6 @@ luaA_object_ref_class(lua_State *L, int oud, lua_class_t *class)
 {
     luaA_checkudata(L, oud, class);
     return luaA_object_ref(L, oud);
-}
-
-/** Unreference an object and return a pointer to it.
- * That only works with userdata, table, thread or function.
- * \param L The Lua VM state.
- * \param oud The object index on the stack.
- */
-static inline void
-luaA_object_unref_from_stack(lua_State *L, int oud)
-{
-    oud = luaA_absindex(L, oud);
-    luaA_object_registry_refcount_push(L);
-    luaA_object_decref(L, -1, oud);
-    lua_pop(L, 1);
-}
-
-/** Unreference an object and return a pointer to it.
- * That only works with userdata, table, thread or function.
- * \param L The Lua VM state.
- * \param pointer The object pointer.
- */
-static inline void
-luaA_object_unref(lua_State *L, const void *pointer)
-{
-    luaA_object_push(L, pointer);
-    luaA_object_unref_from_stack(L, -1);
-    lua_pop(L, 1);
-}
-
-/** Store an item in the environment table of an object.
- * \param L The Lua VM state.
- * \param ud The index of the object on the stack.
- * \param iud The index of the item on the stack.
- * \return The item reference.
- */
-static inline void *
-luaA_object_ref_item(lua_State *L, int ud, int iud)
-{
-    iud = luaA_absindex(L, iud);
-    /* Get the env table from the object */
-    lua_getfenv(L, ud);
-    void *pointer;
-    /* If it has not an env table, it might be a lightuserdata, so use the
-     * global registry */
-    if(lua_isnil(L, -1))
-        pointer = luaA_object_ref(L, iud);
-    else
-        pointer = luaA_object_incref(L, -1, iud);
-    /* Remove env table (or nil) */
-    lua_pop(L, 1);
-    return pointer;
-}
-
-/** Unref an item from the environment table of an object.
- * \param L The Lua VM state.
- * \param ud The index of the object on the stack.
- * \param iud The index of the item on the stack.
- */
-static inline void
-luaA_object_unref_item_from_stack(lua_State *L, int ud, int iud)
-{
-    iud = luaA_absindex(L, iud);
-    /* Get the env table from the object */
-    lua_getfenv(L, ud);
-    /* No env table? Then we unref from the global registry */
-    if(lua_isnil(L, -1))
-        luaA_object_unref_from_stack(L, iud);
-    else
-        /* Decrement */
-        luaA_object_decref(L, -1, iud);
-    /* Remove env table (or nil) */
-    lua_pop(L, 1);
-}
-
-/** Unref an item from the environment table of an object.
- * \param L The Lua VM state.
- * \param ud The index of the object on the stack.
- * \param pointer The address of the object.
- */
-static inline void
-luaA_object_unref_item(lua_State *L, int ud, const void *pointer)
-{
-    ud = luaA_absindex(L, ud);
-    luaA_object_push(L, pointer);
-    luaA_object_unref_item_from_stack(L, ud, -1);
-    /* Remove object */
-    lua_pop(L, 1);
 }
 
 void signal_object_emit(lua_State *, const signal_array_t *, const char *, int);
