@@ -58,7 +58,6 @@ void screen_class_setup(lua_State *);
 void screen_scan(void);
 screen_t *screen_getbycoord(screen_t *, int, int);
 area_t screen_area_get(screen_t *, bool);
-void screen_client_moveto(client_t *, screen_t *, bool);
 protocol_screen_t *protocol_screen_from_root(xcb_window_t);
 
 #endif

@@ -377,58 +377,6 @@ screen_area_get(screen_t *screen, bool strut)
     return area;
 }
 
-/** Move a client to a virtual screen.
- * \param c The client to move.
- * \param new_screen The destination screen.
- * \param doresize Set to true if we also move the client to the new x and
- *        y of the new screen.
- */
-void
-screen_client_moveto(client_t *c, screen_t *new_screen, bool doresize)
-{
-    screen_t *old_screen = c->screen;
-    area_t from, to;
-
-    if(new_screen == c->screen)
-        return;
-
-    c->screen = new_screen;
-
-    if(!doresize)
-    {
-        luaA_object_push(globalconf.L, c);
-        luaA_object_emit_signal(globalconf.L, -1, "property::screen", 0);
-        lua_pop(globalconf.L, 1);
-        return;
-    }
-
-    from = screen_area_get(old_screen, false);
-    to = screen_area_get(c->screen, false);
-
-    area_t new_geometry = c->geometry;
-
-    new_geometry.x = to.x + new_geometry.x - from.x;
-    new_geometry.y = to.y + new_geometry.y - from.y;
-
-    /* resize the client if it doesn't fit the new screen */
-    if(new_geometry.width > to.width)
-        new_geometry.width = to.width;
-    if(new_geometry.height > to.height)
-        new_geometry.height = to.height;
-
-    /* make sure the client is still on the screen */
-    if(new_geometry.x + new_geometry.width > to.x + to.width)
-        new_geometry.x = to.x + to.width - new_geometry.width;
-    if(new_geometry.y + new_geometry.height > to.y + to.height)
-        new_geometry.y = to.y + to.height - new_geometry.height;
-
-    /* move / resize the client */
-    client_resize(c, new_geometry);
-    luaA_object_push(globalconf.L, c);
-    luaA_object_emit_signal(globalconf.L, -1, "property::screen", 0);
-    lua_pop(globalconf.L, 1);
-}
-
 /** Screen module.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.

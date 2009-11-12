@@ -20,6 +20,7 @@
  */
 
 #include "banning.h"
+#include "bma.h"
 #include "objects/tag.h"
 #include "objects/client.h"
 #include "screen.h"
@@ -82,7 +83,7 @@ reban(screen_t *screen)
 
     screen->need_lazy_banning = false;
 
-    client_ignore_enterleave_events();
+    bma_enable();
 
     foreach(c, globalconf.clients)
         if((*c)->screen == screen)
@@ -106,7 +107,7 @@ reban(screen_t *screen)
         }
         /* we don't touch other screens windows */
 
-    client_restore_enterleave_events();
+    bma_disable();
 }
 
 /** Check all screens if they need to rebanned
