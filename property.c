@@ -176,6 +176,13 @@ property_update_wm_normal_hints(client_t *c, xcb_get_property_reply_t *reply)
                                           &c->size_hints, NULL))
             return;
     }
+
+    c->resizable = !(c->size_hints.flags & XCB_SIZE_HINT_P_MAX_SIZE
+                     && c->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE
+                     && c->size_hints.max_width == c->size_hints.min_width
+                     && c->size_hints.max_height == c->size_hints.min_height
+                     && c->size_hints.max_width
+                     && c->size_hints.max_height);
 }
 
 /** Update the WM hints of a client.
