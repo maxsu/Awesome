@@ -317,7 +317,6 @@ event_handle_destroynotify(void *data __attribute__ ((unused)),
                 if(em->window == ev->window)
                 {
                     xembed_window_array_remove(&screen->embedded, em);
-                    widget_invalidate_bytype(widget_systray);
                     break;
                 }
 
@@ -717,7 +716,6 @@ event_handle_unmapnotify(void *data __attribute__ ((unused)),
                 if(em->window == ev->window)
                 {
                     xembed_window_array_remove(&screen->embedded, em);
-                    widget_invalidate_bytype(widget_systray);
                     break;
                 }
 

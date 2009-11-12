@@ -72,9 +72,6 @@ mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
 -- Create a textclock widget
 mytextclock = awful.widget.textclock({ align = "right" })
 
--- Create a systray
-mysystray = widget({ type = "systray" })
-
 -- Create a wibox for each screen and add it
 mywibox = {}
 mypromptbox = {}
@@ -138,7 +135,6 @@ for s = 1, screen.count() do
     right_aligned = {
         layout = awful.widget.layout.horizontal.rightleft
     }
-    if s == 1 then table.insert(right_aligned, mysystray) end
     table.insert(right_aligned, mytextclock)
     table.insert(right_aligned, mylayoutbox[s])
 
