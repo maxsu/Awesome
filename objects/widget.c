@@ -418,7 +418,6 @@ static int
 luaA_widget_get_type(lua_State *L, widget_t *w)
 {
     if (w->type == widget_textbox) lua_pushstring(L, "textbox");
-    else if (w->type == widget_systray) lua_pushstring(L, "systray");
     else if (w->type == widget_imagebox) lua_pushstring(L, "imagebox");
     else lua_pushstring(L, "unknown");
 
@@ -436,9 +435,6 @@ luaA_widget_set_type(lua_State *L, widget_t *w)
     {
       case A_TK_TEXTBOX:
         wc = widget_textbox;
-        break;
-      case A_TK_SYSTRAY:
-        wc = widget_systray;
         break;
       case A_TK_IMAGEBOX:
         wc = widget_imagebox;
