@@ -212,8 +212,6 @@ systray_request_handle(xcb_window_t embed_win, xembed_info_t *info)
 
     xembed_window_array_append(&globalconf.embedded, em);
 
-    widget_invalidate_bytype(widget_systray);
-
     return 0;
 }
 

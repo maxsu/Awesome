@@ -308,7 +308,6 @@ event_handle_destroynotify(xcb_destroy_notify_event_t *ev)
             if(globalconf.embedded.tab[i].win == ev->window)
             {
                 xembed_window_array_take(&globalconf.embedded, i);
-                widget_invalidate_bytype(widget_systray);
             }
 }
 
@@ -696,7 +695,6 @@ event_handle_unmapnotify(xcb_unmap_notify_event_t *ev)
             if(globalconf.embedded.tab[i].win == ev->window)
             {
                 xembed_window_array_take(&globalconf.embedded, i);
-                widget_invalidate_bytype(widget_systray);
                 xcb_change_save_set(_G_connection, XCB_SET_MODE_DELETE, ev->window);
             }
 }
