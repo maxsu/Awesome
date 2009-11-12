@@ -105,9 +105,6 @@ luaA_warn(lua_State *L, const char *fmt, ...)
 
 void luaA_init(xdgHandle *);
 bool luaA_parserc(xdgHandle *, const char *, bool);
-bool luaA_hasitem(lua_State *, const void *);
-void luaA_table2wtable(lua_State *);
-bool luaA_isloop(lua_State *, int);
 
 /** Global signals */
 signal_array_t global_signals;

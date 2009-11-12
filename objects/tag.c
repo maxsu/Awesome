@@ -23,7 +23,6 @@
 #include "tag.h"
 #include "objects/ewindow.h"
 #include "ewmh.h"
-#include "widget.h"
 #include "luaa.h"
 
 LUA_OBJECT_FUNCS(&tag_class, tag_t, tag)

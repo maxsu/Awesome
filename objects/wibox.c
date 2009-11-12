@@ -59,20 +59,12 @@ static void
 wibox_wipe(wibox_t *wibox)
 {
     wibox_wipe_resources(wibox);
-    widget_node_array_wipe(&wibox->widgets);
 }
 
 void
 wibox_unref_simplified(wibox_t **item)
 {
     luaA_object_unref(globalconf.L, *item);
-}
-
-static void
-wibox_need_update(wibox_t *wibox)
-{
-    wibox->need_update = true;
-    wibox_clear_mouse_over(wibox);
 }
 
 static int
@@ -229,7 +221,7 @@ wibox_map(wibox_t *wibox)
     /* Map the wibox */
     DO_WITH_BMA(xcb_map_window(_G_connection, wibox->window));
     /* We must make sure the wibox does not display garbage */
-    wibox_need_update(wibox);
+    wibox->need_update = true;
 }
 
 /** Get a wibox by its window.
@@ -253,9 +245,7 @@ wibox_draw(wibox_t *wibox)
 {
     if(wibox->visible)
     {
-        widget_render(wibox);
         wibox_refresh_pixmap(wibox);
-
         wibox->need_update = false;
     }
 }
@@ -274,19 +264,6 @@ wibox_refresh(void)
     }
 }
 
-/** Clear the wibox' mouse_over pointer.
- * \param wibox The wibox.
- */
-void
-wibox_clear_mouse_over(wibox_t *wibox)
-{
-    if (wibox->mouse_over)
-    {
-        luaA_object_unref(globalconf.L, wibox->mouse_over);
-        wibox->mouse_over = NULL;
-    }
-}
-
 /** Set a wibox visible or not.
  * \param L The Lua VM state.
  * \param udx The wibox.
@@ -299,7 +276,6 @@ wibox_set_visible(lua_State *L, int udx, bool v)
     if(v != wibox->visible)
     {
         wibox->visible = v;
-        wibox_clear_mouse_over(wibox);
 
         if(wibox->screen)
         {
@@ -330,8 +306,6 @@ wibox_detach(lua_State *L, int udx)
         wibox->visible = false;
         /* restore visibility */
         wibox->visible = v;
-
-        wibox_clear_mouse_over(wibox);
 
         wibox_wipe_resources(wibox);
 
@@ -405,7 +379,7 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
     if(wibox->visible)
         wibox_map(wibox);
     else
-        wibox_need_update(wibox);
+        wibox->need_update = true;
 
     luaA_object_emit_signal(L, udx, "property::screen", 0);
 
@@ -420,7 +394,8 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
 static int
 luaA_wibox_need_update(lua_State *L)
 {
-    wibox_need_update(luaA_checkudata(L, 1, (lua_class_t *) &wibox_class));
+    wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
+    wibox->need_update = true;
     return 0;
 }
 
@@ -458,46 +433,6 @@ luaA_wibox_new(lua_State *L)
     w->movable = w->resizable = true;
 
     return 1;
-}
-
-/** Check if a wibox widget table has an item.
- * \param L The Lua VM state.
- * \param wibox The wibox.
- * \param item The item to look for.
- */
-static bool
-luaA_wibox_hasitem(lua_State *L, wibox_t *wibox, const void *item)
-{
-    if(wibox->widgets_table)
-    {
-        if(item == wibox->widgets_table)
-            return true;
-        luaA_object_push(L, wibox->widgets_table);
-        bool ret = luaA_hasitem(L, item);
-        lua_pop(L, 1);
-        return ret;
-    }
-    return false;
-}
-
-/** Invalidate a wibox by a Lua object (table, etc).
- * \param L The Lua VM state.
- * \param item The object identifier.
- */
-void
-luaA_wibox_invalidate_byitem(lua_State *L, const void *item)
-{
-    foreach(w, globalconf.wiboxes)
-    {
-        wibox_t *wibox = *w;
-        if(luaA_wibox_hasitem(L, wibox, item))
-        {
-            /* update wibox */
-            wibox_need_update(wibox);
-            lua_pop(L, 1); /* remove widgets table */
-        }
-
-    }
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
@@ -618,39 +553,6 @@ luaA_wibox_set_visible(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-/** Set the wibox widgets.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_set_widgets(lua_State *L, wibox_t *wibox)
-{
-    if(luaA_isloop(L, -1))
-    {
-        luaA_warn(L, "table is looping, cannot use this as widget table");
-        return 0;
-    }
-    /* duplicate table because next function will eat it */
-    lua_pushvalue(L, -1);
-    wibox->widgets_table = luaA_object_ref_item(L, -4, -1);
-    luaA_object_emit_signal(L, -3, "property::widgets", 0);
-    wibox_need_update(wibox);
-    luaA_table2wtable(L);
-    return 0;
-}
-
-/** Get the wibox widgets.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_get_widgets(lua_State *L, wibox_t *wibox)
-{
-    return luaA_object_push(L, wibox->widgets_table);
-}
-
 static int
 luaA_wibox_set_shape_bounding(lua_State *L, wibox_t *wibox)
 {
@@ -694,10 +596,6 @@ wibox_class_setup(lua_State *L)
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      wibox_methods, wibox_module_meta, NULL);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_WIDGETS,
-                            (lua_class_propfunc_t) luaA_wibox_set_widgets,
-                            (lua_class_propfunc_t) luaA_wibox_get_widgets,
-                            (lua_class_propfunc_t) luaA_wibox_set_widgets);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_VISIBLE,
                             (lua_class_propfunc_t) luaA_wibox_set_visible,
                             (lua_class_propfunc_t) luaA_wibox_get_visible,
