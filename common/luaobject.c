@@ -20,6 +20,7 @@
  */
 
 #include "common/luaobject.h"
+#include "common/lualib.h"
 
 static const int LUAA_OBJECT_REGISTRY_KEY;
 static const int LUAA_OBJECT_REGISTRY_REFCOUNT_KEY;

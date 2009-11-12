@@ -22,6 +22,7 @@
 #ifndef AWESOME_COMMON_LUACLASS
 #define AWESOME_COMMON_LUACLASS
 
+#include <lauxlib.h>
 #include "common/signal.h"
 #include "common/tokenize.h"
 
