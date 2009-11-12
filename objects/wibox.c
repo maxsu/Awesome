@@ -62,17 +62,16 @@ wibox_unref_simplified(wibox_t **item)
     luaA_object_unref(globalconf.L, *item);
 }
 
-static int
-have_shape(void)
+static bool
+wibox_check_have_shape(void)
 {
-    const xcb_query_extension_reply_t *reply;
-
-    reply = xcb_get_extension_data(_G_connection, &xcb_shape_id);
-    if (!reply || !reply->present)
-        return 0;
+    const xcb_query_extension_reply_t *reply = xcb_get_extension_data(_G_connection, &xcb_shape_id);
 
     /* We don't need a specific version of SHAPE, no version check required */
-    return 1;
+    if (!reply || !reply->present)
+        return false;
+
+    return true;
 }
 
 static void
@@ -102,7 +101,7 @@ wibox_shape_update(wibox_t *wibox)
     if(wibox->window == XCB_NONE)
         return;
 
-    if(!have_shape())
+    if(!wibox_check_have_shape())
     {
         static bool warned = false;
         if(!warned)
