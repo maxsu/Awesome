@@ -6,7 +6,6 @@ below
 bg
 bg_align
 bg_image
-bg_resize
 border_color
 border_width
 bottom
@@ -35,7 +34,6 @@ height
 icon
 icon_name
 image
-imagebox
 index
 instance
 key
@@ -44,10 +42,8 @@ key_release
 keysym
 leader_window
 left
-len
 Lock
 machine
-margin
 maximized_horizontal
 maximized_vertical
 middle
@@ -67,7 +63,6 @@ opacity
 outputs
 pid
 release
-resize
 right
 role
 root
@@ -84,7 +79,6 @@ started
 sticky
 system
 text
-textbox
 timeout
 top
 transient_for
@@ -93,7 +87,6 @@ urgent
 valign
 version
 visible
-widgets
 width
 window
 word

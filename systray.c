@@ -27,9 +27,6 @@
 #include "screen.h"
 #include "systray.h"
 #include "xwindow.h"
-#include "objects/widget.h"
-#include "objects/wibox.h"
-#include "common/array.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 
@@ -56,16 +53,6 @@ systray_init(void)
 void
 systray_refresh(void)
 {
-    bool has_systray = false;
-    foreach(w, globalconf.wiboxes)
-        if((*w)->has_systray)
-            /* Can't use "break" with foreach() :( */
-            has_systray = true;
-
-    if(has_systray)
-        systray_register();
-    else
-        systray_cleanup();
 }
 
 
