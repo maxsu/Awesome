@@ -265,6 +265,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
     /* Consider window is focusable by default */
     c->focusable = true;
+    /* Consider window movable/resizable by default */
+    c->movable = c->resizable = true;
 
     /* The frame window gets the border, not the real client window */
     xcb_configure_window(_G_connection, w,

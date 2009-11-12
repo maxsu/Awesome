@@ -377,28 +377,34 @@ window_set_geometry(lua_State *L, int udx, area_t geometry)
     int number_of_vals = 0;
     uint32_t set_geometry_win_vals[4], mask_vals = 0;
 
-    if(w->geometry.x != geometry.x)
+    if(w->movable)
     {
-        w->geometry.x = set_geometry_win_vals[number_of_vals++] = geometry.x;
-        mask_vals |= XCB_CONFIG_WINDOW_X;
+        if(w->geometry.x != geometry.x)
+        {
+            w->geometry.x = set_geometry_win_vals[number_of_vals++] = geometry.x;
+            mask_vals |= XCB_CONFIG_WINDOW_X;
+        }
+
+        if(w->geometry.y != geometry.y)
+        {
+            w->geometry.y = set_geometry_win_vals[number_of_vals++] = geometry.y;
+            mask_vals |= XCB_CONFIG_WINDOW_Y;
+        }
     }
 
-    if(w->geometry.y != geometry.y)
+    if(w->resizable)
     {
-        w->geometry.y = set_geometry_win_vals[number_of_vals++] = geometry.y;
-        mask_vals |= XCB_CONFIG_WINDOW_Y;
-    }
+        if(geometry.width > 0 && w->geometry.width != geometry.width)
+        {
+            w->geometry.width = set_geometry_win_vals[number_of_vals++] = geometry.width;
+            mask_vals |= XCB_CONFIG_WINDOW_WIDTH;
+        }
 
-    if(geometry.width > 0 && w->geometry.width != geometry.width)
-    {
-        w->geometry.width = set_geometry_win_vals[number_of_vals++] = geometry.width;
-        mask_vals |= XCB_CONFIG_WINDOW_WIDTH;
-    }
-
-    if(geometry.height > 0 && w->geometry.height != geometry.height)
-    {
-        w->geometry.height = set_geometry_win_vals[number_of_vals++] = geometry.height;
-        mask_vals |= XCB_CONFIG_WINDOW_HEIGHT;
+        if(geometry.height > 0 && w->geometry.height != geometry.height)
+        {
+            w->geometry.height = set_geometry_win_vals[number_of_vals++] = geometry.height;
+            mask_vals |= XCB_CONFIG_WINDOW_HEIGHT;
+        }
     }
 
     if(mask_vals)
@@ -659,6 +665,8 @@ luaA_window_focus(lua_State *L)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, cursor, lua_pushstring)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, parent, luaA_object_push)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, movable, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, resizable, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
 
 /** Get the window screen.
@@ -737,6 +745,14 @@ window_class_setup(lua_State *L)
     luaA_class_add_property(&window_class, A_TK_CONTENT,
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_content,
+                            NULL);
+    luaA_class_add_property(&window_class, A_TK_MOVABLE,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_window_get_movable,
+                            NULL);
+    luaA_class_add_property(&window_class, A_TK_RESIZABLE,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_window_get_resizable,
                             NULL);
 }
 

@@ -116,3 +116,5 @@ notification
 combo
 dnd
 parent
+movable
+resizable

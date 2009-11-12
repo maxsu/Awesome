@@ -44,6 +44,8 @@
     bool banned; \
     /** True if the window can have focus */ \
     bool focusable; \
+    /** True if the window is resizable and/or movable. */ \
+    bool movable, resizable; \
     /** Key bindings */ \
     key_array_t keys; \
     /** Parent window */ \

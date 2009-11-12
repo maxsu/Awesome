@@ -158,9 +158,17 @@ property_get_wm_normal_hints(client_t *c)
 void
 property_update_wm_normal_hints(client_t *c, xcb_get_property_cookie_t cookie)
 {
-    xcb_get_wm_normal_hints_reply(_G_connection,
-                                  cookie,
-                                  &c->size_hints, NULL);
+    if(!xcb_get_wm_normal_hints_reply(_G_connection,
+                                      cookie,
+                                      &c->size_hints, NULL))
+        return;
+
+    c->resizable = !(c->size_hints.flags & XCB_SIZE_HINT_P_MAX_SIZE
+                     && c->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE
+                     && c->size_hints.max_width == c->size_hints.min_width
+                     && c->size_hints.max_height == c->size_hints.min_height
+                     && c->size_hints.max_width
+                     && c->size_hints.max_height);
 }
 
 xcb_get_property_cookie_t
