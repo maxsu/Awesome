@@ -89,20 +89,5 @@ void client_set_skip_taskbar(lua_State *, int, bool);
 bool client_hasproto(client_t *, xcb_atom_t);
 void client_class_setup(lua_State *);
 
-/** Check if a client has fixed size.
- * \param c A client.
- * \return A boolean value, true if the client has a fixed size.
- */
-static inline bool
-client_isfixed(client_t *c)
-{
-    return (c->size_hints.flags & XCB_SIZE_HINT_P_MAX_SIZE
-            && c->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE
-            && c->size_hints.max_width == c->size_hints.min_width
-            && c->size_hints.max_height == c->size_hints.min_height
-            && c->size_hints.max_width
-            && c->size_hints.max_height);
-}
-
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

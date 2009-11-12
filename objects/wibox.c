@@ -442,6 +442,8 @@ luaA_wibox_new(lua_State *L)
     if(!w->geometry.height)
         w->geometry.height = 1;
 
+    w->movable = w->resizable = true;
+
     return 1;
 }
 
