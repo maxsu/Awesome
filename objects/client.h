@@ -55,8 +55,6 @@ struct client_t
     xcb_get_wm_protocols_reply_t protocols;
     /** Icon */
     image_t *icon;
-    /** Size hints */
-    xcb_size_hints_t size_hints;
     /** Machine the client is running on. */
     char *machine;
     /** Role of the client */
