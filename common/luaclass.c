@@ -19,6 +19,7 @@
  *
  */
 
+#include "common/lualib.h"
 #include "common/luaclass.h"
 #include "common/luaobject.h"
 
