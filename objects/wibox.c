@@ -40,7 +40,7 @@ LUA_OBJECT_FUNCS((lua_class_t *) &wibox_class, wibox_t, wibox)
  * \param w The wibox to wipe.
  */
 static void
-wibox_wipe_resources(wibox_t *w)
+wibox_wipe(wibox_t *w)
 {
     if(w->window)
     {
@@ -53,12 +53,6 @@ wibox_wipe_resources(wibox_t *w)
         w->gc = XCB_NONE;
     }
     draw_context_wipe(&w->ctx);
-}
-
-static void
-wibox_wipe(wibox_t *wibox)
-{
-    wibox_wipe_resources(wibox);
 }
 
 void
@@ -306,7 +300,7 @@ wibox_detach(lua_State *L, int udx)
         /* restore visibility */
         wibox->visible = v;
 
-        wibox_wipe_resources(wibox);
+        wibox_wipe(wibox);
 
         /* XXX this may be done in wipe_resources, but since wipe_resources is
          * called via __gc, not sure it would work */
