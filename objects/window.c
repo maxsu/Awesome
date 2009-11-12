@@ -141,6 +141,223 @@ window_focus(lua_State *L, int idx)
     }
 }
 
+/** Compute window geometry with respect to its geometry hints.
+ * \param window The window.
+ * \param geometry The geometry that the window might receive.
+ * \return The geometry the window must take respecting its hints.
+ */
+area_t
+window_geometry_hints(window_t *window, area_t geometry)
+{
+    int32_t basew, baseh, minw, minh;
+
+    /* base size is substituted with min size if not specified */
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_SIZE)
+    {
+        basew = window->size_hints.base_width;
+        baseh = window->size_hints.base_height;
+    }
+    else if(window->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE)
+    {
+        basew = window->size_hints.min_width;
+        baseh = window->size_hints.min_height;
+    }
+    else
+        basew = baseh = 0;
+
+    /* min size is substituted with base size if not specified */
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE)
+    {
+        minw = window->size_hints.min_width;
+        minh = window->size_hints.min_height;
+    }
+    else if(window->size_hints.flags & XCB_SIZE_HINT_P_SIZE)
+    {
+        minw = window->size_hints.base_width;
+        minh = window->size_hints.base_height;
+    }
+    else
+        minw = minh = 0;
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_ASPECT
+       && window->size_hints.min_aspect_num > 0
+       && window->size_hints.min_aspect_den > 0
+       && geometry.height - baseh > 0
+       && geometry.width - basew > 0)
+    {
+        double dx = (double) (geometry.width - basew);
+        double dy = (double) (geometry.height - baseh);
+        double min = (double) window->size_hints.min_aspect_num / (double) window->size_hints.min_aspect_den;
+        double max = (double) window->size_hints.max_aspect_num / (double) window->size_hints.min_aspect_den;
+        double ratio = dx / dy;
+        if(max > 0 && min > 0 && ratio > 0)
+        {
+            if(ratio < min)
+            {
+                dy = (dx * min + dy) / (min * min + 1);
+                dx = dy * min;
+                geometry.width = (int) dx + basew;
+                geometry.height = (int) dy + baseh;
+            }
+            else if(ratio > max)
+            {
+                dy = (dx * min + dy) / (max * max + 1);
+                dx = dy * min;
+                geometry.width = (int) dx + basew;
+                geometry.height = (int) dy + baseh;
+            }
+        }
+    }
+
+    if(minw)
+        geometry.width = MAX(geometry.width, minw);
+    if(minh)
+        geometry.height = MAX(geometry.height, minh);
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_MAX_SIZE)
+    {
+        if(window->size_hints.max_width)
+            geometry.width = MIN(geometry.width, window->size_hints.max_width);
+        if(window->size_hints.max_height)
+            geometry.height = MIN(geometry.height, window->size_hints.max_height);
+    }
+
+    if(window->size_hints.flags & (XCB_SIZE_HINT_P_RESIZE_INC | XCB_SIZE_HINT_BASE_SIZE)
+       && window->size_hints.width_inc && window->size_hints.height_inc)
+    {
+        uint16_t t1 = geometry.width, t2 = geometry.height;
+        unsigned_subtract(t1, basew);
+        unsigned_subtract(t2, baseh);
+        geometry.width -= t1 % window->size_hints.width_inc;
+        geometry.height -= t2 % window->size_hints.height_inc;
+    }
+
+    return geometry;
+}
+
+static int
+luaA_window_get_size_hints(lua_State *L, window_t *window)
+{
+    const char *u_or_p = NULL;
+
+    lua_createtable(L, 0, 1);
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_US_POSITION)
+        u_or_p = "user_position";
+    else if(window->size_hints.flags & XCB_SIZE_HINT_P_POSITION)
+        u_or_p = "program_position";
+
+    if(u_or_p)
+    {
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, window->size_hints.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, window->size_hints.y);
+        lua_setfield(L, -2, "y");
+        lua_setfield(L, -2, u_or_p);
+        u_or_p = NULL;
+    }
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_US_SIZE)
+        u_or_p = "user_size";
+    else if(window->size_hints.flags & XCB_SIZE_HINT_P_SIZE)
+        u_or_p = "program_size";
+
+    if(u_or_p)
+    {
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, window->size_hints.width);
+        lua_setfield(L, -2, "width");
+        lua_pushnumber(L, window->size_hints.height);
+        lua_setfield(L, -2, "height");
+        lua_setfield(L, -2, u_or_p);
+    }
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE)
+    {
+        lua_pushnumber(L, window->size_hints.min_width);
+        lua_setfield(L, -2, "min_width");
+        lua_pushnumber(L, window->size_hints.min_height);
+        lua_setfield(L, -2, "min_height");
+    }
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_MAX_SIZE)
+    {
+        lua_pushnumber(L, window->size_hints.max_width);
+        lua_setfield(L, -2, "max_width");
+        lua_pushnumber(L, window->size_hints.max_height);
+        lua_setfield(L, -2, "max_height");
+    }
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_RESIZE_INC)
+    {
+        lua_pushnumber(L, window->size_hints.width_inc);
+        lua_setfield(L, -2, "width_inc");
+        lua_pushnumber(L, window->size_hints.height_inc);
+        lua_setfield(L, -2, "height_inc");
+    }
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_ASPECT)
+    {
+        lua_pushnumber(L, window->size_hints.min_aspect_num);
+        lua_setfield(L, -2, "min_aspect_num");
+        lua_pushnumber(L, window->size_hints.min_aspect_den);
+        lua_setfield(L, -2, "min_aspect_den");
+        lua_pushnumber(L, window->size_hints.max_aspect_num);
+        lua_setfield(L, -2, "max_aspect_num");
+        lua_pushnumber(L, window->size_hints.max_aspect_den);
+        lua_setfield(L, -2, "max_aspect_den");
+    }
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_BASE_SIZE)
+    {
+        lua_pushnumber(L, window->size_hints.base_width);
+        lua_setfield(L, -2, "base_width");
+        lua_pushnumber(L, window->size_hints.base_height);
+        lua_setfield(L, -2, "base_height");
+    }
+
+    if(window->size_hints.flags & XCB_SIZE_HINT_P_WIN_GRAVITY)
+    {
+        switch(window->size_hints.win_gravity)
+        {
+          default:
+            lua_pushliteral(L, "north_west");
+            break;
+          case XCB_GRAVITY_NORTH:
+            lua_pushliteral(L, "north");
+            break;
+          case XCB_GRAVITY_NORTH_EAST:
+            lua_pushliteral(L, "north_east");
+            break;
+          case XCB_GRAVITY_WEST:
+            lua_pushliteral(L, "west");
+            break;
+          case XCB_GRAVITY_CENTER:
+            lua_pushliteral(L, "center");
+            break;
+          case XCB_GRAVITY_EAST:
+            lua_pushliteral(L, "east");
+            break;
+          case XCB_GRAVITY_SOUTH_WEST:
+            lua_pushliteral(L, "south_west");
+            break;
+          case XCB_GRAVITY_SOUTH:
+            lua_pushliteral(L, "south");
+            break;
+          case XCB_GRAVITY_SOUTH_EAST:
+            lua_pushliteral(L, "south_east");
+            break;
+          case XCB_GRAVITY_STATIC:
+            lua_pushliteral(L, "static");
+            break;
+        }
+        lua_setfield(L, -2, "win_gravity");
+    }
+
+    return 1;
+}
+
 /** Get or set mouse buttons bindings on a window.
  * \param L The Lua VM state.
  * \return The number of elements pushed on the stack.
@@ -285,6 +502,10 @@ window_class_setup(lua_State *L)
     luaA_class_add_property(&window_class, A_TK_PARENT,
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_parent,
+                            NULL);
+    luaA_class_add_property(&window_class, A_TK_SIZE_HINTS,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_window_get_size_hints,
                             NULL);
 }
 

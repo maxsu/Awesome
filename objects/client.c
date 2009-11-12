@@ -385,110 +385,6 @@ HANDLE_GEOM(height)
     lua_pop(globalconf.L, 1);
 }
 
-/** Compute client geometry with respect to its geometry hints.
- * \param c The client.
- * \param geometry The geometry that the client might receive.
- * \return The geometry the client must take respecting its hints.
- */
-static area_t
-client_geometry_hints(client_t *c, area_t geometry)
-{
-    int32_t basew, baseh, minw, minh;
-    int32_t real_basew = 0, real_baseh = 0;
-
-    /* base size is substituted with min size if not specified */
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_SIZE)
-    {
-        basew = c->size_hints.base_width;
-        baseh = c->size_hints.base_height;
-        real_basew = basew;
-        real_baseh = baseh;
-    }
-    else if(c->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE)
-    {
-        basew = c->size_hints.min_width;
-        baseh = c->size_hints.min_height;
-    }
-    else
-        basew = baseh = 0;
-
-    /* min size is substituted with base size if not specified */
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE)
-    {
-        minw = c->size_hints.min_width;
-        minh = c->size_hints.min_height;
-    }
-    else if(c->size_hints.flags & XCB_SIZE_HINT_P_SIZE)
-    {
-        minw = c->size_hints.base_width;
-        minh = c->size_hints.base_height;
-    }
-    else
-        minw = minh = 0;
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_ASPECT
-       && c->size_hints.min_aspect_den > 0
-       && c->size_hints.max_aspect_den > 0
-       && geometry.height - real_baseh > 0
-       && geometry.width - real_basew > 0)
-    {
-        /* ICCCM mandates:
-         * If a base size is provided along with the aspect ratio fields, the
-         * base size should be subtracted from the window size prior to checking
-         * that the aspect ratio falls in range. If a base size is not provided,
-         * nothing should be subtracted from the window size. (The minimum size
-         * is not to be used in place of the base size for this purpose.) */
-        double dx = (double) (geometry.width - real_basew);
-        double dy = (double) (geometry.height - real_baseh);
-        double min = (double) c->size_hints.min_aspect_num / (double) c->size_hints.min_aspect_den;
-        double max = (double) c->size_hints.max_aspect_num / (double) c->size_hints.max_aspect_den;
-        double ratio = dx / dy;
-        if(max > 0 && min > 0 && ratio > 0)
-        {
-            if(ratio < min)
-            {
-                /* dx is lower than allowed, make dy lower to compensate this
-                 * (+ 0.5 to force proper rounding). */
-                dy = dx / min + 0.5;
-                geometry.width = (int) dx + real_basew;
-                geometry.height = (int) dy + real_baseh;
-            }
-            else if(ratio > max)
-            {
-                /* dx is too high, lower it (+0.5 for proper rounding) */
-                dx = dy * max + 0.5;
-                geometry.width = (int) dx + real_basew;
-                geometry.height = (int) dy + real_baseh;
-            }
-        }
-    }
-
-    if(minw)
-        geometry.width = MAX(geometry.width, minw);
-    if(minh)
-        geometry.height = MAX(geometry.height, minh);
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_MAX_SIZE)
-    {
-        if(c->size_hints.max_width)
-            geometry.width = MIN(geometry.width, c->size_hints.max_width);
-        if(c->size_hints.max_height)
-            geometry.height = MIN(geometry.height, c->size_hints.max_height);
-    }
-
-    if(c->size_hints.flags & (XCB_SIZE_HINT_P_RESIZE_INC | XCB_SIZE_HINT_BASE_SIZE)
-       && c->size_hints.width_inc && c->size_hints.height_inc)
-    {
-        uint16_t t1 = geometry.width, t2 = geometry.height;
-        unsigned_subtract(t1, basew);
-        unsigned_subtract(t2, baseh);
-        geometry.width -= t1 % c->size_hints.width_inc;
-        geometry.height -= t2 % c->size_hints.height_inc;
-    }
-
-    return geometry;
-}
-
 /** Resize client window.
  * The sizes given as parameters are with borders!
  * \param c Client to resize.
@@ -513,7 +409,7 @@ client_resize(client_t *c, area_t geometry)
         geometry.y = 0;
 
     if(!c->fullscreen)
-        geometry = client_geometry_hints(c, geometry);
+        geometry = window_geometry_hints((window_t *) c, geometry);
 
     if(geometry.width == 0 || geometry.height == 0)
         return false;
@@ -839,129 +735,6 @@ luaA_client_get_content(lua_State *L, client_t *c)
     return retval;
 }
 
-static int
-luaA_client_get_size_hints(lua_State *L, client_t *c)
-{
-    const char *u_or_p = NULL;
-
-    lua_createtable(L, 0, 1);
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_US_POSITION)
-        u_or_p = "user_position";
-    else if(c->size_hints.flags & XCB_SIZE_HINT_P_POSITION)
-        u_or_p = "program_position";
-
-    if(u_or_p)
-    {
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, c->size_hints.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, c->size_hints.y);
-        lua_setfield(L, -2, "y");
-        lua_setfield(L, -2, u_or_p);
-        u_or_p = NULL;
-    }
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_US_SIZE)
-        u_or_p = "user_size";
-    else if(c->size_hints.flags & XCB_SIZE_HINT_P_SIZE)
-        u_or_p = "program_size";
-
-    if(u_or_p)
-    {
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, c->size_hints.width);
-        lua_setfield(L, -2, "width");
-        lua_pushnumber(L, c->size_hints.height);
-        lua_setfield(L, -2, "height");
-        lua_setfield(L, -2, u_or_p);
-    }
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_MIN_SIZE)
-    {
-        lua_pushnumber(L, c->size_hints.min_width);
-        lua_setfield(L, -2, "min_width");
-        lua_pushnumber(L, c->size_hints.min_height);
-        lua_setfield(L, -2, "min_height");
-    }
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_MAX_SIZE)
-    {
-        lua_pushnumber(L, c->size_hints.max_width);
-        lua_setfield(L, -2, "max_width");
-        lua_pushnumber(L, c->size_hints.max_height);
-        lua_setfield(L, -2, "max_height");
-    }
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_RESIZE_INC)
-    {
-        lua_pushnumber(L, c->size_hints.width_inc);
-        lua_setfield(L, -2, "width_inc");
-        lua_pushnumber(L, c->size_hints.height_inc);
-        lua_setfield(L, -2, "height_inc");
-    }
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_ASPECT)
-    {
-        lua_pushnumber(L, c->size_hints.min_aspect_num);
-        lua_setfield(L, -2, "min_aspect_num");
-        lua_pushnumber(L, c->size_hints.min_aspect_den);
-        lua_setfield(L, -2, "min_aspect_den");
-        lua_pushnumber(L, c->size_hints.max_aspect_num);
-        lua_setfield(L, -2, "max_aspect_num");
-        lua_pushnumber(L, c->size_hints.max_aspect_den);
-        lua_setfield(L, -2, "max_aspect_den");
-    }
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_BASE_SIZE)
-    {
-        lua_pushnumber(L, c->size_hints.base_width);
-        lua_setfield(L, -2, "base_width");
-        lua_pushnumber(L, c->size_hints.base_height);
-        lua_setfield(L, -2, "base_height");
-    }
-
-    if(c->size_hints.flags & XCB_SIZE_HINT_P_WIN_GRAVITY)
-    {
-        switch(c->size_hints.win_gravity)
-        {
-          default:
-            lua_pushliteral(L, "north_west");
-            break;
-          case XCB_GRAVITY_NORTH:
-            lua_pushliteral(L, "north");
-            break;
-          case XCB_GRAVITY_NORTH_EAST:
-            lua_pushliteral(L, "north_east");
-            break;
-          case XCB_GRAVITY_WEST:
-            lua_pushliteral(L, "west");
-            break;
-          case XCB_GRAVITY_CENTER:
-            lua_pushliteral(L, "center");
-            break;
-          case XCB_GRAVITY_EAST:
-            lua_pushliteral(L, "east");
-            break;
-          case XCB_GRAVITY_SOUTH_WEST:
-            lua_pushliteral(L, "south_west");
-            break;
-          case XCB_GRAVITY_SOUTH:
-            lua_pushliteral(L, "south");
-            break;
-          case XCB_GRAVITY_SOUTH_EAST:
-            lua_pushliteral(L, "south_east");
-            break;
-          case XCB_GRAVITY_STATIC:
-            lua_pushliteral(L, "static");
-            break;
-        }
-        lua_setfield(L, -2, "win_gravity");
-    }
-
-    return 1;
-}
-
 /* Client module.
  * \param L The Lua VM state.
  * \return The number of pushed elements.
@@ -1075,10 +848,6 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_client_set_urgent,
                             (lua_class_propfunc_t) luaA_client_get_urgent,
                             (lua_class_propfunc_t) luaA_client_set_urgent);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_SIZE_HINTS,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_size_hints,
-                            NULL);
     /* Property overrides */
     /* Cursor is not available */
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_CURSOR, NULL, NULL, NULL);

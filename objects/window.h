@@ -50,6 +50,8 @@
     window_t *parent; \
     /** Window geometry */ \
     area_t geometry; \
+    /** Size hints */ \
+    xcb_size_hints_t size_hints; \
     /** Window stack */ \
     ewindow_array_t stack;
 
@@ -80,6 +82,7 @@ void window_unban(window_t *);
 void window_focus_update(window_t *);
 void window_unfocus_update(window_t *);
 void window_focus(lua_State *, int);
+area_t window_geometry_hints(window_t *, area_t);
 
 void window_set_opacity(lua_State *, int, double);
 void window_set_border_width(lua_State *, int, int);
