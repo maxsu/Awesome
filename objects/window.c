@@ -19,6 +19,8 @@
  *
  */
 
+#include <xcb/xcb_image.h>
+
 #include "luaa.h"
 #include "bma.h"
 #include "awesome.h"
@@ -569,6 +571,41 @@ luaA_window_keys(lua_State *L)
     return luaA_key_array_get(L, &window->keys);
 }
 
+static int
+luaA_window_get_content(lua_State *L, window_t *window)
+{
+    if(!window->window)
+        return 1;
+
+    xcb_image_t *ximage = xcb_image_get(_G_connection,
+                                        window->window,
+                                        0, 0,
+                                        window->geometry.width,
+                                        window->geometry.height,
+                                        ~0, XCB_IMAGE_FORMAT_Z_PIXMAP);
+    int retval = 0;
+
+    if(ximage)
+    {
+        if(ximage->bpp >= 24)
+        {
+            uint32_t *data = p_alloca(uint32_t, ximage->width * ximage->height);
+
+            for(int y = 0; y < ximage->height; y++)
+                for(int x = 0; x < ximage->width; x++)
+                {
+                    data[y * ximage->width + x] = xcb_image_get_pixel(ximage, x, y);
+                    data[y * ximage->width + x] |= 0xff000000; /* set alpha to 0xff */
+                }
+
+            retval = image_new_from_argb32(L, ximage->width, ximage->height, data);
+        }
+        xcb_image_destroy(ximage);
+    }
+
+    return retval;
+}
+
 /** Check if a window is visible.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -697,6 +734,10 @@ window_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_set_height,
                             (lua_class_propfunc_t) luaA_window_get_height,
                             (lua_class_propfunc_t) luaA_window_set_height);
+    luaA_class_add_property(&window_class, A_TK_CONTENT,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_window_get_content,
+                            NULL);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
