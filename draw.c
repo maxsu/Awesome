@@ -181,30 +181,24 @@ draw_context_wipe(draw_context_t *ctx)
 /** Draw text into a draw context.
  * \param ctx Draw context  to draw to.
  * \param data Draw text context data.
- * \param ellip Ellipsize mode.
- * \param wrap Wrap mode.
- * \param align Text alignment.
- * \param valign Vertical text alignment.
  * \param area Area to draw to.
  */
 void
-draw_text(draw_context_t *ctx, draw_text_context_t *data,
-          PangoEllipsizeMode ellip, PangoWrapMode wrap,
-          alignment_t align, alignment_t valign, area_t area)
+draw_text(draw_context_t *ctx, draw_text_context_t *data, area_t area)
 {
     pango_layout_set_text(ctx->layout, data->text, data->len);
     pango_layout_set_width(ctx->layout,
                            pango_units_from_double(area.width));
     pango_layout_set_height(ctx->layout, pango_units_from_double(area.height));
-    pango_layout_set_ellipsize(ctx->layout, ellip);
-    pango_layout_set_wrap(ctx->layout, wrap);
+    pango_layout_set_ellipsize(ctx->layout, data->ellip);
+    pango_layout_set_wrap(ctx->layout, data->wrap);
     pango_layout_set_attributes(ctx->layout, data->attr_list);
     pango_layout_set_font_description(ctx->layout, _G_font.desc);
 
     PangoRectangle ext;
     pango_layout_get_pixel_extents(ctx->layout, NULL, &ext);
 
-    switch(align)
+    switch(data->align)
     {
       case AlignCenter:
         area.x += (area.width - ext.width) / 2;
@@ -216,7 +210,7 @@ draw_text(draw_context_t *ctx, draw_text_context_t *data,
         break;
     }
 
-    switch(valign)
+    switch(data->valign)
     {
       case AlignCenter:
         area.y += (area.height - ext.height) / 2;
