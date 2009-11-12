@@ -27,7 +27,6 @@
 #include "screen.h"
 #include "systray.h"
 #include "xwindow.h"
-#include "objects/widget.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 

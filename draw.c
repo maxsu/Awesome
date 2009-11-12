@@ -326,45 +326,6 @@ draw_image(draw_context_t *ctx, int x, int y, double ratio, image_t *image)
     draw_image_from_argb_data(ctx, x, y, image_getwidth(image), image_getheight(image), ratio, image_getdata(image));
 }
 
-/** Return the width and height of a text in pixel.
- * \param data The draw context text data.
- * \return Text height and width.
- */
-area_t
-draw_text_extents(draw_text_context_t *data)
-{
-    cairo_surface_t *surface;
-    cairo_t *cr;
-    PangoLayout *layout;
-    PangoRectangle ext;
-    xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
-    area_t geom = { 0, 0, 0, 0 };
-
-    if(data->len <= 0)
-        return geom;
-
-    surface = cairo_xcb_surface_create(_G_connection,
-                                       _G_default_screen,
-                                       _G_protocol_screens.tab[0].visual,
-                                       s->width_in_pixels,
-                                       s->height_in_pixels);
-
-    cr = cairo_create(surface);
-    layout = pango_cairo_create_layout(cr);
-    pango_layout_set_text(layout, data->text, data->len);
-    pango_layout_set_attributes(layout, data->attr_list);
-    pango_layout_set_font_description(layout, _G_font.desc);
-    pango_layout_get_pixel_extents(layout, NULL, &ext);
-    g_object_unref(layout);
-    cairo_destroy(cr);
-    cairo_surface_destroy(surface);
-
-    geom.width = ext.width;
-    geom.height = ext.height;
-
-    return geom;
-}
-
 /** Transform a string to a alignment_t type.
  * Recognized string are flex, fixed, left, center, middle or right.
  * \param align A string with align text.

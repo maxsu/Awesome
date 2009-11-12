@@ -22,8 +22,9 @@
 #ifndef AWESOME_OBJECTS_WIBOX_H
 #define AWESOME_OBJECTS_WIBOX_H
 
-#include "objects/widget.h"
+#include "draw.h"
 #include "objects/ewindow.h"
+#include "objects/image.h"
 #include "common/luaobject.h"
 
 #define WIBOX_SELECT_INPUT_EVENT_MASK (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT \
@@ -40,11 +41,6 @@ struct wibox_t
     EWINDOW_OBJECT_HEADER
     /** Visible */
     bool visible;
-    /** Widget list */
-    widget_node_array_t widgets;
-    void *widgets_table;
-    /** Widget the mouse is over */
-    widget_t *mouse_over;
     /** Need update */
     bool need_update;
     /** Need shape update */
@@ -66,8 +62,6 @@ void wibox_unref_simplified(wibox_t **);
 ARRAY_FUNCS(wibox_t *, wibox, wibox_unref_simplified)
 
 void wibox_refresh(void);
-
-void luaA_wibox_invalidate_byitem(lua_State *, const void *);
 
 wibox_t * wibox_getbywin(xcb_window_t);
 
