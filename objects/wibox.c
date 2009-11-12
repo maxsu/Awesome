@@ -727,7 +727,6 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_get_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip);
 
-    wibox_class.isvisible = (lua_interface_window_isvisible_t) window_isvisible;
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::width", luaA_wibox_draw_context_update);

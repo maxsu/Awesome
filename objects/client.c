@@ -594,7 +594,6 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_ewindow_get_type,
                             NULL);
 
-    client_class.isvisible = (lua_interface_window_isvisible_t) ewindow_isvisible;
     luaA_class_connect_signal(L, (lua_class_t *) &client_class, "focus", client_take_focus);
 }
 
