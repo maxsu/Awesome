@@ -148,29 +148,6 @@ client_hasproto(client_t *c, xcb_atom_t atom)
     return false;
 }
 
-/** This is part of The Bob Marley Algorithm: we ignore enter and leave window
- * in certain cases, like map/unmap or move, so we don't get spurious events.
- */
-void
-client_ignore_enterleave_events(void)
-{
-    foreach(c, globalconf.clients)
-        xcb_change_window_attributes(_G_connection,
-                                     (*c)->window,
-                                     XCB_CW_EVENT_MASK,
-                                     (const uint32_t []) { CLIENT_SELECT_INPUT_EVENT_MASK & ~(XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW) });
-}
-
-void
-client_restore_enterleave_events(void)
-{
-    foreach(c, globalconf.clients)
-        xcb_change_window_attributes(_G_connection,
-                                     (*c)->window,
-                                     XCB_CW_EVENT_MASK,
-                                     (const uint32_t []) { CLIENT_SELECT_INPUT_EVENT_MASK });
-}
-
 /** Manage a new client.
  * \param w The window.
  * \param wgeom Window geometry.
@@ -221,7 +198,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t
             screen = s;
             break;
         }
-    screen_client_moveto(c, screen_getbycoord(screen, wgeom->x, wgeom->y), false);
+
+    c->screen = screen_getbycoord(screen, wgeom->x, wgeom->y);
 
     /* Store initial geometry and emits signals so we inform that geometry have
      * been set. */
@@ -304,58 +282,6 @@ HANDLE_GEOM(height)
     luaA_object_emit_signal(globalconf.L, -2, "manage", 1);
     /* pop client */
     lua_pop(globalconf.L, 1);
-}
-
-/** Resize client window.
- * The sizes given as parameters are with borders!
- * \param c Client to resize.
- * \param geometry New window geometry.
- * \return true if an actual resize occurred.
- */
-bool
-client_resize(client_t *c, area_t geometry)
-{
-    geometry = window_geometry_hints((window_t *) c, geometry);
-
-    if(geometry.width == 0 || geometry.height == 0)
-        return false;
-
-    if(c->geometry.x != geometry.x
-       || c->geometry.y != geometry.y
-       || c->geometry.width != geometry.width
-       || c->geometry.height != geometry.height)
-    {
-        screen_t *new_screen = screen_getbycoord(c->screen,
-                                                 geometry.x, geometry.y);
-
-        /* Also store geometry including border */
-        c->geometry = geometry;
-
-        /* Ignore all spurious enter/leave notify events */
-        client_ignore_enterleave_events();
-
-        xcb_configure_window(_G_connection, c->window,
-                             XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
-                             | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
-                             (uint32_t[]) { geometry.x, geometry.y, geometry.width, geometry.height });
-
-        client_restore_enterleave_events();
-
-        screen_client_moveto(c, new_screen, false);
-
-        luaA_object_push(globalconf.L, c);
-        luaA_object_emit_signal(globalconf.L, -1, "property::geometry", 0);
-        /** \todo This need to be VERIFIED before it is emitted! */
-        luaA_object_emit_signal(globalconf.L, -1, "property::x", 0);
-        luaA_object_emit_signal(globalconf.L, -1, "property::y", 0);
-        luaA_object_emit_signal(globalconf.L, -1, "property::width", 0);
-        luaA_object_emit_signal(globalconf.L, -1, "property::height", 0);
-        lua_pop(globalconf.L, 1);
-
-        return true;
-    }
-
-    return false;
 }
 
 /** Unmanage a client.
@@ -495,42 +421,6 @@ luaA_client_unmanage(lua_State *L)
     return 0;
 }
 
-/** Return client geometry.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lparam A table with new coordinates, or none.
- * \lreturn A table with client coordinates.
- */
-static int
-luaA_client_geometry(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-
-    if(lua_gettop(L) == 2 && !lua_isnil(L, 2))
-    {
-        area_t geometry;
-
-        luaA_checktable(L, 2);
-        geometry.x = luaA_getopt_number(L, 2, "x", c->geometry.x);
-        geometry.y = luaA_getopt_number(L, 2, "y", c->geometry.y);
-        if(client_isfixed(c))
-        {
-            geometry.width = c->geometry.width;
-            geometry.height = c->geometry.height;
-        }
-        else
-        {
-            geometry.width = luaA_getopt_number(L, 2, "width", c->geometry.width);
-            geometry.height = luaA_getopt_number(L, 2, "height", c->geometry.height);
-        }
-
-        client_resize(c, geometry);
-    }
-
-    return luaA_pusharea(L, c->geometry);
-}
-
 static int
 luaA_client_set_icon(lua_State *L, client_t *c)
 {
@@ -651,7 +541,6 @@ client_class_setup(lua_State *L)
     {
         LUA_CLASS_METHODS(client)
         { "get", luaA_client_get },
-        { "geometry", luaA_client_geometry },
         { "kill", luaA_client_kill },
         { "unmanage", luaA_client_unmanage },
         { NULL, NULL }

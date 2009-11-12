@@ -29,6 +29,7 @@
 #include "xwindow.h"
 #include "luaa.h"
 #include "ewmh.h"
+#include "bma.h"
 #include "objects/tag.h"
 #include "common/xcursor.h"
 #include "common/xutil.h"
@@ -43,11 +44,7 @@ wibox_wipe_resources(wibox_t *w)
 {
     if(w->window)
     {
-        /* Activate BMA */
-        client_ignore_enterleave_events();
-        xcb_destroy_window(_G_connection, w->window);
-        /* Deactivate BMA */
-        client_restore_enterleave_events();
+        DO_WITH_BMA(xcb_destroy_window(_G_connection, w->window));
         w->window = XCB_NONE;
     }
     if(w->gc)
@@ -208,87 +205,6 @@ wibox_refresh_pixmap(wibox_t *w)
     wibox_refresh_pixmap_partial(w, 0, 0, w->geometry.width, w->geometry.height);
 }
 
-/** Move and/or resize a wibox
- * \param L The Lua VM state.
- * \param udx The index of the wibox.
- * \param geometry The new geometry.
- */
-static void
-wibox_moveresize(lua_State *L, int udx, area_t geometry)
-{
-    wibox_t *w = luaA_checkudata(L, udx, (lua_class_t *) &wibox_class);
-    if(w->window)
-    {
-        int number_of_vals = 0;
-        uint32_t moveresize_win_vals[4], mask_vals = 0;
-
-        if(w->geometry.x != geometry.x)
-        {
-            w->geometry.x = moveresize_win_vals[number_of_vals++] = geometry.x;
-            mask_vals |= XCB_CONFIG_WINDOW_X;
-        }
-
-        if(w->geometry.y != geometry.y)
-        {
-            w->geometry.y = moveresize_win_vals[number_of_vals++] = geometry.y;
-            mask_vals |= XCB_CONFIG_WINDOW_Y;
-        }
-
-        if(geometry.width > 0 && w->geometry.width != geometry.width)
-        {
-            w->geometry.width = moveresize_win_vals[number_of_vals++] = geometry.width;
-            mask_vals |= XCB_CONFIG_WINDOW_WIDTH;
-        }
-
-        if(geometry.height > 0 && w->geometry.height != geometry.height)
-        {
-            w->geometry.height = moveresize_win_vals[number_of_vals++] = geometry.height;
-            mask_vals |= XCB_CONFIG_WINDOW_HEIGHT;
-        }
-
-        if(mask_vals)
-        {
-            /* Activate BMA */
-            client_ignore_enterleave_events();
-            xcb_configure_window(_G_connection, w->window, mask_vals, moveresize_win_vals);
-            /* Deactivate BMA */
-            client_restore_enterleave_events();
-
-            w->screen = screen_getbycoord(w->screen, w->geometry.x, w->geometry.y);
-
-            if(mask_vals & XCB_CONFIG_WINDOW_X)
-                luaA_object_emit_signal(L, udx, "property::x", 0);
-            if(mask_vals & XCB_CONFIG_WINDOW_Y)
-                luaA_object_emit_signal(L, udx, "property::y", 0);
-            if(mask_vals & XCB_CONFIG_WINDOW_WIDTH)
-                luaA_object_emit_signal(L, udx, "property::width", 0);
-            if(mask_vals & XCB_CONFIG_WINDOW_HEIGHT)
-                luaA_object_emit_signal(L, udx, "property::height", 0);
-
-            luaA_object_emit_signal(L, udx, "property::geometry", 0);
-        }
-    }
-    else
-    {
-        bool changed = false;
-#define DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(prop) \
-        if(w->geometry.prop != geometry.prop) \
-        { \
-            w->geometry.prop = geometry.prop; \
-            luaA_object_emit_signal(L, udx, "property::" #prop, 0); \
-            changed = true; \
-        }
-        DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(x)
-        DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(y)
-        DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(width)
-        DO_WIBOX_GEOMETRY_CHECK_AND_EMIT(height)
-#undef DO_WIBOX_GEOMETRY_CHECK_AND_EMIT
-
-        if(changed)
-            luaA_object_emit_signal(L, udx, "property::geometry", 0);
-    }
-}
-
 /** Refresh the window content by copying its pixmap data to its window.
  * \param wibox The wibox to refresh.
  * \param x The copy starting point x component.
@@ -310,12 +226,8 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
 static void
 wibox_map(wibox_t *wibox)
 {
-    /* Activate BMA */
-    client_ignore_enterleave_events();
     /* Map the wibox */
-    xcb_map_window(_G_connection, wibox->window);
-    /* Deactivate BMA */
-    client_restore_enterleave_events();
+    DO_WITH_BMA(xcb_map_window(_G_connection, wibox->window));
     /* We must make sure the wibox does not display garbage */
     wibox_need_update(wibox);
 }
@@ -394,14 +306,7 @@ wibox_set_visible(lua_State *L, int udx, bool v)
             if(wibox->visible)
                 wibox_map(wibox);
             else
-            {
-                /* Active BMA */
-                client_ignore_enterleave_events();
-                /* Unmap window */
-                xcb_unmap_window(_G_connection, wibox->window);
-                /* Active BMA */
-                client_restore_enterleave_events();
-            }
+                DO_WITH_BMA(xcb_unmap_window(_G_connection, wibox->window));
         }
 
         luaA_object_emit_signal(L, udx, "property::visible", 0);
@@ -482,10 +387,10 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
 
     /* If it does not match, move it to the screen coordinates */
     if(cscreen != wibox->screen)
-        wibox_moveresize(L, udx, (area_t) { .x = s->geometry.x,
-                                            .y = s->geometry.y,
-                                            .width = wibox->geometry.width,
-                                            .height = wibox->geometry.height });
+        window_set_geometry(L, udx, (area_t) { .x = s->geometry.x,
+                                               .y = s->geometry.y,
+                                               .width = wibox->geometry.width,
+                                               .height = wibox->geometry.height });
 
     wibox_array_append(&globalconf.wiboxes, wibox);
 
@@ -593,113 +498,10 @@ luaA_wibox_invalidate_byitem(lua_State *L, const void *item)
     }
 }
 
-/* Set or get the wibox geometry.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lparam An optional table with wibox geometry.
- * \lreturn The wibox geometry.
- */
-static int
-luaA_wibox_geometry(lua_State *L)
-{
-    wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
-
-    if(lua_gettop(L) == 2)
-    {
-        area_t wingeom;
-
-        luaA_checktable(L, 2);
-        wingeom.x = luaA_getopt_number(L, 2, "x", wibox->geometry.x);
-        wingeom.y = luaA_getopt_number(L, 2, "y", wibox->geometry.y);
-        wingeom.width = luaA_getopt_number(L, 2, "width", wibox->geometry.width);
-        wingeom.height = luaA_getopt_number(L, 2, "height", wibox->geometry.height);
-
-        if(wingeom.width > 0 && wingeom.height > 0)
-            wibox_moveresize(L, 1, wingeom);
-    }
-
-    return luaA_pusharea(L, wibox->geometry);
-}
-
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, bg_image, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_clip, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_bounding, luaA_object_push)
-
-static int
-luaA_wibox_set_x(lua_State *L, wibox_t *wibox)
-{
-    wibox_moveresize(L, -3, (area_t) { .x = luaL_checknumber(L, -1),
-                                       .y = wibox->geometry.y,
-                                       .width = wibox->geometry.width,
-                                       .height = wibox->geometry.height });
-    return 0;
-}
-
-static int
-luaA_wibox_get_x(lua_State *L, wibox_t *wibox)
-{
-    lua_pushnumber(L, wibox->geometry.x);
-    return 1;
-}
-
-static int
-luaA_wibox_set_y(lua_State *L, wibox_t *wibox)
-{
-    wibox_moveresize(L, -3, (area_t) { .x = wibox->geometry.x,
-                                       .y = luaL_checknumber(L, -1),
-                                       .width = wibox->geometry.width,
-                                       .height = wibox->geometry.height });
-    return 0;
-}
-
-static int
-luaA_wibox_get_y(lua_State *L, wibox_t *wibox)
-{
-    lua_pushnumber(L, wibox->geometry.y);
-    return 1;
-}
-
-static int
-luaA_wibox_set_width(lua_State *L, wibox_t *wibox)
-{
-    int width = luaL_checknumber(L, -1);
-    if(width <= 0)
-        luaL_error(L, "invalid width");
-    wibox_moveresize(L, -3, (area_t) { .x = wibox->geometry.x,
-                                       .y = wibox->geometry.y,
-                                       .width = width,
-                                       .height = wibox->geometry.height });
-    return 0;
-}
-
-static int
-luaA_wibox_get_width(lua_State *L, wibox_t *wibox)
-{
-    lua_pushnumber(L, wibox->geometry.width);
-    return 1;
-}
-
-static int
-luaA_wibox_set_height(lua_State *L, wibox_t *wibox)
-{
-    int height = luaL_checknumber(L, -1);
-    if(height <= 0)
-        luaL_error(L, "invalid height");
-    wibox_moveresize(L, -3, (area_t) { .x = wibox->geometry.x,
-                                       .y = wibox->geometry.y,
-                                       .width = wibox->geometry.width,
-                                       .height = height });
-    return 0;
-}
-
-static int
-luaA_wibox_get_height(lua_State *L, wibox_t *wibox)
-{
-    lua_pushnumber(L, wibox->geometry.height);
-    return 1;
-}
 
 /** Set the wibox foreground color.
  * \param L The Lua VM state.
@@ -875,7 +677,6 @@ wibox_class_setup(lua_State *L)
     static const struct luaL_reg wibox_methods[] =
     {
         LUA_CLASS_METHODS(wibox)
-        { "geometry", luaA_wibox_geometry },
         { NULL, NULL }
     };
 
@@ -915,22 +716,6 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_bg_image,
                             (lua_class_propfunc_t) luaA_wibox_get_bg_image,
                             (lua_class_propfunc_t) luaA_wibox_set_bg_image);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_X,
-                            (lua_class_propfunc_t) luaA_wibox_set_x,
-                            (lua_class_propfunc_t) luaA_wibox_get_x,
-                            (lua_class_propfunc_t) luaA_wibox_set_x);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_Y,
-                            (lua_class_propfunc_t) luaA_wibox_set_y,
-                            (lua_class_propfunc_t) luaA_wibox_get_y,
-                            (lua_class_propfunc_t) luaA_wibox_set_y);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_WIDTH,
-                            (lua_class_propfunc_t) luaA_wibox_set_width,
-                            (lua_class_propfunc_t) luaA_wibox_get_width,
-                            (lua_class_propfunc_t) luaA_wibox_set_width);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_HEIGHT,
-                            (lua_class_propfunc_t) luaA_wibox_set_height,
-                            (lua_class_propfunc_t) luaA_wibox_get_height,
-                            (lua_class_propfunc_t) luaA_wibox_set_height);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SHAPE_BOUNDING,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_bounding,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_bounding,

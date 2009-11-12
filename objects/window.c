@@ -20,6 +20,7 @@
  */
 
 #include "luaa.h"
+#include "bma.h"
 #include "awesome.h"
 #include "xwindow.h"
 #include "ewmh.h"
@@ -358,6 +359,178 @@ luaA_window_get_size_hints(lua_State *L, window_t *window)
     return 1;
 }
 
+/** Move and/or resize a window.
+ * \param L The Lua VM state.
+ * \param udx The index of the window on the stack.
+ * \param geometry The new geometry.
+ * \param Return true if the window has been resized or moved, false otherwise.
+ */
+bool
+window_set_geometry(lua_State *L, int udx, area_t geometry)
+{
+    window_t *w = luaA_checkudata(L, udx, &window_class);
+
+    geometry = window_geometry_hints(w, geometry);
+
+    int number_of_vals = 0;
+    uint32_t set_geometry_win_vals[4], mask_vals = 0;
+
+    if(w->geometry.x != geometry.x)
+    {
+        w->geometry.x = set_geometry_win_vals[number_of_vals++] = geometry.x;
+        mask_vals |= XCB_CONFIG_WINDOW_X;
+    }
+
+    if(w->geometry.y != geometry.y)
+    {
+        w->geometry.y = set_geometry_win_vals[number_of_vals++] = geometry.y;
+        mask_vals |= XCB_CONFIG_WINDOW_Y;
+    }
+
+    if(geometry.width > 0 && w->geometry.width != geometry.width)
+    {
+        w->geometry.width = set_geometry_win_vals[number_of_vals++] = geometry.width;
+        mask_vals |= XCB_CONFIG_WINDOW_WIDTH;
+    }
+
+    if(geometry.height > 0 && w->geometry.height != geometry.height)
+    {
+        w->geometry.height = set_geometry_win_vals[number_of_vals++] = geometry.height;
+        mask_vals |= XCB_CONFIG_WINDOW_HEIGHT;
+    }
+
+    if(mask_vals)
+    {
+        if(w->window)
+            DO_WITH_BMA(xcb_configure_window(_G_connection, w->window, mask_vals, set_geometry_win_vals));
+
+        /* Check if the screen has changed */
+        screen_t *screen = screen_getbycoord(w->screen, w->geometry.x, w->geometry.y);
+        if(screen != w->screen)
+        {
+            w->screen = screen;
+            luaA_object_emit_signal(L, udx, "property::screen", 0);
+        }
+
+        if(mask_vals & XCB_CONFIG_WINDOW_X)
+            luaA_object_emit_signal(L, udx, "property::x", 0);
+        if(mask_vals & XCB_CONFIG_WINDOW_Y)
+            luaA_object_emit_signal(L, udx, "property::y", 0);
+        if(mask_vals & XCB_CONFIG_WINDOW_WIDTH)
+            luaA_object_emit_signal(L, udx, "property::width", 0);
+        if(mask_vals & XCB_CONFIG_WINDOW_HEIGHT)
+            luaA_object_emit_signal(L, udx, "property::height", 0);
+
+        luaA_object_emit_signal(L, udx, "property::geometry", 0);
+
+        return true;
+    }
+
+    return false;
+}
+
+/** Return client geometry.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ * \luastack
+ * \lparam A table with new coordinates, or none.
+ * \lreturn A table with client coordinates.
+ */
+static int
+luaA_window_geometry(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+
+    if(lua_gettop(L) == 2 && !lua_isnil(L, 2))
+    {
+        area_t geometry;
+
+        luaA_checktable(L, 2);
+        geometry.x = luaA_getopt_number(L, 2, "x", window->geometry.x);
+        geometry.y = luaA_getopt_number(L, 2, "y", window->geometry.y);
+        geometry.width = luaA_getopt_number(L, 2, "width", window->geometry.width);
+        geometry.height = luaA_getopt_number(L, 2, "height", window->geometry.height);
+
+        window_set_geometry(L, 1, geometry);
+    }
+
+    return luaA_pusharea(L, window->geometry);
+}
+
+static int
+luaA_window_set_x(lua_State *L, window_t *window)
+{
+    window_set_geometry(L, -3, (area_t) { .x = luaL_checknumber(L, -1),
+                                          .y = window->geometry.y,
+                                          .width = window->geometry.width,
+                                          .height = window->geometry.height });
+    return 0;
+}
+
+static int
+luaA_window_get_x(lua_State *L, window_t *window)
+{
+    lua_pushnumber(L, window->geometry.x);
+    return 1;
+}
+
+static int
+luaA_window_set_y(lua_State *L, window_t *window)
+{
+    window_set_geometry(L, -3, (area_t) { .x = window->geometry.x,
+                                          .y = luaL_checknumber(L, -1),
+                                          .width = window->geometry.width,
+                                          .height = window->geometry.height });
+    return 0;
+}
+
+static int
+luaA_window_get_y(lua_State *L, window_t *window)
+{
+    lua_pushnumber(L, window->geometry.y);
+    return 1;
+}
+
+static int
+luaA_window_set_width(lua_State *L, window_t *window)
+{
+    int width = luaL_checknumber(L, -1);
+    if(width <= 0)
+        luaL_error(L, "invalid width");
+    window_set_geometry(L, -3, (area_t) { .x = window->geometry.x,
+                                          .y = window->geometry.y,
+                                          .width = width,
+                                          .height = window->geometry.height });
+    return 0;
+}
+
+static int
+luaA_window_get_width(lua_State *L, window_t *window)
+{
+    lua_pushnumber(L, window->geometry.width);
+    return 1;
+}
+
+static int
+luaA_window_set_height(lua_State *L, window_t *window)
+{
+    int height = luaL_checknumber(L, -1);
+    if(height <= 0)
+        luaL_error(L, "invalid height");
+    window_set_geometry(L, -3, (area_t) { .x = window->geometry.x,
+                                          .y = window->geometry.y,
+                                          .width = window->geometry.width,
+                                          .height = height });
+    return 0;
+}
+
+static int
+luaA_window_get_height(lua_State *L, window_t *window)
+{
+    lua_pushnumber(L, window->geometry.height);
+    return 1;
+}
+
 /** Get or set mouse buttons bindings on a window.
  * \param L The Lua VM state.
  * \return The number of elements pushed on the stack.
@@ -474,6 +647,7 @@ window_class_setup(lua_State *L)
         { "buttons", luaA_window_buttons },
         { "focus", luaA_window_focus },
         { "keys", luaA_window_keys },
+        { "geometry", luaA_window_geometry },
         { "isvisible", luaA_window_isvisible },
         { NULL, NULL }
     };
@@ -507,6 +681,22 @@ window_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_size_hints,
                             NULL);
+    luaA_class_add_property(&window_class, A_TK_X,
+                            (lua_class_propfunc_t) luaA_window_set_x,
+                            (lua_class_propfunc_t) luaA_window_get_x,
+                            (lua_class_propfunc_t) luaA_window_set_x);
+    luaA_class_add_property(&window_class, A_TK_Y,
+                            (lua_class_propfunc_t) luaA_window_set_y,
+                            (lua_class_propfunc_t) luaA_window_get_y,
+                            (lua_class_propfunc_t) luaA_window_set_y);
+    luaA_class_add_property(&window_class, A_TK_WIDTH,
+                            (lua_class_propfunc_t) luaA_window_set_width,
+                            (lua_class_propfunc_t) luaA_window_get_width,
+                            (lua_class_propfunc_t) luaA_window_set_width);
+    luaA_class_add_property(&window_class, A_TK_HEIGHT,
+                            (lua_class_propfunc_t) luaA_window_set_height,
+                            (lua_class_propfunc_t) luaA_window_get_height,
+                            (lua_class_propfunc_t) luaA_window_set_height);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
