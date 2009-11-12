@@ -311,7 +311,7 @@ HANDLE_GEOM(height)
  * \param geometry The geometry that the client might receive.
  * \return The geometry the client must take respecting its hints.
  */
-area_t
+static area_t
 client_geometry_hints(client_t *c, area_t geometry)
 {
     int32_t basew, baseh, minw, minh;
