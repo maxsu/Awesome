@@ -610,6 +610,8 @@ ewindow_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_ewindow_set_type,
                             (lua_class_propfunc_t) luaA_ewindow_get_type,
                             (lua_class_propfunc_t) luaA_ewindow_set_type);
+
+    ewindow_class.isvisible = (lua_interface_window_isvisible_t) ewindow_isvisible;
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
