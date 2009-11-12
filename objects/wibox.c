@@ -178,11 +178,7 @@ wibox_init(wibox_t *w, protocol_screen_t *pscreen)
                           w->border_color.pixel,
                           XCB_GRAVITY_NORTH_WEST,
                           1,
-                          XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
-                          | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_ENTER_WINDOW
-                          | XCB_EVENT_MASK_LEAVE_WINDOW | XCB_EVENT_MASK_STRUCTURE_NOTIFY
-                          | XCB_EVENT_MASK_EXPOSURE
-                          | XCB_EVENT_MASK_PROPERTY_CHANGE
+                          WIBOX_SELECT_INPUT_EVENT_MASK
                       });
 
     /* Update draw context physical screen, important for Zaphod. */
