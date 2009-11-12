@@ -100,7 +100,6 @@ client_t * client_getbywin(xcb_window_t);
 client_t * client_getbyframewin(xcb_window_t);
 
 void client_manage(xcb_window_t, xcb_get_geometry_reply_t *, bool);
-bool client_resize(client_t *, area_t);
 void client_unmanage(client_t *);
 void client_kill(client_t *);
 void client_set_urgent(lua_State *, int, bool);
@@ -116,8 +115,6 @@ void client_set_group_window(lua_State *, int, xcb_window_t);
 void client_set_icon(lua_State *, int, int);
 void client_set_skip_taskbar(lua_State *, int, bool);
 bool client_hasproto(client_t *, xcb_atom_t);
-void client_ignore_enterleave_events(void);
-void client_restore_enterleave_events(void);
 void client_class_setup(lua_State *);
 
 /** Check if a client has fixed size.

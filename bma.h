@@ -1,5 +1,5 @@
 /*
- * screen.h - screen management header
+ * bma.h - Bob Marley Algorithm
  *
  * Copyright © 2007-2009 Julien Danjou <julien@danjou.info>
  *
@@ -19,37 +19,19 @@
  *
  */
 
-#ifndef AWESOME_SCREEN_H
-#define AWESOME_SCREEN_H
+#ifndef AWESOME_BMA_H
+#define AWESOME_BMA_H
 
-#include "area.h"
-#include "objects/window.h"
+#define DO_WITH_BMA(op) \
+    do { \
+        bma_enable(); \
+        op; \
+        bma_disable(); \
+    } while(0)
 
-typedef struct screen_output_t screen_output_t;
-ARRAY_TYPE(screen_output_t, screen_output)
-
-struct a_screen
-{
-    LUA_OBJECT_HEADER
-    /** Screen geometry */
-    area_t geometry;
-    /** Tag list */
-    tag_array_t tags;
-    /** Screen's root window */
-    window_t *root;
-    /** True if the banning on this screen needs to be updated */
-    bool need_lazy_banning;
-    /** The screen outputs informations */
-    screen_output_array_t outputs;
-};
-ARRAY_FUNCS(screen_t, screen, DO_NOTHING)
-
-void screen_emit_signal(lua_State *, screen_t *, const char *, int);
-
-void screen_class_setup(lua_State *);
-void screen_scan(void);
-screen_t *screen_getbycoord(int, int);
-area_t screen_area_get(screen_t *, bool);
+void bma_enable(void);
+void bma_disable(void);
 
 #endif
+
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

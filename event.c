@@ -263,16 +263,18 @@ event_handle_configurerequest(xcb_configure_request_event_t *ev)
         if(ev->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
             geometry.height = ev->height;
 
-        if(ev->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH)
-        {
-            luaA_object_push(globalconf.L, c);
-            ewindow_set_border_width(globalconf.L, -1, ev->border_width);
-            lua_pop(globalconf.L, 1);
-        }
+        /* Push client */
+        luaA_object_push(globalconf.L, c);
 
-        if(!client_resize(c, geometry))
+        if(ev->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH)
+            ewindow_set_border_width(globalconf.L, -1, ev->border_width);
+
+        if(!window_set_geometry(globalconf.L, -1, geometry))
             /* ICCCM 4.1.5 / 4.2.3, if nothing was changed, send an event saying so */
             xwindow_configure(c->window, geometry, c->border_width);
+
+        /* Remove client */
+        lua_pop(globalconf.L, 1);
     }
     else
         event_handle_configurerequest_configure_window(ev);
