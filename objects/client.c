@@ -20,7 +20,6 @@
  */
 
 #include <xcb/xcb_atom.h>
-#include <xcb/xcb_image.h>
 
 #include "awesome.h"
 #include "ewmh.h"
@@ -552,38 +551,6 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
 
-static int
-luaA_client_get_content(lua_State *L, client_t *c)
-{
-    xcb_image_t *ximage = xcb_image_get(_G_connection,
-                                        c->window,
-                                        0, 0,
-                                        c->geometry.width,
-                                        c->geometry.height,
-                                        ~0, XCB_IMAGE_FORMAT_Z_PIXMAP);
-    int retval = 0;
-
-    if(ximage)
-    {
-        if(ximage->bpp >= 24)
-        {
-            uint32_t *data = p_alloca(uint32_t, ximage->width * ximage->height);
-
-            for(int y = 0; y < ximage->height; y++)
-                for(int x = 0; x < ximage->width; x++)
-                {
-                    data[y * ximage->width + x] = xcb_image_get_pixel(ximage, x, y);
-                    data[y * ximage->width + x] |= 0xff000000; /* set alpha to 0xff */
-                }
-
-            retval = image_new_from_argb32(L, ximage->width, ximage->height, data);
-        }
-        xcb_image_destroy(ximage);
-    }
-
-    return retval;
-}
-
 /* Client module.
  * \param L The Lua VM state.
  * \return The number of pushed elements.
@@ -652,10 +619,6 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_client_set_skip_taskbar,
                             (lua_class_propfunc_t) luaA_client_get_skip_taskbar,
                             (lua_class_propfunc_t) luaA_client_set_skip_taskbar);
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_CONTENT,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_content,
-                            NULL);
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_CLASS,
                             NULL,
                             (lua_class_propfunc_t) luaA_client_get_class,
