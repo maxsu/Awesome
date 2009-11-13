@@ -27,11 +27,9 @@
 #include <iconv.h>
 #include <errno.h>
 #include <ctype.h>
-#include <math.h>
 
 #include "draw.h"
 #include "awesome.h"
-#include "globalconf.h"
 #include "screen.h"
 #include "font.h"
 
