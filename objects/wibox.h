@@ -23,6 +23,7 @@
 #define AWESOME_OBJECTS_WIBOX_H
 
 #include "draw.h"
+#include "padding.h"
 #include "objects/ewindow.h"
 #include "objects/image.h"
 #include "common/luaobject.h"
@@ -51,6 +52,10 @@ struct wibox_t
     xcb_gcontext_t gc;
     /** Draw context */
     draw_context_t ctx;
+    /** The wibox text stuff */
+    draw_text_context_t text_ctx;
+    /** Text padding */
+    padding_t text_padding;
     /** The window's content (shape) */
     image_t *shape_clip;
     /** The window's content and border (shape) */
