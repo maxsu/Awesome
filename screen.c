@@ -91,6 +91,12 @@ protocol_screen_scan(void)
         pscreen.root->focusable = true;
         pscreen.root->window = xcb_screen->root;
 
+        /* The default GC is just a newly created associated to the root window */
+        pscreen.gc = xcb_generate_id(_G_connection);
+        xcb_create_gc(_G_connection, pscreen.gc, xcb_screen->root,
+                      XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
+                      (const uint32_t[]) { xcb_screen->black_pixel, xcb_screen->white_pixel });
+
         protocol_screen_array_append(&_G_protocol_screens, pscreen);
     }
 }

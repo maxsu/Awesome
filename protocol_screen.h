@@ -32,6 +32,8 @@ typedef struct
 {
     /** The default visual, used to draw */
     xcb_visualtype_t *visual;
+    /** The graphic context. */
+    xcb_gcontext_t gc;
     /** The monitor of startup notifications */
     SnMonitorContext *snmonitor;
     /** Window that contains the systray */
