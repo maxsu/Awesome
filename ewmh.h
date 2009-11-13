@@ -22,9 +22,7 @@
 #ifndef AWESOME_EWMH_H
 #define AWESOME_EWMH_H
 
-#include "globalconf.h"
 #include "protocol_screen.h"
-#include "strut.h"
 
 void ewmh_init_screen(protocol_screen_t *);
 void ewmh_init(void);
