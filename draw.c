@@ -327,8 +327,6 @@ draw_align_fromstr(const char *align, ssize_t len)
     {
       case A_TK_CENTER: return AlignCenter;
       case A_TK_RIGHT:  return AlignRight;
-      case A_TK_TOP:    return AlignTop;
-      case A_TK_BOTTOM: return AlignBottom;
       default:          return AlignLeft;
     }
 }
@@ -345,6 +343,37 @@ draw_align_tostr(alignment_t a)
       case AlignLeft:   return "left";
       case AlignCenter: return "center";
       case AlignRight:  return "right";
+      default:          return NULL;
+    }
+}
+
+/** Transform a string to a alignment_t type.
+ * Recognized string are flex, fixed, left, center, middle or right.
+ * \param align A string with align text.
+ * \param len The string length.
+ * \return An alignment_t type.
+ */
+alignment_t
+draw_valign_fromstr(const char *align, ssize_t len)
+{
+    switch(a_tokenize(align, len))
+    {
+      case A_TK_CENTER: return AlignCenter;
+      case A_TK_BOTTOM: return AlignBottom;
+      default:          return AlignTop;
+    }
+}
+
+/** Transform an alignment to a string.
+ * \param a The alignment.
+ * \return A string which must not be freed.
+ */
+const char *
+draw_valign_tostr(alignment_t a)
+{
+    switch(a)
+    {
+      case AlignCenter: return "center";
       case AlignBottom: return "bottom";
       case AlignTop:    return "top";
       default:          return NULL;
