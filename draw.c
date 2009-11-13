@@ -331,7 +331,6 @@ draw_align_fromstr(const char *align, ssize_t len)
       case A_TK_RIGHT:  return AlignRight;
       case A_TK_TOP:    return AlignTop;
       case A_TK_BOTTOM: return AlignBottom;
-      case A_TK_MIDDLE: return AlignMiddle;
       default:          return AlignLeft;
     }
 }
@@ -350,7 +349,6 @@ draw_align_tostr(alignment_t a)
       case AlignRight:  return "right";
       case AlignBottom: return "bottom";
       case AlignTop:    return "top";
-      case AlignMiddle: return "middle";
       default:          return NULL;
     }
 }
