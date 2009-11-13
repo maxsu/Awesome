@@ -44,9 +44,6 @@ typedef enum
 typedef struct
 {
     xcb_pixmap_t pixmap;
-    uint16_t width;
-    uint16_t height;
-    protocol_screen_t *pscreen;
     cairo_t *cr;
     cairo_surface_t *surface;
     PangoLayout *layout;
