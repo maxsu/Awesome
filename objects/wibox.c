@@ -214,6 +214,71 @@ wibox_getbywin(xcb_window_t win)
     return w ? *w : NULL;
 }
 
+/** Render a wibox content.
+ * \param wibox The wibox.
+ */
+static void
+wibox_render(wibox_t *wibox)
+{
+    if(wibox->ctx.bg.alpha != 0xffff)
+    {
+        int x = wibox->geometry.x + wibox->border_width,
+            y = wibox->geometry.y + wibox->border_width;
+        xcb_get_property_reply_t *prop_r;
+        char *data;
+        xcb_pixmap_t rootpix;
+        xcb_get_property_cookie_t prop_c;
+        prop_c = xcb_get_property_unchecked(_G_connection, false, globalconf.screen->root, _XROOTPMAP_ID,
+                                            PIXMAP, 0, 1);
+        if((prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL)))
+        {
+            if(prop_r->value_len
+               && (data = xcb_get_property_value(prop_r))
+               && (rootpix = *(xcb_pixmap_t *) data))
+                xcb_copy_area(_G_connection, rootpix,
+                              wibox->ctx.pixmap, globalconf.gc,
+                              x, y,
+                              0, 0,
+                              wibox->ctx.width, wibox->ctx.height);
+            p_delete(&prop_r);
+        }
+    }
+
+    /* draw background image, only if the background color is not opaque */
+    if(wibox->bg_image && wibox->ctx.bg.alpha != 0xffff)
+        draw_image(&wibox->ctx, 0, 0, 1.0, wibox->bg_image);
+
+    /* draw background color */
+    color_t col;
+    xcolor_to_color(&wibox->ctx.bg, &col);
+    draw_rectangle(&wibox->ctx, (area_t) { .x = 0, .y = 0,
+                                           .width = wibox->ctx.width,
+                                           .height = wibox->ctx.height },
+                   1.0, true, &col);
+
+    /* Compute where to draw text, using padding */
+    area_t geometry =  { .x = wibox->text_padding.left,
+                         .y = wibox->text_padding.top,
+                         .width = wibox->geometry.width,
+                         .height = wibox->geometry.height };
+
+    /* Check that padding is not too superior to size. If so, just ignore it and
+     * set size to 0 */
+    int padding_width = wibox->text_padding.left + wibox->text_padding.right;
+    if(padding_width <= geometry.width)
+        geometry.width -= wibox->text_padding.left + wibox->text_padding.right;
+    else
+        geometry.width = 0;
+
+    int padding_height = wibox->text_padding.top + wibox->text_padding.bottom;
+    if(padding_height <= geometry.height)
+        geometry.height -= wibox->text_padding.top + wibox->text_padding.bottom;
+    else
+        geometry.height = 0;
+
+    draw_text(&wibox->ctx, &wibox->text_ctx, geometry);
+}
+
 /** Draw a wibox.
  * \param wibox The wibox to draw.
  */
@@ -222,6 +287,7 @@ wibox_draw(wibox_t *wibox)
 {
     if(wibox->visible)
     {
+        wibox_render(wibox);
         wibox_refresh_pixmap(wibox);
         wibox->need_update = false;
     }
@@ -541,9 +607,175 @@ wibox_new_init(lua_State *L)
     wibox->opacity = -1;
     wibox->cursor = a_strdup("left_ptr");
     wibox->geometry.width = wibox->geometry.height = 1;
+    wibox->text_ctx.valign = AlignTop;
     wibox->need_update = true;
     return wibox;
 }
+
+static int
+luaA_wibox_set_text(lua_State *L, wibox_t *wibox)
+{
+    size_t len;
+    const char *buf;
+
+    if(lua_isnil(L, -1))
+    {
+        /* delete */
+        draw_text_context_wipe(&wibox->text_ctx);
+        p_clear(&wibox->text_ctx, 1);
+    }
+    else if((buf = luaL_checklstring(L, -1, &len)))
+    {
+        char *text;
+        ssize_t tlen;
+        /* if text has been converted to UTF-8 */
+        if(draw_iso2utf8(buf, len, &text, &tlen))
+        {
+            draw_text_context_init(&wibox->text_ctx, text, tlen);
+            p_delete(&text);
+        }
+        else
+            draw_text_context_init(&wibox->text_ctx, buf, len);
+    }
+    return 0;
+}
+
+static int
+luaA_wibox_get_text(lua_State *L, wibox_t *wibox)
+{
+    lua_pushlstring(L, wibox->text_ctx.text, wibox->text_ctx.len);
+    return 1;
+}
+
+static int
+luaA_wibox_text_padding(lua_State *L)
+{
+    wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
+
+    if(lua_gettop(L) == 2)
+        wibox->text_padding = luaA_getopt_padding(L, 2, &wibox->text_padding);
+
+    return luaA_pushpadding(L, &wibox->text_padding);
+}
+
+static int
+luaA_wibox_get_ellipsize(lua_State *L, wibox_t *wibox)
+{
+    switch(wibox->text_ctx.ellip)
+    {
+      case PANGO_ELLIPSIZE_START:
+        lua_pushliteral(L, "start");
+        break;
+      case PANGO_ELLIPSIZE_MIDDLE:
+        lua_pushliteral(L, "middle");
+        break;
+      case PANGO_ELLIPSIZE_END:
+        lua_pushliteral(L, "end");
+        break;
+      case PANGO_ELLIPSIZE_NONE:
+        lua_pushliteral(L, "none");
+        break;
+    }
+
+    return 1;
+}
+
+
+static int
+luaA_wibox_set_ellipsize(lua_State *L, wibox_t *wibox)
+{
+    size_t len;
+    const char *buf;
+
+    if((buf = luaL_checklstring(L, 3, &len)))
+        switch(a_tokenize(buf, len))
+        {
+          case A_TK_START:
+            wibox->text_ctx.ellip = PANGO_ELLIPSIZE_START;
+            break;
+          case A_TK_MIDDLE:
+            wibox->text_ctx.ellip = PANGO_ELLIPSIZE_MIDDLE;
+            break;
+          case A_TK_END:
+            wibox->text_ctx.ellip = PANGO_ELLIPSIZE_END;
+            break;
+          case A_TK_NONE:
+            wibox->text_ctx.ellip = PANGO_ELLIPSIZE_NONE;
+            break;
+          default:
+            return 0;
+        }
+
+    wibox->need_update = true;
+
+    return 0;
+}
+
+static int
+luaA_wibox_get_wrap(lua_State *L, wibox_t *wibox)
+{
+    switch(wibox->text_ctx.wrap)
+    {
+      case PANGO_WRAP_WORD:
+        lua_pushliteral(L, "word");
+        break;
+      case PANGO_WRAP_CHAR:
+        lua_pushliteral(L, "char");
+        break;
+      case PANGO_WRAP_WORD_CHAR:
+        lua_pushliteral(L, "word_char");
+        break;
+    }
+
+    return 1;
+}
+
+static int
+luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
+{
+    size_t len;
+    const char *buf;
+
+    if((buf = luaL_checklstring(L, 3, &len)))
+        switch(a_tokenize(buf, len))
+        {
+          case A_TK_WORD:
+            wibox->text_ctx.wrap = PANGO_WRAP_WORD;
+            break;
+          case A_TK_CHAR:
+            wibox->text_ctx.wrap = PANGO_WRAP_CHAR;
+            break;
+          case A_TK_WORD_CHAR:
+            wibox->text_ctx.wrap = PANGO_WRAP_WORD_CHAR;
+            break;
+          default:
+            return 0;
+        }
+
+    wibox->need_update = true;
+
+    return 0;
+}
+
+#define DO_WIBOX_ALIGN_FUNC(field) \
+    static int \
+    luaA_wibox_set_##field(lua_State *L, wibox_t *wibox) \
+    { \
+        size_t len; \
+        const char *buf = luaL_checklstring(L, -1, &len); \
+        wibox->text_ctx.field = draw_align_fromstr(buf, len); \
+        wibox->need_update = true; \
+        return 0; \
+    } \
+    static int \
+    luaA_wibox_get_##field(lua_State *L, wibox_t *wibox) \
+    { \
+        lua_pushstring(L, draw_align_tostr(wibox->text_ctx.field)); \
+        return 1; \
+    }
+DO_WIBOX_ALIGN_FUNC(align)
+DO_WIBOX_ALIGN_FUNC(valign)
+#undef DO_WIBOX_ALIGN_FUNC
 
 void
 wibox_class_setup(lua_State *L)
@@ -551,6 +783,7 @@ wibox_class_setup(lua_State *L)
     static const struct luaL_reg wibox_methods[] =
     {
         LUA_CLASS_METHODS(wibox)
+        { "text_padding", luaA_wibox_text_padding },
         { NULL, NULL }
     };
 
@@ -594,6 +827,26 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip);
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_TEXT,
+                            (lua_class_propfunc_t) luaA_wibox_set_text,
+                            (lua_class_propfunc_t) luaA_wibox_get_text,
+                            (lua_class_propfunc_t) luaA_wibox_set_text);
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ELLIPSIZE,
+                            (lua_class_propfunc_t) luaA_wibox_set_ellipsize,
+                            (lua_class_propfunc_t) luaA_wibox_get_ellipsize,
+                            (lua_class_propfunc_t) luaA_wibox_set_ellipsize);
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_WRAP,
+                            (lua_class_propfunc_t) luaA_wibox_set_wrap,
+                            (lua_class_propfunc_t) luaA_wibox_get_wrap,
+                            (lua_class_propfunc_t) luaA_wibox_set_wrap);
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ALIGN,
+                            (lua_class_propfunc_t) luaA_wibox_set_align,
+                            (lua_class_propfunc_t) luaA_wibox_get_align,
+                            (lua_class_propfunc_t) luaA_wibox_set_align);
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_VALIGN,
+                            (lua_class_propfunc_t) luaA_wibox_set_valign,
+                            (lua_class_propfunc_t) luaA_wibox_get_valign,
+                            (lua_class_propfunc_t) luaA_wibox_set_valign);
 
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update);
