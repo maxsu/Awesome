@@ -383,33 +383,7 @@ luaA_wibox_need_update(lua_State *L)
 static int
 luaA_wibox_new(lua_State *L)
 {
-    luaA_class_new(L, (lua_class_t *) &wibox_class);
-
-    wibox_t *w = luaA_checkudata(L, -1, (lua_class_t *) &wibox_class);
-
-    if(!w->ctx.fg.initialized)
-        w->ctx.fg = globalconf.colors.fg;
-
-    if(!w->ctx.bg.initialized)
-        w->ctx.bg = globalconf.colors.bg;
-
-    w->visible = true;
-
-    if(!w->opacity)
-        w->opacity = -1;
-
-    if(!w->cursor)
-        w->cursor = a_strdup("left_ptr");
-
-    if(!w->geometry.width)
-        w->geometry.width = 1;
-
-    if(!w->geometry.height)
-        w->geometry.height = 1;
-
-    w->movable = w->resizable = true;
-
-    return 1;
+    return luaA_class_new(L, (lua_class_t *) &wibox_class);
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
@@ -552,6 +526,25 @@ luaA_wibox_set_shape_clip(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
+/** Create a new wibox and init its default values.
+ * The wibox is left on the stack.
+ * \param L The Lua VM state.
+ * \return A pointer to a wibox object, initialized.
+ */
+static wibox_t *
+wibox_new_init(lua_State *L)
+{
+    wibox_t *wibox = wibox_new(L);
+    wibox->visible = wibox->movable = wibox->resizable = true;
+    wibox->ctx.fg = globalconf.colors.fg;
+    wibox->ctx.bg = globalconf.colors.bg;
+    wibox->opacity = -1;
+    wibox->cursor = a_strdup("left_ptr");
+    wibox->geometry.width = wibox->geometry.height = 1;
+    wibox->need_update = true;
+    return wibox;
+}
+
 void
 wibox_class_setup(lua_State *L)
 {
@@ -568,7 +561,7 @@ wibox_class_setup(lua_State *L)
     };
 
     luaA_class_setup(L, (lua_class_t *) &wibox_class, "wibox", (lua_class_t *) &ewindow_class,
-                     (lua_class_allocator_t) wibox_new,
+                     (lua_class_allocator_t) wibox_new_init,
                      (lua_class_collector_t) wibox_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
