@@ -48,8 +48,6 @@ struct wibox_t
     bool need_shape_update;
     /** Background image */
     image_t *bg_image;
-    /** The graphic context. */
-    xcb_gcontext_t gc;
     /** Draw context */
     draw_context_t ctx;
     /** The wibox text stuff */
