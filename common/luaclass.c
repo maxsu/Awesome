@@ -396,8 +396,7 @@ static lua_class_property_t *
 lua_class_property_array_getbyid(lua_class_property_array_t *arr,
                                  awesome_token_t id)
 {
-    lua_class_property_t lookup_prop = { .id = id };
-    return lua_class_property_array_lookup(arr, &lookup_prop);
+    return lua_class_property_array_lookup(arr, (lua_class_property_t) { .id = id });
 }
 
 /** Get a property of a object.
