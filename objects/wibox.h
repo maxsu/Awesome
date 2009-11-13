@@ -59,7 +59,7 @@ struct wibox_t
 
 void wibox_unref_simplified(wibox_t **);
 
-ARRAY_FUNCS(wibox_t *, wibox, wibox_unref_simplified)
+BARRAY_FUNCS(wibox_t *, wibox, wibox_unref_simplified, window_cmp)
 
 void wibox_refresh(void);
 
