@@ -492,20 +492,24 @@ ewmh_client_check_hints(client_t *c)
         state = (xcb_atom_t *) data;
         ewindow_type_t type = c->type;
         for(int i = 0; i < xcb_get_property_value_length(reply) / ssizeof(xcb_atom_t); i++)
-            if(state[i] == _NET_WM_WINDOW_TYPE_DESKTOP)
-                type = MAX(c->type, EWINDOW_TYPE_DESKTOP);
-            else if(state[i] == _NET_WM_WINDOW_TYPE_DIALOG)
-                type = MAX(c->type, EWINDOW_TYPE_DIALOG);
-            else if(state[i] == _NET_WM_WINDOW_TYPE_SPLASH)
-                type = MAX(c->type, EWINDOW_TYPE_SPLASH);
-            else if(state[i] == _NET_WM_WINDOW_TYPE_DOCK)
-                type = MAX(c->type, EWINDOW_TYPE_DOCK);
-            else if(state[i] == _NET_WM_WINDOW_TYPE_MENU)
-                type = MAX(c->type, EWINDOW_TYPE_MENU);
-            else if(state[i] == _NET_WM_WINDOW_TYPE_TOOLBAR)
-                type = MAX(c->type, EWINDOW_TYPE_TOOLBAR);
-            else if(state[i] == _NET_WM_WINDOW_TYPE_UTILITY)
-                type = MAX(c->type, EWINDOW_TYPE_UTILITY);
+            if(0) {}
+#define HANDLE(wtype) \
+            else if(state[i] == _NET_WM_WINDOW_##wtype) \
+                type = MAX(c->type, EWINDOW_##wtype);
+HANDLE(TYPE_DESKTOP)
+HANDLE(TYPE_DOCK)
+HANDLE(TYPE_TOOLBAR)
+HANDLE(TYPE_MENU)
+HANDLE(TYPE_UTILITY)
+HANDLE(TYPE_SPLASH)
+HANDLE(TYPE_DIALOG)
+HANDLE(TYPE_DROPDOWN_MENU)
+HANDLE(TYPE_POPUP_MENU)
+HANDLE(TYPE_TOOLTIP)
+HANDLE(TYPE_NOTIFICATION)
+HANDLE(TYPE_COMBO)
+HANDLE(TYPE_DND)
+#undef HANDLE
 
         luaA_object_push(globalconf.L, c);
         ewindow_set_type(globalconf.L, -1, type);
