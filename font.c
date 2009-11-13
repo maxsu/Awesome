@@ -24,8 +24,6 @@
 
 #include "font.h"
 #include "screen.h"
-#include "globalconf.h"
-#include "common/xutil.h"
 
 /** Init a new Pango font.
  * \param font The font to init.
