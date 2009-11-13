@@ -123,8 +123,8 @@ wibox_draw_context_update(wibox_t *w)
 
     draw_context_wipe(&w->ctx);
 
-    if(w->ctx.pscreen)
-        draw_context_init(&w->ctx, w->ctx.pscreen,
+    if(w->screen)
+        draw_context_init(&w->ctx, w->screen->protocol_screen,
                           w->geometry.width,
                           w->geometry.height,
                           &fg, &bg);
@@ -164,7 +164,6 @@ wibox_init(wibox_t *w, protocol_screen_t *pscreen)
                       });
 
     /* Update draw context physical screen, important for Zaphod. */
-    w->ctx.pscreen = pscreen;
     wibox_draw_context_update(w);
 
     /* The default GC is just a newly created associated to the root window */
@@ -242,7 +241,7 @@ wibox_render(wibox_t *wibox)
         char *data;
         xcb_pixmap_t rootpix;
         xcb_get_property_cookie_t prop_c;
-        int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, wibox->ctx.pscreen);
+        int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, wibox->screen->protocol_screen);
         xcb_screen_t *s = xutil_screen_get(_G_connection, phys_screen);
         prop_c = xcb_get_property_unchecked(_G_connection, false, s->root, _XROOTPMAP_ID,
                                             PIXMAP, 0, 1);
@@ -255,7 +254,7 @@ wibox_render(wibox_t *wibox)
                               wibox->ctx.pixmap, wibox->gc,
                               x, y,
                               0, 0,
-                              wibox->ctx.width, wibox->ctx.height);
+                              wibox->geometry.width, wibox->geometry.height);
             p_delete(&prop_r);
         }
     }
@@ -268,8 +267,8 @@ wibox_render(wibox_t *wibox)
     color_t col;
     xcolor_to_color(&wibox->ctx.bg, &col);
     draw_rectangle(&wibox->ctx, (area_t) { .x = 0, .y = 0,
-                                           .width = wibox->ctx.width,
-                                           .height = wibox->ctx.height },
+                                           .width = wibox->geometry.width,
+                                           .height = wibox->geometry.height },
                    1.0, true, &col);
 
     /* Compute where to draw text, using padding */
