@@ -33,12 +33,11 @@
 
 typedef enum
 {
-    AlignLeft   = (0),
-    AlignRight  = (1),
-    AlignCenter = (1 << 1),
-    AlignTop    = (1 << 2),
-    AlignBottom = (1 << 3),
-    AlignMiddle = (1 << 5)
+    AlignLeft = 0,
+    AlignRight,
+    AlignCenter,
+    AlignTop,
+    AlignBottom
 } alignment_t;
 
 typedef struct
