@@ -86,12 +86,17 @@ signal_remove(signal_array_t *arr, const char *name, const void *ref)
     signal_t *sigfound = signal_array_getbyid(arr,
                                               a_strhash((const unsigned char *) name));
     if(sigfound)
+    {
         foreach(func, sigfound->sigfuncs)
             if(ref == *func)
             {
                 cptr_array_remove(&sigfound->sigfuncs, func);
                 break;
             }
+        /* No more function for the signal? Remove it. */
+        if(!sigfound->sigfuncs.len)
+            signal_array_remove(arr, sigfound);
+    }
 }
 
 #endif
