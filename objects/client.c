@@ -126,11 +126,8 @@ client_set_class_instance(lua_State *L, int cidx, const char *class, const char 
 client_t *
 client_getbywin(xcb_window_t w)
 {
-    foreach(c, globalconf.clients)
-        if((*c)->window == w)
-            return *c;
-
-    return NULL;
+    client_t **c = client_array_lookup(&globalconf.clients, &(client_t) { .window = w });
+    return c ? *c : NULL;
 }
 
 /** Check if client supports atom a protocol in WM_PROTOCOL.
@@ -189,7 +186,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t
 
     /* Duplicate client and push it in client list */
     lua_pushvalue(globalconf.L, -1);
-    client_array_push(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
+    client_array_insert(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
 
     /* Set the right screen */
     screen_t *screen = NULL;

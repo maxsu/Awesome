@@ -71,6 +71,13 @@ typedef struct
     lua_interface_window_isvisible_t isvisible;
 } lua_interface_window_t;
 
+static inline int
+window_cmp(const void *a, const void *b)
+{
+    window_t *x = *((window_t **) a), *y = *((window_t**) b);
+    return x->window > y->window ? 1 : (x->window < y->window ? -1 : 0);
+}
+
 lua_class_t window_class;
 LUA_OBJECT_FUNCS(&window_class, window_t, window)
 

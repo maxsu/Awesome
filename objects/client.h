@@ -63,7 +63,7 @@ struct client_t
     uint32_t pid;
 };
 
-ARRAY_FUNCS(client_t *, client, DO_NOTHING)
+BARRAY_FUNCS(client_t *, client, DO_NOTHING, window_cmp)
 
 /** Client class */
 lua_interface_window_t client_class;
