@@ -239,7 +239,7 @@ wibox_render(wibox_t *wibox)
                               wibox->ctx.pixmap, globalconf.gc,
                               x, y,
                               0, 0,
-                              wibox->ctx.width, wibox->ctx.height);
+                              wibox->geometry.width, wibox->geometry.height);
             p_delete(&prop_r);
         }
     }
@@ -252,8 +252,8 @@ wibox_render(wibox_t *wibox)
     color_t col;
     xcolor_to_color(&wibox->ctx.bg, &col);
     draw_rectangle(&wibox->ctx, (area_t) { .x = 0, .y = 0,
-                                           .width = wibox->ctx.width,
-                                           .height = wibox->ctx.height },
+                                           .width = wibox->geometry.width,
+                                           .height = wibox->geometry.height },
                    1.0, true, &col);
 
     /* Compute where to draw text, using padding */

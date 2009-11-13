@@ -138,8 +138,6 @@ draw_context_init(draw_context_t *d,
                       d->pixmap, xcb_screen->root,
                       width, height);
 
-    d->width = width;
-    d->height = height;
     d->surface = cairo_xcb_surface_create(_G_connection,
                                           d->pixmap, globalconf.visual,
                                           width, height);
