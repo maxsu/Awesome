@@ -23,7 +23,6 @@
 #include <ctype.h>
 
 #include "color.h"
-#include "globalconf.h"
 #include "awesome.h"
 #include "common/xutil.h"
 
