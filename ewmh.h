@@ -23,7 +23,6 @@
 #define AWESOME_EWMH_H
 
 #include "globalconf.h"
-#include "strut.h"
 
 void ewmh_init(void);
 void ewmh_update_net_numbers_of_desktop(void);
