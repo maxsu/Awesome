@@ -779,14 +779,14 @@ luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
     { \
         size_t len; \
         const char *buf = luaL_checklstring(L, -1, &len); \
-        wibox->text_ctx.field = draw_align_fromstr(buf, len); \
+        wibox->text_ctx.field = draw_##field##_fromstr(buf, len); \
         wibox->need_update = true; \
         return 0; \
     } \
     static int \
     luaA_wibox_get_##field(lua_State *L, wibox_t *wibox) \
     { \
-        lua_pushstring(L, draw_align_tostr(wibox->text_ctx.field)); \
+        lua_pushstring(L, draw_##field##_tostr(wibox->text_ctx.field)); \
         return 1; \
     }
 DO_WIBOX_ALIGN_FUNC(align)

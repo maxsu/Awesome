@@ -97,6 +97,8 @@ void draw_rectangle(draw_context_t *, area_t, float, bool, const color_t *);
 void draw_image(draw_context_t *, int, int, double, image_t *);
 alignment_t draw_align_fromstr(const char *, ssize_t);
 const char *draw_align_tostr(alignment_t);
+alignment_t draw_valign_fromstr(const char *, ssize_t);
+const char *draw_valign_tostr(alignment_t);
 
 static inline void
 draw_text_context_wipe(draw_text_context_t *pdata)
