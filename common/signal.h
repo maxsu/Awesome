@@ -50,7 +50,7 @@ DO_BARRAY(signal_t, signal, signal_wipe, signal_cmp)
 static inline signal_t *
 signal_array_getbyid(const signal_array_t *arr, unsigned long id)
 {
-    return signal_array_lookup(arr, &(signal_t) { .id = id });
+    return signal_array_lookup(arr, (signal_t) { .id = id });
 }
 
 /** Add a signal inside a signal array.
