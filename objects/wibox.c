@@ -210,10 +210,8 @@ wibox_map(wibox_t *wibox)
 wibox_t *
 wibox_getbywin(xcb_window_t win)
 {
-    foreach(w, globalconf.wiboxes)
-        if((*w)->window == win)
-            return *w;
-    return NULL;
+    wibox_t **w = wibox_array_lookup(&globalconf.wiboxes, &(wibox_t) { .window = win });
+    return w ? *w : NULL;
 }
 
 /** Draw a wibox.
@@ -345,9 +343,9 @@ wibox_attach(lua_State *L, int udx, screen_t *s)
                                                .width = wibox->geometry.width,
                                                .height = wibox->geometry.height });
 
-    wibox_array_append(&globalconf.wiboxes, wibox);
-
     wibox_init(wibox);
+
+    wibox_array_insert(&globalconf.wiboxes, wibox);
 
     xwindow_set_cursor(wibox->window,
                        xcursor_new(_G_connection, xcursor_font_fromstr(wibox->cursor)));
