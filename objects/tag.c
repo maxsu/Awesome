@@ -181,22 +181,12 @@ untag_ewindow(lua_State *L, int widx, int tidx)
     tag_t *tag = luaA_checkudata(L, tidx, &tag_class);
     ewindow_t *ewindow = luaA_checkudata(L, widx, (lua_class_t *) &ewindow_class);
 
-    foreach(item, tag->windows)
-        if(*item == ewindow)
-        {
-            ewindow_array_remove(&tag->windows, item);
-            /* Unref ewindow from tag */
-            luaA_object_unref_item(L, tidx, ewindow);
-            break;
-        }
-    foreach(item, ewindow->tags)
-        if(*item == tag)
-        {
-            tag_array_remove(&ewindow->tags, item);
-            /* Unref tag from ewindow */
-            luaA_object_unref_item(L, widx, tag);
-            break;
-        }
+    ewindow_array_find_and_remove(&tag->windows, ewindow);
+    tag_array_find_and_remove(&ewindow->tags, tag);
+    /* Unref ewindow from tag */
+    luaA_object_unref_item(L, tidx, ewindow);
+    /* Unref tag from ewindow */
+    luaA_object_unref_item(L, widx, tag);
     tag_ewindow_emit_signal(L, tidx, widx, "untagged");
 }
 

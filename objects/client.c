@@ -290,8 +290,8 @@ void
 client_unmanage(client_t *c)
 {
     /* remove client from global list and everywhere else */
-    client_array_find_and_remove(&globalconf.clients, c);
-    ewindow_binary_array_find_and_remove(&_G_ewindows, (ewindow_t *) c);
+    client_array_lookup_and_remove(&globalconf.clients, &(client_t) { .window = c->window });
+    ewindow_binary_array_lookup_and_remove(&_G_ewindows, &(ewindow_t) { .window = c->window });
 
     /* Tag and window reference each other so there are tight forever.
      * We don't want the tag the unmanaged client to be referenced forever in a
