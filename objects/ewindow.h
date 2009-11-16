@@ -91,12 +91,17 @@ struct ewindow_t
 };
 
 DO_ARRAY(ewindow_t *, ewindow, DO_NOTHING)
+DO_BARRAY(ewindow_t *, ewindow_binary, DO_NOTHING, window_cmp)
+
+/** All managed ewindows */
+ewindow_binary_array_t _G_ewindows;
 
 lua_interface_window_t ewindow_class;
 
 void ewindow_class_setup(lua_State *);
 
 bool ewindow_isvisible(ewindow_t *);
+ewindow_t *ewindow_getbywin(xcb_window_t);
 
 void ewindow_set_opacity(lua_State *, int, double);
 void ewindow_set_border_width(lua_State *, int, int);

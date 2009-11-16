@@ -324,12 +324,8 @@ luaA_wibox_destroy(lua_State *L)
     xcb_destroy_window(_G_connection, wibox->window);
 
     /* Remove it right away */
-    foreach(item, globalconf.wiboxes)
-        if(*item == wibox)
-        {
-            wibox_array_remove(&globalconf.wiboxes, item);
-            break;
-        }
+    wibox_array_find_and_remove(&globalconf.wiboxes, wibox);
+    ewindow_binary_array_find_and_remove(&_G_ewindows, (ewindow_t *) wibox);
 
     luaA_object_emit_signal(globalconf.L, 1, "property::window", 0);
 
@@ -401,6 +397,7 @@ luaA_wibox_new(lua_State *L)
 
     /* Now we can insert because we have a window id */
     wibox_array_insert(&globalconf.wiboxes, wibox);
+    ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) wibox);
 
     /* Update draw context physical screen, important for Zaphod. */
     wibox_draw_context_update(wibox);
