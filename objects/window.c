@@ -22,11 +22,9 @@
 #include <xcb/xcb_image.h>
 
 #include "luaa.h"
-#include "bma.h"
 #include "awesome.h"
 #include "xwindow.h"
 #include "ewmh.h"
-#include "bma.h"
 #include "screen.h"
 #include "objects/window.h"
 #include "objects/tag.h"
@@ -137,7 +135,7 @@ window_focus(lua_State *L, int idx)
         /* If the window is banned but isvisible, unban it right now because you
          * can't set focus on unmapped window */
         if(window_isvisible(L, idx))
-            DO_WITH_BMA(window_unban(window));
+            window_unban(window);
         else
             return;
 
@@ -414,7 +412,7 @@ window_set_geometry(lua_State *L, int udx, area_t geometry)
     if(mask_vals)
     {
         if(w->window)
-            DO_WITH_BMA(xcb_configure_window(_G_connection, w->window, mask_vals, set_geometry_win_vals));
+            xcb_configure_window(_G_connection, w->window, mask_vals, set_geometry_win_vals);
 
         /* Check if the screen has changed */
         screen_t *screen = screen_getbycoord(w->screen, w->geometry.x, w->geometry.y);
