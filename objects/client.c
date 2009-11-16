@@ -464,6 +464,8 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, transient_for, luaA_object_push)
+LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, (lua_class_t *) &client_class, client_t, transient_for)
 
 /* Client module.
  * \param L The Lua VM state.
@@ -577,14 +579,13 @@ client_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_focusable,
                             NULL);
+    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TRANSIENT_FOR,
+                            NULL,
+                            (lua_class_propfunc_t) luaA_client_get_transient_for,
+                            NULL);
     /* Property overrides */
     /* Cursor is not available */
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_CURSOR, NULL, NULL, NULL);
-    /* Transient for is readonly */
-    luaA_class_add_property((lua_class_t *) &client_class, A_TK_TRANSIENT_FOR,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_ewindow_get_transient_for,
-                            NULL);
     /* Type is not modifiable */
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_TYPE,
                             NULL,
