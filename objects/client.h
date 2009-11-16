@@ -87,6 +87,8 @@ struct client_t
     char *role;
     /** Client pid */
     uint32_t pid;
+    /** Client it is transient for */
+    client_t *transient_for;
 };
 
 BARRAY_FUNCS(client_t *, client, DO_NOTHING, window_cmp)
@@ -114,6 +116,7 @@ void client_set_alt_name(lua_State *L, int, char *);
 void client_set_group_window(lua_State *, int, xcb_window_t);
 void client_set_icon(lua_State *, int, int);
 void client_set_skip_taskbar(lua_State *, int, bool);
+void client_set_transient_for(lua_State *, int, int);
 bool client_hasproto(client_t *, xcb_atom_t);
 void client_class_setup(lua_State *);
 

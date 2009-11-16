@@ -80,8 +80,6 @@ typedef enum
     bool modal; \
     /** True if the client is on top */ \
     bool ontop; \
-    /** Window it is transient for */ \
-    ewindow_t *transient_for; \
     /** The window type */ \
     ewindow_type_t type;
 
@@ -111,7 +109,6 @@ void ewindow_set_fullscreen(lua_State *, int, bool);
 void ewindow_set_maximized_horizontal(lua_State *, int, bool);
 void ewindow_set_maximized_vertical(lua_State *, int, bool);
 void ewindow_set_minimized(lua_State *, int, bool);
-void ewindow_set_transient_for(lua_State *, int, int);
 void ewindow_set_type(lua_State *, int, ewindow_type_t);
 
 int luaA_ewindow_get_transient_for(lua_State *, ewindow_t *);

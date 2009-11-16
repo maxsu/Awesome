@@ -116,7 +116,7 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_cookie_t cookie)
     ewindow_set_type(globalconf.L, -1, EWINDOW_TYPE_DIALOG);
     ewindow_set_above(globalconf.L, -1, false);
     luaA_object_push(globalconf.L, client_getbywin(trans));
-    ewindow_set_transient_for(globalconf.L, -2, -1);
+    client_set_transient_for(globalconf.L, -2, -1);
     lua_pop(globalconf.L, 2);
 }
 
