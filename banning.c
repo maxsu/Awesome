@@ -20,7 +20,6 @@
  */
 
 #include "banning.h"
-#include "bma.h"
 #include "objects/tag.h"
 #include "objects/client.h"
 #include "screen.h"
@@ -83,8 +82,6 @@ reban(screen_t *screen)
 
     screen->need_lazy_banning = false;
 
-    bma_enable();
-
     foreach(c, globalconf.clients)
         if((*c)->screen == screen)
         {
@@ -105,9 +102,6 @@ reban(screen_t *screen)
                 window_ban((window_t *) *c);
             lua_pop(globalconf.L, 1);
         }
-        /* we don't touch other screens windows */
-
-    bma_disable();
 }
 
 /** Check all screens if they need to rebanned

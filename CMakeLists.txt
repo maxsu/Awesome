@@ -38,7 +38,6 @@ set(AWE_DOC_FILES
 set(AWE_SRCS
     ${SOURCE_DIR}/awesome.c
     ${SOURCE_DIR}/banning.c
-    ${SOURCE_DIR}/bma.c
     ${SOURCE_DIR}/color.c
     ${SOURCE_DIR}/dbus.c
     ${SOURCE_DIR}/draw.c
