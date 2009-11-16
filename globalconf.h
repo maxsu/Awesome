@@ -34,13 +34,11 @@ typedef struct wibox_t wibox_t;
 typedef struct a_screen screen_t;
 typedef struct client_t client_t;
 typedef struct tag tag_t;
-typedef struct ewindow_t ewindow_t;
 
 ARRAY_TYPE(tag_t *, tag)
 ARRAY_TYPE(screen_t, screen)
 ARRAY_TYPE(client_t *, client)
 ARRAY_TYPE(wibox_t *, wibox)
-ARRAY_TYPE(ewindow_t *, ewindow)
 
 /** Main configuration structure */
 typedef struct

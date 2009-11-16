@@ -25,8 +25,8 @@
 #include <lua.h>
 
 void stack_init(void);
-void stack_ewindow_raise(lua_State *L, int);
-void stack_ewindow_lower(lua_State *L, int);
+void stack_window_raise(lua_State *L, int);
+void stack_window_lower(lua_State *L, int);
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

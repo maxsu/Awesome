@@ -376,7 +376,7 @@ luaA_wibox_new(lua_State *L)
     wibox->parent = wibox->screen->protocol_screen->root;
 
     /* Raise window */
-    stack_ewindow_raise(L, -1);
+    stack_window_raise(L, -1);
 
     int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, wibox->screen->protocol_screen);
     xcb_screen_t *s = xutil_screen_get(_G_connection, phys_screen);

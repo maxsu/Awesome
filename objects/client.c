@@ -231,7 +231,7 @@ HANDLE_GEOM(height)
     ewmh_client_check_hints(c);
 
     /* Push client in stack */
-    stack_ewindow_raise(globalconf.L, -1);
+    stack_window_raise(globalconf.L, -1);
 
     /* update window title */
     property_update_wm_name(c, NULL);
