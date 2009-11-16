@@ -26,7 +26,6 @@
 #include "awesome.h"
 #include "objects/wibox.h"
 #include "luaa.h"
-#include "bma.h"
 #include "common/tokenize.h"
 #include "common/xutil.h"
 
@@ -199,7 +198,6 @@ luaA_mouse_coords(lua_State *L)
     if(lua_gettop(L) >= 1)
     {
         luaA_checktable(L, 1);
-        bool ignore_enter_notify = (lua_gettop(L) == 2 && luaA_checkboolean(L, 2));
 
         if(!mouse_query_pointer_root(&mouse_x, &mouse_y, NULL, &mask))
             return 0;
@@ -207,10 +205,7 @@ luaA_mouse_coords(lua_State *L)
         x = luaA_getopt_number(L, 1, "x", mouse_x);
         y = luaA_getopt_number(L, 1, "y", mouse_y);
 
-        if(ignore_enter_notify)
-            DO_WITH_BMA(mouse_warp_pointer(globalconf.screen->root, x, y));
-        else
-            mouse_warp_pointer(globalconf.screen->root, x, y);
+        mouse_warp_pointer(globalconf.screen->root, x, y);
 
         lua_pop(L, 1);
     }

@@ -29,7 +29,6 @@
 #include "xwindow.h"
 #include "luaa.h"
 #include "ewmh.h"
-#include "bma.h"
 #include "objects/tag.h"
 #include "common/xcursor.h"
 #include "common/xutil.h"
@@ -157,7 +156,7 @@ static void
 wibox_unmap(wibox_t *wibox)
 {
     /* Map the wibox */
-    DO_WITH_BMA(xcb_unmap_window(_G_connection, wibox->window));
+    xcb_unmap_window(_G_connection, wibox->window);
     if(strut_has_value(&wibox->strut))
     {
         lua_pushlightuserdata(globalconf.L, wibox->screen);
@@ -170,7 +169,7 @@ static void
 wibox_map(wibox_t *wibox)
 {
     /* Map the wibox */
-    DO_WITH_BMA(xcb_map_window(_G_connection, wibox->window));
+    xcb_map_window(_G_connection, wibox->window);
     /* We must make sure the wibox does not display garbage */
     wibox->need_update = true;
     if(strut_has_value(&wibox->strut))
@@ -319,7 +318,7 @@ luaA_wibox_destroy(lua_State *L)
 {
     wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
 
-    DO_WITH_BMA(xcb_destroy_window(_G_connection, wibox->window));
+    xcb_destroy_window(_G_connection, wibox->window);
 
     /* Remove it right away */
     foreach(item, globalconf.wiboxes)

@@ -11,7 +11,6 @@ module("mouse")
 
 --- Get or set the mouse coords.
 -- @param coords_table None or a table with x and y keys as mouse coordinates.
--- @param silent Disable mouse::enter or mouse::leave events that could be triggered by the pointer when moving.
 -- @return A table with mouse coordinates.
 -- @name coords
 -- @class function
