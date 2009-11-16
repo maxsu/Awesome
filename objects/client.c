@@ -187,6 +187,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t
     /* Duplicate client and push it in client list */
     lua_pushvalue(globalconf.L, -1);
     client_array_insert(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
+    ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) c);
 
     /* Set the right screen */
     screen_t *screen = NULL;
@@ -289,12 +290,8 @@ void
 client_unmanage(client_t *c)
 {
     /* remove client from global list and everywhere else */
-    foreach(elem, globalconf.clients)
-        if(*elem == c)
-        {
-            client_array_remove(&globalconf.clients, elem);
-            break;
-        }
+    client_array_find_and_remove(&globalconf.clients, c);
+    ewindow_binary_array_find_and_remove(&_G_ewindows, (ewindow_t *) c);
 
     /* Tag and window reference each other so there are tight forever.
      * We don't want the tag the unmanaged client to be referenced forever in a

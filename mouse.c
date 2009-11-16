@@ -244,14 +244,7 @@ luaA_mouse_object_under_pointer(lua_State *L)
     if(!mouse_query_pointer_root(&screen, &mouse_x, &mouse_y, &child, NULL))
         return 0;
 
-    wibox_t *wibox;
-    client_t *client;
-    if((wibox = wibox_getbywin(child)))
-        return luaA_object_push(L, wibox);
-    else if((client = client_getbywin(child)))
-        return luaA_object_push(globalconf.L, client);
-
-    return 0;
+    return luaA_object_push(L, ewindow_getbywin(child));
 }
 
 const struct luaL_reg awesome_mouse_methods[] =
