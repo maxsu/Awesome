@@ -245,8 +245,9 @@ xwindow_takefocus(xcb_window_t win)
 void
 xwindow_set_cursor(xcb_window_t w, xcb_cursor_t c)
 {
-    xcb_change_window_attributes(_G_connection, w, XCB_CW_CURSOR,
-                                 (const uint32_t[]) { c });
+    if(w)
+        xcb_change_window_attributes(_G_connection, w, XCB_CW_CURSOR,
+                                     (const uint32_t[]) { c });
 }
 
 /** Set a window border color.
