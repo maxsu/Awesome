@@ -597,7 +597,7 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
             luaA_object_push(globalconf.L, c);
             ewindow_set_minimized(globalconf.L, -1, false);
             /* it will be raised, so just update ourself */
-            stack_ewindow_raise(globalconf.L, -1);
+            stack_window_raise(globalconf.L, -1);
             lua_pop(globalconf.L, 1);
         }
     }
