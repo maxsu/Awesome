@@ -321,8 +321,8 @@ luaA_wibox_destroy(lua_State *L)
     xcb_destroy_window(_G_connection, wibox->window);
 
     /* Remove it right away */
-    wibox_array_lookup_and_remove(&globalconf.wiboxes, wibox);
-    ewindow_binary_array_lookup_and_remove(&_G_ewindows, (ewindow_t *) wibox);
+    wibox_array_lookup_and_remove(&globalconf.wiboxes, &(wibox_t) { .window = wibox->window });
+    ewindow_binary_array_lookup_and_remove(&_G_ewindows, &(ewindow_t) { .window = wibox->window });
 
     luaA_object_emit_signal(globalconf.L, 1, "property::window", 0);
 

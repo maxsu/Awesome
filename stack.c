@@ -30,12 +30,7 @@
 static void
 stack_window_remove(window_t *window)
 {
-    foreach(w, window->parent->stack)
-        if(*w == window)
-        {
-            window_array_remove(&window->parent->stack, w);
-            break;
-        }
+    window_array_find_and_remove(&window->parent->stack, window);
 }
 
 /** Push the window at the beginning of the window stack.
