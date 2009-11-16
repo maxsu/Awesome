@@ -373,7 +373,7 @@ luaA_wibox_new(lua_State *L)
     wibox->parent = globalconf.screens.tab[0].root;
 
     /* Raise window */
-    stack_ewindow_raise(L, -1);
+    stack_window_raise(L, -1);
 
     xcb_screen_t *s = globalconf.screen;
 

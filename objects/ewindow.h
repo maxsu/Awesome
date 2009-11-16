@@ -85,11 +85,14 @@ typedef enum
     /** The window type */ \
     ewindow_type_t type;
 
+typedef struct ewindow_t ewindow_t;
 /** Window structure */
 struct ewindow_t
 {
     EWINDOW_OBJECT_HEADER
 };
+
+DO_ARRAY(ewindow_t *, ewindow, DO_NOTHING)
 
 lua_interface_window_t ewindow_class;
 
@@ -113,8 +116,6 @@ void ewindow_set_type(lua_State *, int, ewindow_type_t);
 
 int luaA_ewindow_get_transient_for(lua_State *, ewindow_t *);
 int luaA_ewindow_get_type(lua_State *, ewindow_t *);
-
-ARRAY_FUNCS(ewindow_t *, ewindow, DO_NOTHING)
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

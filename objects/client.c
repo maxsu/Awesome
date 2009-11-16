@@ -305,7 +305,7 @@ HANDLE_GEOM(height)
     ewmh_client_check_hints(c);
 
     /* Push client in stack */
-    stack_ewindow_raise(globalconf.L, -1);
+    stack_window_raise(globalconf.L, -1);
 
     /* Always stay in NORMAL_STATE. Even though iconified seems more
      * appropriate sometimes. The only possible loss is that clients not using

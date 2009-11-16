@@ -22,6 +22,7 @@
 #include <xcb/xcb_image.h>
 
 #include "luaa.h"
+#include "stack.h"
 #include "awesome.h"
 #include "xwindow.h"
 #include "ewmh.h"
@@ -626,6 +627,18 @@ luaA_window_isvisible(lua_State *L)
 }
 
 static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, focusable)
+static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, layer)
+
+static int
+luaA_window_set_layer(lua_State *L, window_t *window)
+{
+    int layer = luaL_checknumber(L, 3);
+    if(layer >= INT8_MIN && layer <= INT8_MAX)
+        window_set_layer(L, 1, layer);
+    else
+        luaL_error(L, "invalid layer, must be between %d and %d", INT8_MIN, INT8_MAX);
+    return 0;
+}
 
 static int
 luaA_window_set_cursor(lua_State *L, window_t *window)
@@ -665,6 +678,7 @@ luaA_window_focus(lua_State *L)
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, layer, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, cursor, lua_pushstring)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, parent, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, movable, lua_pushboolean)
@@ -685,6 +699,28 @@ luaA_window_get_screen(lua_State *L, window_t *window)
     return 1;
 }
 
+/** Raise an window on top of others which are on the same layer.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_raise(lua_State *L)
+{
+    stack_window_raise(L, 1);
+    return 0;
+}
+
+/** Lower an window on top of others which are on the same layer.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_lower(lua_State *L)
+{
+    stack_window_lower(L, 1);
+    return 0;
+}
+
 void
 window_class_setup(lua_State *L)
 {
@@ -696,6 +732,8 @@ window_class_setup(lua_State *L)
         { "keys", luaA_window_keys },
         { "geometry", luaA_window_geometry },
         { "isvisible", luaA_window_isvisible },
+        { "raise", luaA_window_raise },
+        { "lower", luaA_window_lower },
         { NULL, NULL }
     };
 
@@ -756,6 +794,10 @@ window_class_setup(lua_State *L)
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_resizable,
                             NULL);
+    luaA_class_add_property(&window_class, A_TK_LAYER,
+                            (lua_class_propfunc_t) luaA_window_set_layer,
+                            (lua_class_propfunc_t) luaA_window_get_layer,
+                            (lua_class_propfunc_t) luaA_window_set_layer);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
