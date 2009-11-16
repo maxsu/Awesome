@@ -128,9 +128,6 @@ event_handle_mousegrabber(int x, int y, uint16_t mask)
 static void
 event_handle_button(xcb_button_press_event_t *ev)
 {
-    client_t *c;
-    wibox_t *wibox;
-
     globalconf.timestamp = ev->time;
 
     if(event_handle_mousegrabber(ev->root_x, ev->root_y, 1 << (ev->detail - 1 + 8)))
@@ -142,28 +139,12 @@ event_handle_button(xcb_button_press_event_t *ev)
      * drop them */
     ev->state &= 0x00ff;
 
-    if((wibox = wibox_getbywin(ev->event))
-       || (wibox = wibox_getbywin(ev->child)))
-    {
-        /* If the wibox is child, then x,y are
-         * relative to root window */
-        if(wibox->window == ev->child)
-        {
-            ev->event_x -= wibox->geometry.x;
-            ev->event_y -= wibox->geometry.y;
-        }
+    ewindow_t *ewindow = ewindow_getbywin(ev->event);
 
-        /* Push the wibox */
-        luaA_object_push(globalconf.L, wibox);
-        event_button_callback(ev, &wibox->buttons, 1, NULL);
-    }
-    else if((c = client_getbyframewin(ev->event)))
+    if(ewindow)
     {
-        luaA_object_push(globalconf.L, c);
-        event_button_callback(ev, &c->buttons, 1, NULL);
-        xcb_allow_events(_G_connection,
-                         XCB_ALLOW_REPLAY_POINTER,
-                         XCB_CURRENT_TIME);
+        luaA_object_push(globalconf.L, ewindow);
+        event_button_callback(ev, &ewindow->buttons, 1, NULL);
     }
     else if(ev->child == XCB_NONE)
         if(globalconf.screen->root == ev->event)
@@ -306,24 +287,16 @@ event_handle_motionnotify(xcb_motion_notify_event_t *ev)
 static void
 event_handle_leavenotify(xcb_leave_notify_event_t *ev)
 {
-    wibox_t *wibox;
-    client_t *c;
-
     globalconf.timestamp = ev->time;
 
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return;
 
-    if((c = client_getbyframewin(ev->event)))
-    {
-        luaA_object_push(globalconf.L, c);
-        luaA_object_emit_signal(globalconf.L, -1, "mouse::leave", 0);
-        lua_pop(globalconf.L, 1);
-    }
+    ewindow_t *ewindow = ewindow_getbywin(ev->event);
 
-    if((wibox = wibox_getbywin(ev->event)))
+    if(ewindow)
     {
-        luaA_object_push(globalconf.L, wibox);
+        luaA_object_push(globalconf.L, ewindow);
         luaA_object_emit_signal(globalconf.L, -1, "mouse::leave", 0);
         lua_pop(globalconf.L, 1);
     }
@@ -335,24 +308,16 @@ event_handle_leavenotify(xcb_leave_notify_event_t *ev)
 static void
 event_handle_enternotify(xcb_enter_notify_event_t *ev)
 {
-    client_t *c;
-    wibox_t *wibox;
-
     globalconf.timestamp = ev->time;
 
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return;
 
-    if((wibox = wibox_getbywin(ev->event)))
-    {
-        luaA_object_push(globalconf.L, wibox);
-        luaA_object_emit_signal(globalconf.L, -1, "mouse::enter", 0);
-        lua_pop(globalconf.L, 1);
-    }
+    ewindow_t *ewindow = ewindow_getbywin(ev->event);
 
-    if((c = client_getbyframewin(ev->event)))
+    if(ewindow)
     {
-        luaA_object_push(globalconf.L, c);
+        luaA_object_push(globalconf.L, ewindow);
         luaA_object_emit_signal(globalconf.L, -1, "mouse::enter", 0);
         lua_pop(globalconf.L, 1);
     }
@@ -378,10 +343,10 @@ event_handle_focusin(xcb_focus_in_event_t *ev)
         case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
         case XCB_NOTIFY_DETAIL_NONLINEAR:
           {
-            client_t *c;
+            ewindow_t *ewindow = ewindow_getbywin(ev->event);
 
-            if((c = client_getbywin(ev->event)))
-                window_focus_update((window_t *) c);
+            if(ewindow)
+                window_focus_update((window_t *) ewindow);
           }
         /* all other events are ignored */
         default:
@@ -411,10 +376,10 @@ event_handle_focusout(xcb_focus_in_event_t *ev)
         case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
         case XCB_NOTIFY_DETAIL_NONLINEAR:
           {
-            client_t *c;
+            ewindow_t *ewindow = ewindow_getbywin(ev->event);
 
-            if((c = client_getbywin(ev->event)))
-                window_unfocus_update((window_t *) c);
+            if(ewindow)
+                window_unfocus_update((window_t *) ewindow);
           }
         /* all other events are ignored */
         default:
@@ -467,20 +432,18 @@ event_handle_key(xcb_key_press_event_t *ev)
     {
         /* get keysym ignoring all modifiers */
         xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, 0);
-        window_t *window = (window_t *) client_getbywin(ev->event);
-        if(!window)
-            window = (window_t *) wibox_getbywin(ev->event);
-        if(window)
+        ewindow_t *ewindow = ewindow_getbywin(ev->event);
+        if(ewindow)
         {
             /* first emit key bindings */
-            luaA_object_push(globalconf.L, window);
-            event_key_callback(ev, &window->keys, 1, &keysym);
+            luaA_object_push(globalconf.L, ewindow);
+            event_key_callback(ev, &ewindow->keys, 1, &keysym);
             /* transfer event (keycode + modifiers) to keysym and then convert
              * keysym to string */
             char buf[MAX(MB_LEN_MAX, 32)];
             if(keyresolv_keysym_to_string(keyresolv_get_keysym(ev->detail, ev->state), buf, countof(buf)))
             {
-                luaA_object_push(globalconf.L, window);
+                luaA_object_push(globalconf.L, ewindow);
                 luaA_pushmodifiers(globalconf.L, ev->state);
                 lua_pushstring(globalconf.L, buf);
                 switch(ev->response_type)

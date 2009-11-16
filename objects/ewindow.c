@@ -47,6 +47,13 @@ ewindow_isvisible(ewindow_t *ewindow)
     return false;
 }
 
+ewindow_t *
+ewindow_getbywin(xcb_window_t win)
+{
+    ewindow_t **w = ewindow_binary_array_lookup(&_G_ewindows, &(ewindow_t) { .window = win });
+    return w ? *w : NULL;
+}
+
 /** Return ewindow struts (reserved space at the edge of the screen).
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.

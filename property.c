@@ -352,23 +352,13 @@ static int
 property_handle_net_wm_opacity(uint8_t state,
                                xcb_window_t window)
 {
-    wibox_t *wibox = wibox_getbywin(window);
+    ewindow_t *ewindow = ewindow_getbywin(window);
 
-    if(wibox)
+    if(ewindow)
     {
-        luaA_object_push(globalconf.L, wibox);
-        ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(wibox->window));
+        luaA_object_push(globalconf.L, ewindow);
+        ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(window));
         lua_pop(globalconf.L, -1);
-    }
-    else
-    {
-        client_t *c = client_getbywin(window);
-        if(c)
-        {
-            luaA_object_push(globalconf.L, c);
-            ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(c->window));
-            lua_pop(globalconf.L, 1);
-        }
     }
 
     return 0;
