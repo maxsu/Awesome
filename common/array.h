@@ -106,6 +106,20 @@
     static inline void pfx##_array_append(pfx##_array_t *arr, type_t e) {   \
         pfx##_array_splice(arr, arr->len, 0, &e, 1);                        \
     }                                                                       \
+    static inline type_t *pfx##_array_find(pfx##_array_t *arr, type_t e)    \
+    {                                                                       \
+        foreach(item, *arr)                                                 \
+            if(!memcmp(item, &e, sizeof(e)))                                \
+                return item;                                                \
+        return NULL;                                                        \
+    }                                                                       \
+    static inline void pfx##_array_find_and_remove(pfx##_array_t *arr,      \
+                                                   type_t e)                \
+    {                                                                       \
+        type_t *item = pfx##_array_find(arr, e);                            \
+        if(item)                                                            \
+            pfx##_array_remove(arr, item);                                  \
+    }
 
 /** Binary ordered array functions */
 #define BARRAY_FUNCS(type_t, pfx, dtor, cmp)                                \
@@ -135,6 +149,13 @@
     pfx##_array_lookup(const pfx##_array_t *arr, type_t e)                  \
     {                                                                       \
         return bsearch(&e, arr->tab, arr->len, sizeof(type_t), cmp);        \
+    }                                                                       \
+    static inline void pfx##_array_lookup_and_remove(pfx##_array_t *arr,    \
+                                                     type_t e)              \
+    {                                                                       \
+        type_t *item = pfx##_array_lookup(arr, e);                          \
+        if(item)                                                            \
+            pfx##_array_remove(arr, item);                                  \
     }
 
 #define DO_ARRAY(type_t, pfx, dtor)                                         \
