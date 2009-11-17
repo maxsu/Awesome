@@ -24,40 +24,26 @@
 #include "objects/client.h"
 #include "screen.h"
 
+/** True if the banning on this screen needs to be updated */
+static bool need_lazy_banning;
+
 /** Reban windows following current selected tags.
  */
 static int
 banning_need_update(lua_State *L)
 {
-    screen_t *screen = NULL;
-
-    /** \todo add a common class for object with a screen? */
-    client_t *client = luaA_toudata(L, 1, (lua_class_t *) &client_class);
-    if(client)
-        screen = client->screen;
-    else
-    {
-        tag_t *tag = luaA_toudata(L, 1, &tag_class);
-        if(tag)
-            screen = tag->screen;
-        else
-            return 0;
-    }
-
     /* We update the complete banning only once per main loop to avoid
      * excessive updates...  */
-    screen->need_lazy_banning = true;
+    need_lazy_banning = true;
 
     /* But if a client will be banned in our next update we unfocus it now. */
     foreach(c, globalconf.clients)
-        /* we don't touch other screens windows */
-        if((*c)->screen == screen)
-        {
-            luaA_object_push(globalconf.L, *c);
-            if(window_isvisible(L, -1))
-                window_ban_unfocus((window_t *) *c);
-            lua_pop(globalconf.L, 1);
-        }
+    {
+        luaA_object_push(globalconf.L, *c);
+        if(window_isvisible(L, -1))
+            window_ban_unfocus((window_t *) *c);
+        lua_pop(globalconf.L, 1);
+    }
 
     return 0;
 }
@@ -74,43 +60,31 @@ banning_init(void)
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::screen", banning_need_update);
 }
 
-static void
-reban(screen_t *screen)
+void
+banning_refresh(void)
 {
-    if (!screen->need_lazy_banning)
+    if (!need_lazy_banning)
         return;
 
-    screen->need_lazy_banning = false;
-
     foreach(c, globalconf.clients)
-        if((*c)->screen == screen)
-        {
-            luaA_object_push(globalconf.L, *c);
-            if(window_isvisible(globalconf.L, -1))
-                window_unban((window_t *) *c);
-            lua_pop(globalconf.L, 1);
-        }
+    {
+        luaA_object_push(globalconf.L, *c);
+        if(window_isvisible(globalconf.L, -1))
+            window_unban((window_t *) *c);
+        lua_pop(globalconf.L, 1);
+    }
 
     /* Some people disliked the short flicker of background, so we first unban everything.
      * Afterwards we ban everything we don't want. This should avoid that. */
     foreach(c, globalconf.clients)
-        /* we don't touch other screens windows */
-        if((*c)->screen == screen)
-        {
-            luaA_object_push(globalconf.L, *c);
-            if(!window_isvisible(globalconf.L, -1))
-                window_ban((window_t *) *c);
-            lua_pop(globalconf.L, 1);
-        }
-}
+    {
+        luaA_object_push(globalconf.L, *c);
+        if(!window_isvisible(globalconf.L, -1))
+            window_ban((window_t *) *c);
+        lua_pop(globalconf.L, 1);
+    }
 
-/** Check all screens if they need to rebanned
- */
-void
-banning_refresh(void)
-{
-    foreach(screen, globalconf.screens)
-        reban(screen);
+    need_lazy_banning = false;
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

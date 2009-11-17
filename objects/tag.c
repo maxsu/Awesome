@@ -1,7 +1,7 @@
 /*
  * tag.c - tag management
  *
- * Copyright © 2007-2008 Julien Danjou <julien@danjou.info>
+ * Copyright © 2007-2009 Julien Danjou <julien@danjou.info>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +27,6 @@
 
 LUA_OBJECT_FUNCS(&tag_class, tag_t, tag)
 
-void
-tag_unref_simplified(tag_t **tag)
-{
-    luaA_object_unref(globalconf.L, *tag);
-}
-
 static void
 tag_wipe(tag_t *tag)
 {
@@ -57,69 +51,6 @@ tag_view(lua_State *L, int udx, bool view)
         tag->selected = view;
         luaA_object_emit_signal(L, udx, "property::selected", 0);
     }
-}
-
-/** Append a tag to a screen.
- * \param L The Lua VM state.
- * \param udx The tag index on the stack.
- * \param s The screen.
- */
-void
-tag_append_to_screen(lua_State *L, int udx, screen_t *s)
-{
-    tag_t *tag = luaA_checkudata(globalconf.L, udx, &tag_class);
-
-    /* can't attach a tag twice */
-    if(tag->screen)
-    {
-        lua_remove(L, udx);
-        return;
-    }
-
-    tag->screen = s;
-    tag_array_append(&s->tags, luaA_object_ref_class(globalconf.L, udx, &tag_class));
-    ewmh_update_net_numbers_of_desktop();
-    ewmh_update_net_desktop_names();
-
-    luaA_object_push(globalconf.L, tag);
-    luaA_object_emit_signal(L, -1, "property::screen", 0);
-    lua_pop(L, 1);
-
-    lua_pushlightuserdata(globalconf.L, tag->screen);
-    luaA_object_push(globalconf.L, tag);
-    luaA_object_emit_signal(globalconf.L, -2, "tag::attach", 1);
-    lua_pop(globalconf.L, 1);
-}
-
-/** Remove a tag from screen. Tag must be on a screen.
- * \param tag The tag to remove.
- */
-void
-tag_remove_from_screen(tag_t *tag)
-{
-    if(!tag->screen)
-        return;
-
-    tag_array_t *tags = &tag->screen->tags;
-
-    for(int i = 0; i < tags->len; i++)
-        if(tags->tab[i] == tag)
-        {
-            tag_array_take(tags, i);
-            break;
-        }
-
-    ewmh_update_net_numbers_of_desktop();
-    ewmh_update_net_desktop_names();
-
-    lua_pushlightuserdata(globalconf.L, tag->screen);
-    tag->screen = NULL;
-    luaA_object_push(globalconf.L, tag);
-    luaA_object_emit_signal(globalconf.L, -1, "property::screen", 0);
-    luaA_object_emit_signal(globalconf.L, -2, "tag::detach", 1);
-    lua_pop(globalconf.L, 1);
-
-    luaA_object_unref(globalconf.L, tag);
 }
 
 static void
@@ -199,15 +130,14 @@ ewindow_is_tagged(ewindow_t *ewindow, tag_t *tag)
 }
 
 /** Get the index of the first selected tag.
- * \param screen Screen.
  * \return Its index.
  */
 int
-tags_get_first_selected_index(screen_t *screen)
+tags_get_first_selected_index(void)
 {
-    foreach(tag, screen->tags)
+    foreach(tag, _G_tags)
         if((*tag)->selected)
-            return tag_array_indexof(&screen->tags, tag);
+            return tag_array_indexof(&_G_tags, tag);
     return 0;
 }
 
@@ -218,7 +148,7 @@ static void
 tag_view_only(tag_t *target)
 {
     if(target)
-        foreach(tag, target->screen->tags)
+        foreach(tag, _G_tags)
         {
             luaA_object_push(globalconf.L, *tag);
             tag_view(globalconf.L, -1, *tag == target);
@@ -227,17 +157,14 @@ tag_view_only(tag_t *target)
 }
 
 /** View only a tag, selected by its index.
- * \param screen Screen.
  * \param dindex The index.
  */
 void
-tag_view_only_byindex(screen_t *screen, int dindex)
+tag_view_only_byindex(int dindex)
 {
-    tag_array_t *tags = &screen->tags;
-
-    if(dindex < 0 || dindex >= tags->len)
+    if(dindex < 0 || dindex >= _G_tags.len)
         return;
-    tag_view_only(tags->tab[dindex]);
+    tag_view_only(_G_tags.tab[dindex]);
 }
 
 /** Create a new tag.
@@ -320,45 +247,6 @@ luaA_tag_set_selected(lua_State *L, tag_t *tag)
     return 0;
 }
 
-/** Set the tag screen.
- * \param L The Lua VM state.
- * \param tag The tag to set the screen for.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_tag_set_screen(lua_State *L, tag_t *tag)
-{
-    int screen;
-    if(lua_isnil(L, -1))
-        screen = -1;
-    else
-    {
-        screen = luaL_checknumber(L, -1) - 1;
-        luaA_checkscreen(screen);
-    }
-
-    tag_remove_from_screen(tag);
-
-    if(screen != -1)
-        tag_append_to_screen(L, -3, &globalconf.screens.tab[screen]);
-
-    return 0;
-}
-
-/** Get the tag screen.
- * \param L The Lua VM state.
- * \param tag The tag to get the screen for.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_tag_get_screen(lua_State *L, tag_t *tag)
-{
-    if(!tag->screen)
-        return 0;
-    lua_pushnumber(L, screen_array_indexof(&globalconf.screens, tag->screen) + 1);
-    return 1;
-}
-
 void
 tag_class_setup(lua_State *L)
 {
@@ -385,10 +273,6 @@ tag_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_tag_set_name,
                             (lua_class_propfunc_t) luaA_tag_get_name,
                             (lua_class_propfunc_t) luaA_tag_set_name);
-    luaA_class_add_property(&tag_class, A_TK_SCREEN,
-                            (lua_class_propfunc_t) NULL,
-                            (lua_class_propfunc_t) luaA_tag_get_screen,
-                            (lua_class_propfunc_t) luaA_tag_set_screen);
     luaA_class_add_property(&tag_class, A_TK_SELECTED,
                             (lua_class_propfunc_t) luaA_tag_set_selected,
                             (lua_class_propfunc_t) luaA_tag_get_selected,
