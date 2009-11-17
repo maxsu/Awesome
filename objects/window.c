@@ -68,7 +68,7 @@ window_ban_unfocus(window_t *window)
     if(_G_window_focused == window)
         /* Set focus on root window, so no events leak to the current window. */
         xcb_set_input_focus(_G_connection, XCB_INPUT_FOCUS_PARENT,
-                            window->screen->protocol_screen->root->window, XCB_CURRENT_TIME);
+                            _G_root->window, XCB_CURRENT_TIME);
 }
 
 /** Ban window.

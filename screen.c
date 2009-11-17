@@ -78,35 +78,26 @@ screen_default_visual(xcb_screen_t *s)
 static void
 protocol_screen_scan(void)
 {
-    for(int screen = 0; screen < xcb_get_setup(_G_connection)->roots_len; screen++)
-    {
-        xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, screen);
-        protocol_screen_t pscreen;
-        p_clear(&pscreen, 1);
-        pscreen.visual = screen_default_visual(xcb_screen);
+    xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, _G_default_screen);
+    _G_visual = screen_default_visual(xcb_screen);
 
-        /* Create root window */
-        window_new(globalconf.L);
-        pscreen.root = luaA_object_ref(globalconf.L, -1);
-        pscreen.root->focusable = true;
-        pscreen.root->window = xcb_screen->root;
+    /* Create root window */
+    window_new(globalconf.L);
+    _G_root = luaA_object_ref(globalconf.L, -1);
+    _G_root->focusable = true;
+    _G_root->window = xcb_screen->root;
 
-        /* The default GC is just a newly created associated to the root window */
-        pscreen.gc = xcb_generate_id(_G_connection);
-        xcb_create_gc(_G_connection, pscreen.gc, xcb_screen->root,
-                      XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
-                      (const uint32_t[]) { xcb_screen->black_pixel, xcb_screen->white_pixel });
-
-        protocol_screen_array_append(&_G_protocol_screens, pscreen);
-    }
+    /* The default GC is just a newly created associated to the root window */
+    _G_gc = xcb_generate_id(_G_connection);
+    xcb_create_gc(_G_connection, _G_gc, xcb_screen->root,
+                  XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
+                  (const uint32_t[]) { xcb_screen->black_pixel, xcb_screen->white_pixel });
 }
 
 /** Scan screen information using XRandR protocol.
- * \param pscreen The protocol screen to scan.
- * \return True if informations where gathered successfully, false otherwise.
  */
 static bool
-screen_scan_xrandr(protocol_screen_t *pscreen)
+screen_scan_xrandr(void)
 {
     /* Check for extension before checking for XRandR */
     if(!xcb_get_extension_data(_G_connection, &xcb_randr_id)->present)
@@ -125,10 +116,7 @@ screen_scan_xrandr(protocol_screen_t *pscreen)
      * So in awesome, we map our screen_t on XRandR CRTCs.
      */
 
-    /* All this could be splitted in the Good Async Way.
-     * Fact is most of the time, we always one or 2 pscreen so it's not
-     * worth it. */
-    xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, pscreen->root->window);
+    xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, _G_root->window);
     xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(_G_connection, screen_res_c, NULL);
 
     /* We go through CRTC, and build a screen for each one. */
@@ -151,7 +139,6 @@ screen_scan_xrandr(protocol_screen_t *pscreen)
         new_screen.geometry.y = crtc_info_r->y;
         new_screen.geometry.width= crtc_info_r->width;
         new_screen.geometry.height= crtc_info_r->height;
-        new_screen.protocol_screen = pscreen;
 
         xcb_randr_output_t *randr_outputs = xcb_randr_get_crtc_info_outputs(crtc_info_r);
 
@@ -188,11 +175,10 @@ screen_scan_xrandr(protocol_screen_t *pscreen)
 }
 
 /** Scan screen information using Xinerama protocol.
- * \param pscreen The protocol screen to scan.
  * \return True if informations where gathered successfully, false otherwise.
  */
 static bool
-screen_scan_xinerama(protocol_screen_t *pscreen)
+screen_scan_xinerama(void)
 {
     /* Check for extension before checking for Xinerama */
     if(xcb_get_extension_data(_G_connection, &xcb_xinerama_id)->present)
@@ -240,7 +226,6 @@ screen_scan_xinerama(protocol_screen_t *pscreen)
             screen_t new_screen;
             p_clear(&new_screen, 1);
             new_screen.geometry = screen_xsitoarea(xsi[screen]);
-            new_screen.protocol_screen = pscreen;
             screen_array_append(&globalconf.screens, new_screen);
         }
     }
@@ -258,37 +243,25 @@ screen_scan(void)
     /* Scan screen protocol first */
     protocol_screen_scan();
 
-    foreach(pscreen, _G_protocol_screens)
-        /* If Xrandr fails... */
-        if(!screen_scan_xrandr(pscreen))
-            /* ...try Xinerama... */
-            if(!screen_scan_xinerama(pscreen))
-                /* ... or then try the good old standard way */
-            {
-                int pscreen_index = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
-                xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, pscreen_index);
-                screen_t s;
-                p_clear(&s, 1);
-                s.geometry.x = 0;
-                s.geometry.y = 0;
-                s.geometry.width = xcb_screen->width_in_pixels;
-                s.geometry.height = xcb_screen->height_in_pixels;
-                s.protocol_screen = pscreen;
-                screen_array_append(&globalconf.screens, s);
-            }
+    /* If Xrandr fails... */
+    if(!screen_scan_xrandr())
+        /* ...try Xinerama... */
+        if(!screen_scan_xinerama())
+            /* ... or then try the good old standard way */
+        {
+            xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, _G_default_screen);
+            screen_t s;
+            p_clear(&s, 1);
+            s.geometry.x = 0;
+            s.geometry.y = 0;
+            s.geometry.width = xcb_screen->width_in_pixels;
+            s.geometry.height = xcb_screen->height_in_pixels;
+            screen_array_append(&globalconf.screens, s);
+        }
 
     /* Transforms all screen in lightuserdata */
     foreach(screen, globalconf.screens)
         screen_make_light(globalconf.L, screen);
-}
-
-protocol_screen_t *
-protocol_screen_from_root(xcb_window_t root)
-{
-    foreach(screen, _G_protocol_screens)
-        if(screen->root->window == root)
-            return screen;
-    return NULL;
 }
 
 /** Return the Xinerama screen number where the coordinates belongs to.
@@ -470,7 +443,7 @@ luaA_screen_get_index(lua_State *L, screen_t *screen)
 static int
 luaA_screen_get_root(lua_State *L, screen_t *screen)
 {
-    return luaA_object_push(L, screen->protocol_screen->root);
+    return luaA_object_push(L, _G_root);
 }
 
 static int

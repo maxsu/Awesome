@@ -145,14 +145,12 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
         luaA_object_push(globalconf.L, ewindow);
         event_button_callback(ev, &ewindow->buttons, 1, NULL);
     }
-    else
-        foreach(screen, _G_protocol_screens)
-            if(screen->root->window == ev->event)
-            {
-                luaA_object_push(globalconf.L, screen->root);
-                event_button_callback(ev, &screen->root->buttons, 1, NULL);
-                return 0;
-            }
+    else if(_G_root->window == ev->event)
+    {
+        luaA_object_push(globalconf.L, _G_root);
+        event_button_callback(ev, &_G_root->buttons, 1, NULL);
+        return 0;
+    }
 
     return 0;
 }
@@ -283,13 +281,12 @@ event_handle_destroynotify(void *data __attribute__ ((unused)),
     if((c = client_getbywin(ev->window)))
         client_unmanage(c);
     else
-        foreach(screen, _G_protocol_screens)
-            foreach(em, screen->embedded)
-                if(em->window == ev->window)
-                {
-                    xembed_window_array_remove(&screen->embedded, em);
-                    break;
-                }
+        foreach(em, _G_embedded)
+            if(em->window == ev->window)
+            {
+                xembed_window_array_remove(&_G_embedded, em);
+                break;
+            }
 
     return 0;
 }
@@ -508,14 +505,12 @@ event_handle_key(void *data __attribute__ ((unused)),
                 lua_pop(globalconf.L, 1);
             }
         }
-        else
-            foreach(screen, _G_protocol_screens)
-                if(screen->root->window == ev->event)
-                {
-                    luaA_object_push(globalconf.L, screen->root);
-                    event_key_callback(ev, &screen->root->keys, 1, &keysym);
-                    return 0;
-                }
+        else if(_G_root->window == ev->event)
+        {
+            luaA_object_push(globalconf.L, _G_root);
+            event_key_callback(ev, &_G_root->keys, 1, &keysym);
+            return 0;
+        }
     }
 
     return 0;
@@ -545,13 +540,12 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
     if(wa_r->override_redirect)
         goto bailout;
 
-    foreach(screen, _G_protocol_screens)
-        if(xembed_getbywin(&screen->embedded, ev->window))
-        {
-            xcb_map_window(connection, ev->window);
-            xembed_window_activate(connection, ev->window);
-            goto bailout;
-        }
+    if(xembed_getbywin(&_G_embedded, ev->window))
+    {
+        xcb_map_window(connection, ev->window);
+        xembed_window_activate(connection, ev->window);
+        goto bailout;
+    }
 
     if((c = client_getbywin(ev->window)))
     {
@@ -575,7 +569,7 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
             goto bailout;
         }
 
-        client_manage(ev->window, geom_r, protocol_screen_from_root(geom_r->root), false);
+        client_manage(ev->window, geom_r, false);
 
         p_delete(&geom_r);
     }
@@ -598,19 +592,18 @@ event_handle_unmapnotify(void *data __attribute__ ((unused)),
 
     if((c = client_getbywin(ev->window)))
     {
-        if(ev->event == c->screen->protocol_screen->root->window
+        if(ev->event == _G_root->window
            && XCB_EVENT_SENT(ev)
            && xwindow_get_state_reply(xwindow_get_state_unchecked(c->window)) == XCB_WM_STATE_NORMAL)
             client_unmanage(c);
     }
     else
-        foreach(screen, _G_protocol_screens)
-            foreach(em, screen->embedded)
-                if(em->window == ev->window)
-                {
-                    xembed_window_array_remove(&screen->embedded, em);
-                    break;
-                }
+        foreach(em, _G_embedded)
+            if(em->window == ev->window)
+            {
+                xembed_window_array_remove(&_G_embedded, em);
+                break;
+            }
 
     return 0;
 }
@@ -704,8 +697,7 @@ event_handle_mappingnotify(void *data,
         keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
 
         /* regrab everything */
-        foreach(screen, _G_protocol_screens)
-            xwindow_grabkeys(screen->root->window, &screen->root->keys);
+        xwindow_grabkeys(_G_root->window, &_G_root->keys);
 
         foreach(c, globalconf.clients)
             xwindow_grabkeys((*c)->window, &(*c)->keys);

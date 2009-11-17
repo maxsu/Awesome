@@ -30,6 +30,7 @@
 #include "objects/wibox.h"
 #include "xwindow.h"
 #include "luaa.h"
+#include "systray.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 
@@ -354,11 +355,7 @@ property_handle_xembed_info(void *data __attribute__ ((unused)),
                             xcb_atom_t name,
                             xcb_get_property_reply_t *reply)
 {
-    xembed_window_t *emwin = NULL;
-
-    foreach(screen, _G_protocol_screens)
-        if((emwin = xembed_getbywin(&screen->embedded, window)))
-            break;
+    xembed_window_t *emwin = xembed_getbywin(&_G_embedded, window);
 
     if(emwin)
         xembed_property_update(connection, emwin, reply);
@@ -374,13 +371,10 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
                              xcb_atom_t name,
                              xcb_get_property_reply_t *reply)
 {
-    if(globalconf.xinerama_is_active)
-        foreach(w, globalconf.wiboxes)
-            (*w)->need_update = true;
-    else
-        foreach(wibox, globalconf.wiboxes)
-            if(window == (*wibox)->screen->protocol_screen->root->window)
-               (*wibox)->need_update = true;
+    /* Redraw all wiboxes.
+     * \todo only do it for non-opaque wiboxes */
+    foreach(wibox, globalconf.wiboxes)
+        (*wibox)->need_update = true;
 
     return 0;
 }

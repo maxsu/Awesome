@@ -78,27 +78,15 @@ ewmh_client_update_hints(lua_State *L)
 }
 
 /** Update the desktop geometry.
- * \param protocol_screen The protocol screen to update.
  */
 static void
-ewmh_update_desktop_geometry(protocol_screen_t *pscreen)
+ewmh_update_desktop_geometry(void)
 {
-    screen_t *s = NULL;
-    foreach(screen, globalconf.screens)
-        if(screen->protocol_screen == pscreen)
-        {
-            s = screen;
-            break;
-        }
-
-    if(!s)
-        return;
-
-    area_t geom = screen_area_get(s, false);
+    area_t geom = screen_area_get(globalconf.screens.tab, false);
     uint32_t sizes[] = { geom.width, geom.height };
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        pscreen->root->window,
+                        _G_root->window,
                         _NET_DESKTOP_GEOMETRY, CARDINAL, 32, countof(sizes), sizes);
 }
 
@@ -107,7 +95,7 @@ ewmh_update_net_active_window(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        c->screen->protocol_screen->root->window,
+                        _G_root->window,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { c->window });
     return 0;
 }
@@ -115,9 +103,8 @@ ewmh_update_net_active_window(lua_State *L)
 static int
 ewmh_reset_net_active_window(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        c->screen->protocol_screen->root->window,
+                        _G_root->window,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { XCB_NONE });
     return 0;
 }
@@ -125,16 +112,14 @@ ewmh_reset_net_active_window(lua_State *L)
 static int
 ewmh_update_net_client_list(lua_State *L)
 {
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_window_t *wins = p_alloca(xcb_window_t, globalconf.clients.len);
 
     int n = 0;
     foreach(client, globalconf.clients)
-        if((*client)->screen->protocol_screen == c->screen->protocol_screen)
-            wins[n++] = c->window;
+        wins[n++] = (*client)->window;
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        c->screen->protocol_screen->root->window,
+                        _G_root->window,
 			_NET_CLIENT_LIST, WINDOW, 32, n, wins);
 
     return 0;
@@ -146,18 +131,17 @@ ewmh_update_net_current_desktop(lua_State *L)
     tag_t *tag = luaA_checkudata(L, 1, &tag_class);
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        tag->screen->protocol_screen->root->window,
+                        _G_root->window,
                         _NET_CURRENT_DESKTOP, CARDINAL, 32, 1,
                         (uint32_t[]) { tags_get_first_selected_index(tag->screen) });
     return 0;
 }
 
 void
-ewmh_init_screen(protocol_screen_t *pscreen)
+ewmh_init_screen(void)
 {
     xcb_window_t father;
-    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
-    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, phys_screen);
+    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, _G_default_screen);
     xcb_atom_t atom[] =
     {
         _NET_SUPPORTED,
@@ -233,7 +217,7 @@ ewmh_init_screen(protocol_screen_t *pscreen)
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         father, _NET_WM_PID, CARDINAL, 32, 1, &i);
 
-    ewmh_update_desktop_geometry(pscreen);
+    ewmh_update_desktop_geometry();
 };
 
 /** Update the client active desktop.
@@ -329,43 +313,40 @@ ewmh_init(void)
 DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
 
 void
-ewmh_update_net_numbers_of_desktop(int phys_screen)
+ewmh_update_net_numbers_of_desktop(void)
 {
-    uint32_t count = globalconf.screens.tab[phys_screen].tags.len;
-
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(_G_connection, phys_screen)->root,
-			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &count);
+                        _G_root->window,
+			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &globalconf.screens.tab[0].tags.len);
 }
 
 void
-ewmh_update_net_desktop_names(int phys_screen)
+ewmh_update_net_desktop_names(void)
 {
     buffer_t buf;
 
     buffer_inita(&buf, BUFSIZ);
 
-    foreach(tag, globalconf.screens.tab[phys_screen].tags)
+    foreach(tag, globalconf.screens.tab->tags)
     {
         buffer_adds(&buf, tag_get_name(*tag));
         buffer_addc(&buf, '\0');
     }
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-			xutil_screen_get(_G_connection, phys_screen)->root,
+                        _G_root->window,
 			_NET_DESKTOP_NAMES, UTF8_STRING, 8, buf.len, buf.s);
     buffer_wipe(&buf);
 }
 
 /** Update the work area space for each physical screen and each desktop.
- * \param phys_screen The physical screen id.
  */
 void
-ewmh_update_workarea(int phys_screen)
+ewmh_update_workarea(void)
 {
-    tag_array_t *tags = &globalconf.screens.tab[phys_screen].tags;
+    tag_array_t *tags = &globalconf.screens.tab->tags;
     uint32_t *area = p_alloca(uint32_t, tags->len * 4);
-    area_t geom = screen_area_get(&globalconf.screens.tab[phys_screen], true);
+    area_t geom = screen_area_get(globalconf.screens.tab, true);
 
     for(int i = 0; i < tags->len; i++)
     {
@@ -376,7 +357,7 @@ ewmh_update_workarea(int phys_screen)
     }
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        xutil_screen_get(_G_connection, phys_screen)->root,
+                        _G_root->window,
                         _NET_WORKAREA, CARDINAL, 32, tags->len * 4, area);
 }
 

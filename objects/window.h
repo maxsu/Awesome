@@ -23,6 +23,7 @@
 #define AWESOME_OBJECTS_WINDOW_H
 
 #include "globalconf.h"
+#include "screen.h"
 #include "area.h"
 #include "objects/button.h"
 #include "objects/key.h"
@@ -57,7 +58,6 @@
     /** Window stack */ \
     window_array_t stack;
 
-typedef struct window_t window_t;
 DO_ARRAY(window_t *, window, DO_NOTHING)
 /** Window structure */
 struct window_t

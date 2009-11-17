@@ -113,7 +113,7 @@ wibox_draw_context_update(wibox_t *w)
     draw_context_wipe(&w->ctx);
 
     if(w->screen)
-        draw_context_init(&w->ctx, w->screen->protocol_screen,
+        draw_context_init(&w->ctx,
                           w->geometry.width,
                           w->geometry.height,
                           &fg, &bg);
@@ -149,7 +149,7 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
 {
     if(wibox->ctx.pixmap && wibox->window)
         xcb_copy_area(_G_connection, wibox->ctx.pixmap,
-                      wibox->window, wibox->screen->protocol_screen->gc, x, y, x, y,
+                      wibox->window, _G_gc, x, y, x, y,
                       w, h);
 }
 
@@ -206,8 +206,7 @@ wibox_render(wibox_t *wibox)
         char *data;
         xcb_pixmap_t rootpix;
         xcb_get_property_cookie_t prop_c;
-        int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, wibox->screen->protocol_screen);
-        xcb_screen_t *s = xutil_screen_get(_G_connection, phys_screen);
+        xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
         prop_c = xcb_get_property_unchecked(_G_connection, false, s->root, _XROOTPMAP_ID,
                                             PIXMAP, 0, 1);
         if((prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL)))
@@ -216,7 +215,7 @@ wibox_render(wibox_t *wibox)
                && (data = xcb_get_property_value(prop_r))
                && (rootpix = *(xcb_pixmap_t *) data))
                 xcb_copy_area(_G_connection, rootpix,
-                              wibox->ctx.pixmap, wibox->screen->protocol_screen->gc,
+                              wibox->ctx.pixmap, _G_gc,
                               x, y,
                               0, 0,
                               wibox->geometry.width, wibox->geometry.height);
@@ -369,13 +368,12 @@ luaA_wibox_new(lua_State *L)
 
     /* Set the wibox screen and parent */
     wibox->screen = globalconf.screens.tab;
-    wibox->parent = wibox->screen->protocol_screen->root;
+    wibox->parent = _G_root;
 
     /* Raise window */
     stack_window_raise(L, -1);
 
-    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, wibox->screen->protocol_screen);
-    xcb_screen_t *s = xutil_screen_get(_G_connection, phys_screen);
+    xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
 
     /* Create window */
     wibox->window = xcb_generate_id(_G_connection);
@@ -399,7 +397,6 @@ luaA_wibox_new(lua_State *L)
     wibox_array_insert(&globalconf.wiboxes, wibox);
     ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) wibox);
 
-    /* Update draw context physical screen, important for Zaphod. */
     wibox_draw_context_update(wibox);
 
     wibox_shape_update(wibox);

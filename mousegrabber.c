@@ -25,6 +25,7 @@
 #include "mouse.h"
 #include "mousegrabber.h"
 #include "luaa.h"
+#include "common/luaobject.h"
 #include "common/xcursor.h"
 #include "common/xutil.h"
 

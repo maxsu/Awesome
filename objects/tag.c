@@ -79,11 +79,9 @@ tag_append_to_screen(lua_State *L, int udx, screen_t *s)
     tag->screen = s;
     tag_array_append(&s->tags, luaA_object_ref_class(globalconf.L, udx, &tag_class));
 
-    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens,
-                                                    s->protocol_screen);
-    ewmh_update_net_numbers_of_desktop(phys_screen);
-    ewmh_update_net_desktop_names(phys_screen);
-    ewmh_update_workarea(phys_screen);
+    ewmh_update_net_numbers_of_desktop();
+    ewmh_update_net_desktop_names();
+    ewmh_update_workarea();
 
     luaA_object_push(globalconf.L, tag);
     luaA_object_emit_signal(L, -1, "property::screen", 0);
@@ -113,11 +111,9 @@ tag_remove_from_screen(tag_t *tag)
             break;
         }
 
-    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens,
-                                                    tag->screen->protocol_screen);
-    ewmh_update_net_numbers_of_desktop(phys_screen);
-    ewmh_update_net_desktop_names(phys_screen);
-    ewmh_update_workarea(phys_screen);
+    ewmh_update_net_numbers_of_desktop();
+    ewmh_update_net_desktop_names();
+    ewmh_update_workarea();
 
     lua_pushlightuserdata(globalconf.L, tag->screen);
     tag->screen = NULL;

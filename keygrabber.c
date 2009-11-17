@@ -28,6 +28,7 @@
 #include "luaa.h"
 #include "keyresolv.h"
 #include "screen.h"
+#include "objects/window.h"
 #include "common/xutil.h"
 
 /** Grab the keyboard.
@@ -43,7 +44,7 @@ keygrabber_grab(void)
     {
         if((xgb = xcb_grab_keyboard_reply(_G_connection,
                                           xcb_grab_keyboard(_G_connection, true,
-                                                            _G_protocol_screens.tab[0].root->window,
+                                                            _G_root->window,
                                                             XCB_CURRENT_TIME, XCB_GRAB_MODE_ASYNC,
                                                             XCB_GRAB_MODE_ASYNC),
                                           NULL)))

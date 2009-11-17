@@ -24,11 +24,21 @@
 
 #include <xcb/xcb.h>
 #include "common/xembed.h"
-#include "protocol_screen.h"
 
-void systray_init(protocol_screen_t *);
-void systray_cleanup(protocol_screen_t *);
-int systray_request_handle(xcb_window_t, protocol_screen_t *, xembed_info_t *);
+/** Window that contains the systray */
+struct
+{
+    xcb_window_t window;
+    /** Systray window parent */
+    xcb_window_t parent;
+} _G_systray;
+
+/** Emebedded clients */
+xembed_window_array_t _G_embedded;
+
+void systray_init(void);
+void systray_cleanup(void);
+int systray_request_handle(xcb_window_t, xembed_info_t *);
 bool systray_iskdedockapp(xcb_window_t);
 int systray_process_client_message(xcb_client_message_event_t *);
 int xembed_process_client_message(xcb_client_message_event_t *);

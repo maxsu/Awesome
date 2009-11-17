@@ -73,7 +73,7 @@ lua_interface_window_t client_class;
 LUA_OBJECT_FUNCS((lua_class_t *) &client_class, client_t, client)
 
 client_t * client_getbywin(xcb_window_t);
-void client_manage(xcb_window_t, xcb_get_geometry_reply_t *, protocol_screen_t *, bool);
+void client_manage(xcb_window_t, xcb_get_geometry_reply_t *, bool);
 void client_unmanage(client_t *);
 void client_kill(client_t *);
 void client_set_urgent(lua_State *, int, bool);
