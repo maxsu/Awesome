@@ -309,38 +309,6 @@ wibox_set_visible(lua_State *L, int udx, bool v)
     }
 }
 
-/** Remove a wibox from a screen.
- * \param L The Lua VM state.
- * \param udx Wibox to destroy from screen.
- */
-static int
-luaA_wibox_destroy(lua_State *L)
-{
-    wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
-
-    xcb_destroy_window(_G_connection, wibox->window);
-
-    /* Remove it right away */
-    wibox_array_lookup_and_remove(&globalconf.wiboxes, &(wibox_t) { .window = wibox->window });
-    ewindow_binary_array_lookup_and_remove(&_G_ewindows, &(ewindow_t) { .window = wibox->window });
-
-    luaA_object_emit_signal(globalconf.L, 1, "property::window", 0);
-
-    if(strut_has_value(&wibox->strut))
-    {
-        lua_pushlightuserdata(L, wibox->screen);
-        luaA_object_emit_signal(L, -1, "property::workarea", 0);
-        lua_pop(L, 1);
-    }
-
-    wibox->parent = NULL;
-    wibox->screen = NULL;
-    luaA_object_emit_signal(L, 1, "property::screen", 0);
-    luaA_object_unref(globalconf.L, wibox);
-
-    return 0;
-}
-
 static int
 luaA_wibox_need_update(lua_State *L)
 {
@@ -356,60 +324,91 @@ luaA_wibox_need_update(lua_State *L)
 static int
 luaA_wibox_new(lua_State *L)
 {
-    luaA_class_new(L, (lua_class_t *) &wibox_class);
+    return luaA_class_new(L, (lua_class_t *) &wibox_class);
+}
 
-    /* duplicate wibox */
-    lua_pushvalue(L, -1);
+static int
+luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
+{
+    /* If wibox already has a window, we need to destroy it */
+    if(wibox->window)
+    {
+        xcb_destroy_window(_G_connection, wibox->window);
+        wibox->window = XCB_NONE;
 
-    /* ref it */
-    wibox_t *wibox = luaA_object_ref_class(globalconf.L, -1, (lua_class_t *) &wibox_class);
+        /* Remove it right away */
+        wibox_array_lookup_and_remove(&globalconf.wiboxes, &(wibox_t) { .window = wibox->window });
+        ewindow_binary_array_lookup_and_remove(&_G_ewindows, &(ewindow_t) { .window = wibox->window });
 
-    /* Set the wibox screen and parent */
-    wibox->screen = globalconf.screens.tab;
-    wibox->parent = globalconf.screens.tab[0].root;
+        luaA_object_emit_signal(L, -3, "property::window", 0);
 
-    /* Raise window */
-    stack_window_raise(L, -1);
+        if(strut_has_value(&wibox->strut))
+        {
+            lua_pushlightuserdata(L, wibox->screen);
+            luaA_object_emit_signal(L, -1, "property::workarea", 0);
+            lua_pop(L, 1);
+        }
 
-    xcb_screen_t *s = globalconf.screen;
+        luaA_object_unref_item(L, -3, wibox->parent);
+        wibox->parent = NULL;
+        wibox->screen = NULL;
+        luaA_object_emit_signal(L, -3, "property::screen", 0);
+        luaA_object_unref(L, wibox);
+    }
 
-    /* Create window */
-    wibox->window = xcb_generate_id(_G_connection);
-    xcb_create_window(_G_connection, s->root_depth, wibox->window, s->root,
-                      wibox->geometry.x, wibox->geometry.y,
-                      wibox->geometry.width, wibox->geometry.height,
-                      wibox->border_width, XCB_COPY_FROM_PARENT, s->root_visual,
-                      XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
-                      | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
-                      (const uint32_t [])
-                      {
-                          wibox->ctx.bg.pixel,
-                          wibox->border_color.pixel,
-                          XCB_GRAVITY_NORTH_WEST,
-                          true,
-                          WIBOX_SELECT_INPUT_EVENT_MASK
-                      });
-    luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
+    if(!lua_isnil(L, -1))
+    {
+        /* \todo check that parent is not a child or on a different tree (other
+         * pscreen) */
+        luaA_checkudata(L, -1, &window_class);
+        wibox->parent = luaA_object_ref_item(L, -3, -1);
 
-    /* Now we can insert because we have a window id */
-    wibox_array_insert(&globalconf.wiboxes, wibox);
-    ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) wibox);
+        /* \todo has to be fix for Zaphod */
+        wibox->screen = globalconf.screens.tab;
+        xcb_screen_t *s = globalconf.screen;
 
-    /* Update draw context physical screen, important for Zaphod. */
-    wibox_draw_context_update(wibox);
+        /* Create window */
+        wibox->window = xcb_generate_id(_G_connection);
+        xcb_create_window(_G_connection, s->root_depth, wibox->window, wibox->parent->window,
+                          wibox->geometry.x, wibox->geometry.y,
+                          wibox->geometry.width, wibox->geometry.height,
+                          wibox->border_width, XCB_COPY_FROM_PARENT, s->root_visual,
+                          XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
+                          | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
+                          (const uint32_t [])
+                          {
+                              wibox->ctx.bg.pixel,
+                              wibox->border_color.pixel,
+                              XCB_GRAVITY_NORTH_WEST,
+                              true,
+                              WIBOX_SELECT_INPUT_EVENT_MASK
+                          });
+        luaA_object_emit_signal(globalconf.L, 1, "property::window", 0);
 
-    wibox_shape_update(wibox);
+        /* Raise window */
+        stack_window_raise(L, -2);
 
-    xwindow_buttons_grab(wibox->window, &wibox->buttons);
+        /* ref it */
+        luaA_object_ref_class(L, -2, (lua_class_t *) &wibox_class);
+        /* Now we can insert because we have a window id */
+        wibox_array_insert(&globalconf.wiboxes, wibox);
+        ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) wibox);
 
-    xwindow_set_cursor(wibox->window, xcursor_new(_G_connection, xcursor_font_fromstr(wibox->cursor)));
+        wibox_draw_context_update(wibox);
 
-    xwindow_set_opacity(wibox->window, wibox->opacity);
+        wibox_shape_update(wibox);
 
-    if(wibox->visible)
-        wibox_map(wibox);
+        xwindow_buttons_grab(wibox->window, &wibox->buttons);
 
-    return 1;
+        xwindow_set_cursor(wibox->window, xcursor_new(_G_connection, xcursor_font_fromstr(wibox->cursor)));
+
+        xwindow_set_opacity(wibox->window, wibox->opacity);
+
+        if(wibox->visible)
+            wibox_map(wibox);
+    }
+
+    return 0;
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
@@ -723,7 +722,6 @@ wibox_class_setup(lua_State *L)
     static const struct luaL_reg wibox_methods[] =
     {
         LUA_CLASS_METHODS(wibox)
-        { "destroy", luaA_wibox_destroy },
         { "text_padding", luaA_wibox_text_padding },
         { NULL, NULL }
     };
@@ -788,6 +786,12 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_valign,
                             (lua_class_propfunc_t) luaA_wibox_get_valign,
                             (lua_class_propfunc_t) luaA_wibox_set_valign);
+    /* Properties overwritten */
+    /* Parent can be set on wiboxes */
+    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_PARENT,
+                            (lua_class_propfunc_t) luaA_wibox_set_parent,
+                            (lua_class_propfunc_t) luaA_window_get_parent,
+                            (lua_class_propfunc_t) luaA_wibox_set_parent);
 
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update);
