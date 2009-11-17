@@ -426,6 +426,27 @@ luaA_class_property_get(lua_State *L, lua_class_t *lua_class, int fieldidx)
     return NULL;
 }
 
+/** This is a wrapper for calling property function in a clean env.
+ * On the stack it gets:
+ * 1. function to call
+ * 2. object
+ * (3. key
+ *  4. value,
+ *  etc, we don't care)
+ *  It then pop 1. function to call, and calls it with L and 2. object has
+ *  argument.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_class_property_call_function_wrapper(lua_State *L)
+{
+    lua_class_propfunc_t func = lua_topointer(L, 1);
+    lua_remove(L, 1);
+    lua_object_t *object = lua_touserdata(L, 1);
+    return func(L, object);
+}
+
 /** Generic index meta function for objects.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -445,12 +466,34 @@ luaA_class_index(lua_State *L)
     if(prop)
     {
         if(prop->index)
-            return prop->index(L, luaA_checkudata(L, 1, class));
+        {
+            /* Push wrapper function */
+            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+            /* Push property function */
+            lua_pushlightuserdata(L, prop->index);
+            /* Push object */
+            lua_pushvalue(L, 1);
+            /* Duplicate key */
+            lua_pushvalue(L, 2);
+            lua_call(L, 3, 1);
+
+            return 1;
+        }
     }
     else if(class)
     {
         if(class->index_miss_property)
-            return class->index_miss_property(L, luaA_checkudata(L, 1, class));
+        {
+            /* Push wrapper function */
+            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+            /* Push property function */
+            lua_pushlightuserdata(L, class->index_miss_property);
+            /* Push object */
+            lua_pushvalue(L, 1);
+            /* Duplicate key */
+            lua_pushvalue(L, 2);
+            lua_call(L, 3, 0);
+        }
     }
 
     return 0;
@@ -471,12 +514,36 @@ luaA_class_newindex(lua_State *L)
     if(prop)
     {
         if(prop->newindex)
-            return prop->newindex(L, luaA_checkudata(L, 1, class));
+        {
+            /* Push wrapper function */
+            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+            /* Push property function */
+            lua_pushlightuserdata(L, prop->newindex);
+            /* Push object */
+            lua_pushvalue(L, 1);
+            /* Duplicate key */
+            lua_pushvalue(L, 2);
+            /* Duplicate value */
+            lua_pushvalue(L, 3);
+            lua_call(L, 4, 0);
+        }
     }
     else
     {
         if(class->newindex_miss_property)
-            return class->newindex_miss_property(L, luaA_checkudata(L, 1, class));
+        {
+            /* Push wrapper function */
+            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+            /* Push property function */
+            lua_pushlightuserdata(L, class->index_miss_property);
+            /* Push object */
+            lua_pushvalue(L, 1);
+            /* Duplicate key */
+            lua_pushvalue(L, 2);
+            /* Duplicate value */
+            lua_pushvalue(L, 3);
+            lua_call(L, 4, 0);
+        }
     }
 
     return 0;
@@ -493,7 +560,7 @@ luaA_class_new(lua_State *L, lua_class_t *lua_class)
     luaA_checktable(L, 2);
 
     /* Create a new object */
-    void *object = lua_class->allocator(L);
+    lua_class->allocator(L);
 
     /* Push the first key before iterating */
     lua_pushnil(L);
@@ -508,7 +575,19 @@ luaA_class_new(lua_State *L, lua_class_t *lua_class)
             lua_class_property_t *prop = luaA_class_property_get(L, lua_class, -2);
 
             if(prop && prop->new)
-                prop->new(L, object);
+            {
+                /* Push wrapper function */
+                lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+                /* Push property function */
+                lua_pushlightuserdata(L, prop->new);
+                /* Push object */
+                lua_pushvalue(L, 3);
+                /* Duplicate key */
+                lua_pushvalue(L, -5);
+                /* Duplicate value */
+                lua_pushvalue(L, -5);
+                lua_call(L, 4, 0);
+            }
         }
         /* Remove value */
         lua_pop(L, 1);
