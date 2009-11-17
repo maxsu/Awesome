@@ -26,7 +26,6 @@
 #include "awesome.h"
 #include "xwindow.h"
 #include "ewmh.h"
-#include "screen.h"
 #include "objects/window.h"
 #include "objects/tag.h"
 #include "common/luaobject.h"
@@ -415,14 +414,6 @@ window_set_geometry(lua_State *L, int udx, area_t geometry)
         if(w->window)
             xcb_configure_window(_G_connection, w->window, mask_vals, set_geometry_win_vals);
 
-        /* Check if the screen has changed */
-        screen_t *screen = screen_getbycoord(w->geometry.x, w->geometry.y);
-        if(screen != w->screen)
-        {
-            w->screen = screen;
-            luaA_object_emit_signal(L, udx, "property::screen", 0);
-        }
-
         if(mask_vals & XCB_CONFIG_WINDOW_X)
             luaA_object_emit_signal(L, udx, "property::x", 0);
         if(mask_vals & XCB_CONFIG_WINDOW_Y)
@@ -685,20 +676,6 @@ static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, movable, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, resizable, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
 
-/** Get the window screen.
- * \param L The Lua VM state.
- * \param window The window object.
- * \return The number of elements pushed on stack.
- */
-int
-luaA_window_get_screen(lua_State *L, window_t *window)
-{
-    if(!window->screen)
-        return 0;
-    lua_pushnumber(L, screen_array_indexof(&globalconf.screens, window->screen) + 1);
-    return 1;
-}
-
 /** Raise an window on top of others which are on the same layer.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -754,10 +731,6 @@ window_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_set_cursor,
                             (lua_class_propfunc_t) luaA_window_get_cursor,
                             (lua_class_propfunc_t) luaA_window_set_cursor);
-    luaA_class_add_property(&window_class, A_TK_SCREEN,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_screen,
-                            NULL);
     luaA_class_add_property(&window_class, A_TK_PARENT,
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_parent,

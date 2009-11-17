@@ -294,53 +294,39 @@ screen_area_get(screen_t *screen, bool strut)
     area_t area = screen->geometry;
     uint16_t top = 0, bottom = 0, left = 0, right = 0;
 
-#define COMPUTE_STRUT(o) \
-    { \
-        if((o)->strut.top_start_x || (o)->strut.top_end_x || (o)->strut.top) \
-        { \
-            if((o)->strut.top) \
-                top = MAX(top, (o)->strut.top); \
-            else \
-                top = MAX(top, ((o)->geometry.y - area.y) + (o)->geometry.height); \
-        } \
-        if((o)->strut.bottom_start_x || (o)->strut.bottom_end_x || (o)->strut.bottom) \
-        { \
-            if((o)->strut.bottom) \
-                bottom = MAX(bottom, (o)->strut.bottom); \
-            else \
-                bottom = MAX(bottom, (area.y + area.height) - (o)->geometry.y); \
-        } \
-        if((o)->strut.left_start_y || (o)->strut.left_end_y || (o)->strut.left) \
-        { \
-            if((o)->strut.left) \
-                left = MAX(left, (o)->strut.left); \
-            else \
-                left = MAX(left, ((o)->geometry.x - area.x) + (o)->geometry.width); \
-        } \
-        if((o)->strut.right_start_y || (o)->strut.right_end_y || (o)->strut.right) \
-        { \
-            if((o)->strut.right) \
-                right = MAX(right, (o)->strut.right); \
-            else \
-                right = MAX(right, (area.x + area.width) - (o)->geometry.x); \
-        } \
-    }
-
-    foreach(c, globalconf.clients)
-        if((*c)->screen == screen)
+    foreach(ewindow, _G_ewindows)
+        if(screen == screen_getbycoord((*ewindow)->geometry.x, (*ewindow)->geometry.y)
+           && ewindow_isvisible(*ewindow))
         {
-            luaA_object_push(globalconf.L, *c);
-            if(window_isvisible(globalconf.L, -1))
-                COMPUTE_STRUT(*c)
-            lua_pop(globalconf.L, 1);
+            if((*ewindow)->strut.top_start_x || (*ewindow)->strut.top_end_x || (*ewindow)->strut.top)
+            {
+                if((*ewindow)->strut.top)
+                    top = MAX(top, (*ewindow)->strut.top);
+                else
+                    top = MAX(top, ((*ewindow)->geometry.y - area.y) + (*ewindow)->geometry.height);
+            }
+            if((*ewindow)->strut.bottom_start_x || (*ewindow)->strut.bottom_end_x || (*ewindow)->strut.bottom)
+            {
+                if((*ewindow)->strut.bottom)
+                    bottom = MAX(bottom, (*ewindow)->strut.bottom);
+                else
+                    bottom = MAX(bottom, (area.y + area.height) - (*ewindow)->geometry.y);
+            }
+            if((*ewindow)->strut.left_start_y || (*ewindow)->strut.left_end_y || (*ewindow)->strut.left)
+            {
+                if((*ewindow)->strut.left)
+                    left = MAX(left, (*ewindow)->strut.left);
+                else
+                    left = MAX(left, ((*ewindow)->geometry.x - area.x) + (*ewindow)->geometry.width);
+            }
+            if((*ewindow)->strut.right_start_y || (*ewindow)->strut.right_end_y || (*ewindow)->strut.right)
+            {
+                if((*ewindow)->strut.right)
+                    right = MAX(right, (*ewindow)->strut.right);
+                else
+                    right = MAX(right, (area.x + area.width) - (*ewindow)->geometry.x);
+            }
         }
-
-    foreach(wibox, globalconf.wiboxes)
-        if((*wibox)->visible
-           && (*wibox)->screen == screen)
-            COMPUTE_STRUT(*wibox)
-
-#undef COMPUTE_STRUT
 
     area.x += left;
     area.y += top;
