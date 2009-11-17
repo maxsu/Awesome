@@ -36,8 +36,6 @@
     xcb_window_t frame_window; \
     /** Cursor */ \
     char *cursor; \
-    /** Client logical screen */ \
-    screen_t *screen; \
     /** Button bindings */ \
     button_array_t buttons; \
     /** True if the window is banned from the view */ \
@@ -104,7 +102,6 @@ bool window_set_geometry(lua_State *, int, area_t);
 bool window_isvisible(lua_State *, int);
 
 int luaA_window_get_focusable(lua_State *, window_t *);
-int luaA_window_get_screen(lua_State *, window_t *);
 int luaA_window_get_parent(lua_State *, window_t *);
 
 #endif
