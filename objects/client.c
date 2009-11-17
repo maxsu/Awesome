@@ -189,8 +189,6 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     client_array_insert(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
     ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) c);
 
-    c->screen = screen_getbycoord(wgeom->x, wgeom->y);
-
     /* Store initial geometry and emits signals so we inform that geometry have
      * been set. */
 #define HANDLE_GEOM(attr) \
@@ -300,7 +298,7 @@ client_unmanage(client_t *c)
 
     if(strut_has_value(&c->strut))
     {
-        lua_pushlightuserdata(globalconf.L, c->screen);
+        lua_pushlightuserdata(globalconf.L, screen_getbycoord(c->geometry.x, c->geometry.y));
         luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
         lua_pop(globalconf.L, 1);
     }
@@ -344,34 +342,18 @@ client_kill(client_t *c)
 /** Get all clients into a table.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lparam An optional screen number.
- * \lreturn A table with all clients.
  */
 static int
 luaA_client_get(lua_State *L)
 {
-    int i = 1, screen;
+    int i = 1;
 
-    screen = luaL_optnumber(L, 1, 0) - 1;
+    lua_createtable(L, globalconf.clients.len, 0);
 
-    lua_newtable(L);
-
-    if(screen == -1)
-        foreach(c, globalconf.clients)
-        {
-            luaA_object_push(L, *c);
-            lua_rawseti(L, -2, i++);
-        }
-    else
+    foreach(c, globalconf.clients)
     {
-        luaA_checkscreen(screen);
-        foreach(c, globalconf.clients)
-            if((*c)->screen == &globalconf.screens.tab[screen])
-            {
-                luaA_object_push(L, *c);
-                lua_rawseti(L, -2, i++);
-            }
+        luaA_object_push(L, *c);
+        lua_rawseti(L, -2, i++);
     }
 
     return 1;

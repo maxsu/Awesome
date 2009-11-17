@@ -111,12 +111,10 @@ wibox_draw_context_update(wibox_t *w)
     xcolor_t fg = w->ctx.fg, bg = w->ctx.bg;
 
     draw_context_wipe(&w->ctx);
-
-    if(w->screen)
-        draw_context_init(&w->ctx,
-                          w->geometry.width,
-                          w->geometry.height,
-                          &fg, &bg);
+    draw_context_init(&w->ctx,
+                      w->geometry.width,
+                      w->geometry.height,
+                      &fg, &bg);
 }
 
 static int
@@ -160,7 +158,7 @@ wibox_unmap(wibox_t *wibox)
     xcb_unmap_window(_G_connection, wibox->window);
     if(strut_has_value(&wibox->strut))
     {
-        lua_pushlightuserdata(globalconf.L, wibox->screen);
+        lua_pushlightuserdata(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y));
         luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
         lua_pop(globalconf.L, 1);
     }
@@ -175,7 +173,7 @@ wibox_map(wibox_t *wibox)
     wibox->need_update = true;
     if(strut_has_value(&wibox->strut))
     {
-        lua_pushlightuserdata(globalconf.L, wibox->screen);
+        lua_pushlightuserdata(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y));
         luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
         lua_pop(globalconf.L, 1);
     }
@@ -299,13 +297,10 @@ wibox_set_visible(lua_State *L, int udx, bool v)
     {
         wibox->visible = v;
 
-        if(wibox->screen)
-        {
-            if(wibox->visible)
-                wibox_map(wibox);
-            else
-                wibox_unmap(wibox);
-        }
+        if(wibox->visible)
+            wibox_map(wibox);
+        else
+            wibox_unmap(wibox);
 
         luaA_object_emit_signal(L, udx, "property::visible", 0);
     }
@@ -346,14 +341,13 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
 
         if(strut_has_value(&wibox->strut))
         {
-            lua_pushlightuserdata(L, wibox->screen);
+            lua_pushlightuserdata(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y));
             luaA_object_emit_signal(L, -1, "property::workarea", 0);
             lua_pop(L, 1);
         }
 
         luaA_object_unref_item(L, -3, wibox->parent);
         wibox->parent = NULL;
-        wibox->screen = NULL;
         luaA_object_emit_signal(L, -3, "property::screen", 0);
         luaA_object_unref(L, wibox);
     }
@@ -365,8 +359,6 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
         luaA_checkudata(L, -1, &window_class);
         wibox->parent = luaA_object_ref_item(L, -3, -1);
 
-        /* \todo has to be fix for Zaphod */
-        wibox->screen = globalconf.screens.tab;
         xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
 
         /* Create window */
@@ -744,10 +736,6 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_visible,
                             (lua_class_propfunc_t) luaA_wibox_get_visible,
                             (lua_class_propfunc_t) luaA_wibox_set_visible);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SCREEN,
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_screen,
-                            NULL);
     luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_FG,
                             (lua_class_propfunc_t) luaA_wibox_set_fg,
                             (lua_class_propfunc_t) luaA_wibox_get_fg,
