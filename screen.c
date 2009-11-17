@@ -381,44 +381,6 @@ luaA_screen_module_index(lua_State *L)
     return 1;
 }
 
-/** Get screen tags.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lparam None or a table of tags to set to the screen.
- * The table must contains at least one tag.
- * \return A table with all screen tags.
- */
-static int
-luaA_screen_tags(lua_State *L)
-{
-    screen_t *s = luaA_checkudata(L, 1, &screen_class);
-
-    if(lua_gettop(L) == 2)
-    {
-        luaA_checktable(L, 2);
-
-        /* Detach all tags, but go backward since the array len will change */
-        for(int i = s->tags.len - 1; i >= 0; i--)
-            tag_remove_from_screen(s->tags.tab[i]);
-
-        lua_pushnil(L);
-        while(lua_next(L, 2))
-            tag_append_to_screen(L, -1, s);
-    }
-    else
-    {
-        lua_createtable(L, s->tags.len, 0);
-        for(int i = 0; i < s->tags.len; i++)
-        {
-            luaA_object_push(L, s->tags.tab[i]);
-            lua_rawseti(L, -2, i + 1);
-        }
-    }
-
-    return 1;
-}
-
 /** Get the screen count.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -480,7 +442,6 @@ screen_class_setup(lua_State *L)
     static const struct luaL_reg screen_methods[] =
     {
         LUA_CLASS_METHODS(screen)
-        { "tags", luaA_screen_tags },
         { "count", luaA_screen_count },
         { NULL, NULL }
     };

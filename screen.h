@@ -34,8 +34,6 @@ struct a_screen
     LUA_OBJECT_HEADER
     /** Screen geometry */
     area_t geometry;
-    /** Tag list */
-    tag_array_t tags;
     /** Window that contains the systray */
     struct
     {
@@ -43,8 +41,6 @@ struct a_screen
         /** Systray window parent */
         xcb_window_t parent;
     } systray;
-    /** True if the banning on this screen needs to be updated */
-    bool need_lazy_banning;
     /** The screen outputs informations */
     screen_output_array_t outputs;
 };
