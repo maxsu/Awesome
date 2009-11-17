@@ -103,6 +103,7 @@ bool window_isvisible(lua_State *, int);
 
 int luaA_window_get_focusable(lua_State *, window_t *);
 int luaA_window_get_screen(lua_State *, window_t *);
+int luaA_window_get_parent(lua_State *, window_t *);
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
