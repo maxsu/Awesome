@@ -22,6 +22,9 @@
 #ifndef AWESOME_GLOBALCONF_H
 #define AWESOME_GLOBALCONF_H
 
+#define SN_API_NOT_YET_FROZEN
+#include <libsn/sn.h>
+
 #include <ev.h>
 
 #include <xcb/xcb_icccm.h>
@@ -31,6 +34,7 @@
 #include "common/xembed.h"
 
 typedef struct wibox_t wibox_t;
+typedef struct window_t window_t;
 typedef struct a_screen screen_t;
 typedef struct client_t client_t;
 typedef struct tag tag_t;

@@ -26,6 +26,7 @@
 #include "globalconf.h"
 #include "luaa.h"
 #include "keyresolv.h"
+#include "objects/key.h"
 #include "common/xutil.h"
 #include "common/luaobject.h"
 

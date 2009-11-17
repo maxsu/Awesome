@@ -33,6 +33,8 @@ int luaA_spawn(lua_State *);
 
 /** The startup notification display struct */
 SnDisplay *_G_sndisplay;
+/** The monitor of startup notifications */
+SnMonitorContext *_G_snmonitor;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

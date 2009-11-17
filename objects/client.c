@@ -151,13 +151,13 @@ client_hasproto(client_t *c, xcb_atom_t atom)
  * \param startup True if we are managing at startup time.
  */
 void
-client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t *pscreen, bool startup)
+client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
 {
     const uint32_t select_input_val[] = { CLIENT_SELECT_INPUT_EVENT_MASK };
 
     if(systray_iskdedockapp(w))
     {
-        systray_request_handle(w, pscreen, NULL);
+        systray_request_handle(w, NULL);
         return;
     }
 
@@ -177,7 +177,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t
     /* Store window */
     c->window = w;
     /* Store parent */
-    c->parent = pscreen->root;
+    c->parent = _G_root;
     luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
     /* Consider window is focusable by default */
     c->focusable = true;
@@ -189,16 +189,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, protocol_screen_t
     client_array_insert(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
     ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) c);
 
-    /* Set the right screen */
-    screen_t *screen = NULL;
-    foreach(s, globalconf.screens)
-        if(s->protocol_screen == pscreen)
-        {
-            screen = s;
-            break;
-        }
-
-    c->screen = screen_getbycoord(screen, wgeom->x, wgeom->y);
+    c->screen = screen_getbycoord(globalconf.screens.tab, wgeom->x, wgeom->y);
 
     /* Store initial geometry and emits signals so we inform that geometry have
      * been set. */

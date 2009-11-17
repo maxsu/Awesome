@@ -33,21 +33,19 @@
 #define SYSTEM_TRAY_REQUEST_DOCK 0 /* Begin icon docking */
 
 /** Initialize systray information in X.
- * \param pscreen The protocol screen.
  */
 void
-systray_init(protocol_screen_t *pscreen)
+systray_init(void)
 {
     xcb_client_message_event_t ev;
-    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
-    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, phys_screen);
+    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, _G_default_screen);
     char *atom_name;
     xcb_intern_atom_cookie_t atom_systray_q;
     xcb_intern_atom_reply_t *atom_systray_r;
     xcb_atom_t atom_systray;
 
     /* Send requests */
-    if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", phys_screen)))
+    if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", _G_default_screen)))
     {
         warn("error getting systray atom");
         return;
@@ -58,9 +56,9 @@ systray_init(protocol_screen_t *pscreen)
 
     p_delete(&atom_name);
 
-    pscreen->systray.window = xcb_generate_id(_G_connection);
+    _G_systray.window = xcb_generate_id(_G_connection);
     xcb_create_window(_G_connection, xscreen->root_depth,
-                      pscreen->systray.window, xscreen->root,
+                      _G_systray.window, xscreen->root,
                       -1, -1, 1, 1, 0,
                       XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
 
@@ -71,7 +69,7 @@ systray_init(protocol_screen_t *pscreen)
     ev.format = 32;
     ev.type = MANAGER;
     ev.data.data32[0] = XCB_CURRENT_TIME;
-    ev.data.data32[2] = pscreen->systray.window;
+    ev.data.data32[2] = _G_systray.window;
     ev.data.data32[3] = ev.data.data32[4] = 0;
 
     if(!(atom_systray_r = xcb_intern_atom_reply(_G_connection, atom_systray_q, NULL)))
@@ -85,7 +83,7 @@ systray_init(protocol_screen_t *pscreen)
     p_delete(&atom_systray_r);
 
     xcb_set_selection_owner(_G_connection,
-                            pscreen->systray.window,
+                            _G_systray.window,
                             atom_systray,
                             XCB_CURRENT_TIME);
 
@@ -93,16 +91,14 @@ systray_init(protocol_screen_t *pscreen)
 }
 
 /** Remove systray information in X.
- * \param pscreen Protocol screen to cleanup.
  */
 void
-systray_cleanup(protocol_screen_t *pscreen)
+systray_cleanup(void)
 {
-    int phys_screen = protocol_screen_array_indexof(&_G_protocol_screens, pscreen);
     xcb_intern_atom_reply_t *atom_systray_r;
     char *atom_name;
 
-    if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", phys_screen))
+    if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", _G_default_screen))
        || !(atom_systray_r = xcb_intern_atom_reply(_G_connection,
                                                    xcb_intern_atom_unchecked(_G_connection,
                                                                              false,
@@ -127,12 +123,11 @@ systray_cleanup(protocol_screen_t *pscreen)
 
 /** Handle a systray request.
  * \param embed_win The window to embed.
- * \param pscreen The protocol screen to display on.
  * \param info The embedding info
  * \return 0 on no error.
  */
 int
-systray_request_handle(xcb_window_t embed_win, protocol_screen_t *pscreen, xembed_info_t *info)
+systray_request_handle(xcb_window_t embed_win, xembed_info_t *info)
 {
     xembed_window_t em;
     xcb_get_property_cookie_t em_cookie;
@@ -144,7 +139,7 @@ systray_request_handle(xcb_window_t embed_win, protocol_screen_t *pscreen, xembe
     };
 
     /* check if not already trayed */
-    if(xembed_getbywin(&pscreen->embedded, embed_win))
+    if(xembed_getbywin(&_G_embedded, embed_win))
         return -1;
 
     p_clear(&em_cookie, 1);
@@ -157,7 +152,7 @@ systray_request_handle(xcb_window_t embed_win, protocol_screen_t *pscreen, xembe
     xwindow_set_state(embed_win, XCB_WM_STATE_WITHDRAWN);
 
     xcb_reparent_window(_G_connection, embed_win,
-                        pscreen->systray.window, 0, 0);
+                        _G_systray.window, 0, 0);
 
     em.window = embed_win;
 
@@ -166,10 +161,10 @@ systray_request_handle(xcb_window_t embed_win, protocol_screen_t *pscreen, xembe
     else
         xembed_info_get_reply(_G_connection, em_cookie, &em.info);
 
-    xembed_embedded_notify(_G_connection, em.window, pscreen->systray.window,
+    xembed_embedded_notify(_G_connection, em.window, _G_systray.window,
                            MIN(XEMBED_VERSION, em.info.version));
 
-    xembed_window_array_append(&pscreen->embedded, em);
+    xembed_window_array_append(&_G_embedded, em);
 
     return 0;
 }
@@ -193,12 +188,8 @@ systray_process_client_message(xcb_client_message_event_t *ev)
         if(!(geom_r = xcb_get_geometry_reply(_G_connection, geom_c, NULL)))
             return -1;
 
-        foreach(screen, _G_protocol_screens)
-            if(screen->root->window == geom_r->root)
-            {
-                ret = systray_request_handle(ev->data.data32[2], screen, NULL);
-                break;
-            }
+        ret = systray_request_handle(ev->data.data32[2], NULL);
+        break;
 
         p_delete(&geom_r);
         break;

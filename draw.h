@@ -30,7 +30,6 @@
 #include "objects/image.h"
 #include "color.h"
 #include "area.h"
-#include "protocol_screen.h"
 
 typedef enum
 {
@@ -51,7 +50,7 @@ typedef struct
     xcolor_t bg;
 } draw_context_t;
 
-void draw_context_init(draw_context_t *, protocol_screen_t *, int, int,
+void draw_context_init(draw_context_t *, int, int,
                        const xcolor_t *, const xcolor_t *);
 void draw_context_wipe(draw_context_t *);
 

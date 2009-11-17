@@ -23,7 +23,8 @@
 #define AWESOME_SCREEN_H
 
 #include "area.h"
-#include "protocol_screen.h"
+#include "globalconf.h"
+#include "common/luaobject.h"
 
 typedef struct screen_output_t screen_output_t;
 ARRAY_TYPE(screen_output_t, screen_output)
@@ -31,8 +32,6 @@ ARRAY_TYPE(screen_output_t, screen_output)
 struct a_screen
 {
     LUA_OBJECT_HEADER
-    /** Protocol screen */
-    protocol_screen_t *protocol_screen;
     /** Screen geometry */
     area_t geometry;
     /** Tag list */
@@ -51,14 +50,17 @@ struct a_screen
 };
 ARRAY_FUNCS(screen_t, screen, DO_NOTHING)
 
-/** Protocol screens */
-protocol_screen_array_t _G_protocol_screens;
+/** The graphic context. */
+xcb_gcontext_t _G_gc;
+/** The default visual, used to draw */
+xcb_visualtype_t *_G_visual;
+/** Screen's root window */
+window_t *_G_root;
 
 void screen_class_setup(lua_State *);
 void screen_scan(void);
 screen_t *screen_getbycoord(screen_t *, int, int);
 area_t screen_area_get(screen_t *, bool);
-protocol_screen_t *protocol_screen_from_root(xcb_window_t);
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

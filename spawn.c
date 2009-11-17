@@ -236,11 +236,10 @@ spawn_init(void)
 {
     _G_sndisplay = sn_xcb_display_new(_G_connection, NULL, NULL);
 
-    foreach(screen, _G_protocol_screens)
-        screen->snmonitor = sn_monitor_context_new(_G_sndisplay,
-                                                   protocol_screen_array_indexof(&_G_protocol_screens, screen),
-                                                   spawn_monitor_event,
-                                                   NULL, NULL);
+    _G_snmonitor = sn_monitor_context_new(_G_sndisplay,
+                                          _G_default_screen,
+                                          spawn_monitor_event,
+                                          NULL, NULL);
 }
 
 static void
@@ -274,42 +273,19 @@ spawn_command(const gchar *command_line, GError **error)
 }
 
 /** Spawn a program.
- * This function is multi-head (Zaphod) aware and will set display to
- * the right screen according to mouse position.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack
- * \luastack
- * \lparam The command to launch.
- * \lparam Use startup-notification, true or false, default to true.
- * \lparam The optional screen number to spawn the command on.
- * \lreturn Nothing if launch was successful, an error string otherwise.
  */
 int
 luaA_spawn(lua_State *L)
 {
-    char *host, newdisplay[128];
     const char *cmd;
     bool use_sn = true;
-    int screen = 0, screenp, displayp;
 
     if(lua_gettop(L) >= 2)
         use_sn = luaA_checkboolean(L, 2);
 
-    if(lua_gettop(L) == 3)
-    {
-        screen = luaL_checknumber(L, 3) - 1;
-        luaA_checkscreen(screen);
-    }
-
     cmd = luaL_checkstring(L, 1);
-
-    if(!globalconf.xinerama_is_active)
-    {
-        xcb_parse_display(NULL, &host, &displayp, &screenp);
-        snprintf(newdisplay, sizeof(newdisplay), "%s:%d.%d", host, displayp, screen);
-        setenv("DISPLAY", newdisplay, 1);
-        p_delete(&host);
-    }
 
     SnLauncherContext *context = NULL;
     if(use_sn)
@@ -325,8 +301,7 @@ luaA_spawn(lua_State *L)
         else
             cmdname = a_strdup(cmd);
 
-        context = sn_launcher_context_new(_G_sndisplay,
-                                          protocol_screen_array_indexof(&_G_protocol_screens, globalconf.screens.tab[screen].protocol_screen));
+        context = sn_launcher_context_new(_G_sndisplay, _G_default_screen);
         sn_launcher_context_set_name(context, "awesome");
         sn_launcher_context_set_description(context, "awesome spawn");
         sn_launcher_context_set_binary_name(context, cmdname);

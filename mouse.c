@@ -147,7 +147,7 @@ luaA_mouse_newindex(lua_State *L)
         {
             int screen = luaL_checknumber(L, 3) - 1;
             luaA_checkscreen(screen);
-            mouse_warp_pointer(globalconf.screens.tab[screen].protocol_screen->root->window,
+            mouse_warp_pointer(_G_root->window,
                                globalconf.screens.tab[screen].geometry.x,
                                globalconf.screens.tab[screen].geometry.y);
         }
