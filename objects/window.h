@@ -55,8 +55,8 @@
     xcb_size_hints_t size_hints; \
     /** Windows layer */ \
     int8_t layer; \
-    /** Window stack */ \
-    window_array_t stack;
+    /** Window childrens stack */ \
+    window_array_t childrens; \
 
 DO_ARRAY(window_t *, window, DO_NOTHING)
 /** Window structure */
