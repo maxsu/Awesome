@@ -30,7 +30,7 @@
 static void
 stack_window_remove(window_t *window)
 {
-    window_array_find_and_remove(&window->parent->stack, window);
+    window_array_find_and_remove(&window->parent->childrens, window);
 }
 
 /** Push the window at the beginning of the window stack.
@@ -40,7 +40,7 @@ static void
 stack_window_push(window_t *window)
 {
     stack_window_remove(window);
-    window_array_push(&window->parent->stack, window);
+    window_array_push(&window->parent->childrens, window);
 }
 
 /** Push the window at the end of the window stack.
@@ -50,7 +50,7 @@ static void
 stack_window_append(window_t *window)
 {
     stack_window_remove(window);
-    window_array_append(&window->parent->stack, window);
+    window_array_append(&window->parent->childrens, window);
 }
 
 /** Put window on bottom of the stack.
@@ -90,7 +90,7 @@ stack_refresh(lua_State *L)
 
     if(window->parent)
         for(int layer = INT8_MIN; layer <= INT8_MAX; layer++)
-            foreach(node, window->parent->stack)
+            foreach(node, window->parent->childrens)
                 if((*node)->layer == layer)
                 {
                     xcb_configure_window(_G_connection, (*node)->window,
