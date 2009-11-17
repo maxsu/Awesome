@@ -40,7 +40,7 @@ ewindow_isvisible(ewindow_t *ewindow)
     if(ewindow->sticky || ewindow->type == EWINDOW_TYPE_DESKTOP)
         return true;
 
-    foreach(tag, ewindow->screen->tags)
+    foreach(tag, _G_tags)
         if(tag_get_selected(*tag) && ewindow_is_tagged(ewindow, *tag))
             return true;
 

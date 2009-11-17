@@ -30,24 +30,19 @@ struct tag
     LUA_OBJECT_HEADER
     /** Tag name */
     char *name;
-    /** Screen */
-    screen_t *screen;
     /** true if selected */
     bool selected;
     /** Windows in this tag */
     ewindow_array_t windows;
 };
 
-int tags_get_first_selected_index(screen_t *);
+int tags_get_first_selected_index(void);
 void tag_ewindow(lua_State *, int, int);
 void untag_ewindow(lua_State *, int, int);
 bool ewindow_is_tagged(ewindow_t *, tag_t *);
-void tag_view_only_byindex(screen_t *, int);
-void tag_append_to_screen(lua_State *, int, screen_t *);
-void tag_remove_from_screen(tag_t *);
-void tag_unref_simplified(tag_t **);
+void tag_view_only_byindex(int);
 
-ARRAY_FUNCS(tag_t *, tag, tag_unref_simplified)
+ARRAY_FUNCS(tag_t *, tag, DO_NOTHING)
 
 void tag_class_setup(lua_State *);
 
@@ -55,6 +50,8 @@ bool tag_get_selected(tag_t *);
 char *tag_get_name(tag_t *);
 
 lua_class_t tag_class;
+
+tag_array_t _G_tags;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

@@ -128,12 +128,10 @@ ewmh_update_net_client_list(lua_State *L)
 static int
 ewmh_update_net_current_desktop(lua_State *L)
 {
-    tag_t *tag = luaA_checkudata(L, 1, &tag_class);
-
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         _G_root->window,
                         _NET_CURRENT_DESKTOP, CARDINAL, 32, 1,
-                        (uint32_t[]) { tags_get_first_selected_index(tag->screen) });
+                        (uint32_t[]) { tags_get_first_selected_index() });
     return 0;
 }
 
@@ -231,8 +229,8 @@ ewmh_client_update_desktop(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
 
-    for(int i = 0; i < c->screen->tags.len; i++)
-        if(ewindow_is_tagged((ewindow_t *) c, c->screen->tags.tab[i]))
+    for(int i = 0; i < _G_tags.len; i++)
+        if(ewindow_is_tagged((ewindow_t *) c, _G_tags.tab[i]))
         {
             xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                                 c->window, _NET_WM_DESKTOP, CARDINAL, 32, 1, &i);
@@ -317,7 +315,7 @@ ewmh_update_net_numbers_of_desktop(void)
 {
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         _G_root->window,
-			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &globalconf.screens.tab[0].tags.len);
+			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &_G_tags.len);
 }
 
 void
@@ -327,7 +325,7 @@ ewmh_update_net_desktop_names(void)
 
     buffer_inita(&buf, BUFSIZ);
 
-    foreach(tag, globalconf.screens.tab->tags)
+    foreach(tag, _G_tags)
     {
         buffer_adds(&buf, tag_get_name(*tag));
         buffer_addc(&buf, '\0');
@@ -344,11 +342,10 @@ ewmh_update_net_desktop_names(void)
 void
 ewmh_update_workarea(void)
 {
-    tag_array_t *tags = &globalconf.screens.tab->tags;
-    uint32_t *area = p_alloca(uint32_t, tags->len * 4);
+    uint32_t *area = p_alloca(uint32_t, _G_tags.len * 4);
     area_t geom = screen_area_get(globalconf.screens.tab, true);
 
-    for(int i = 0; i < tags->len; i++)
+    for(int i = 0; i < _G_tags.len; i++)
     {
         area[4 * i + 0] = geom.x;
         area[4 * i + 1] = geom.y;
@@ -358,7 +355,7 @@ ewmh_update_workarea(void)
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         _G_root->window,
-                        _NET_WORKAREA, CARDINAL, 32, tags->len * 4, area);
+                        _NET_WORKAREA, CARDINAL, 32, _G_tags.len * 4, area);
 }
 
 static void
@@ -462,16 +459,9 @@ int
 ewmh_process_client_message(xcb_client_message_event_t *ev)
 {
     client_t *c;
-    int screen;
 
     if(ev->type == _NET_CURRENT_DESKTOP)
-        for(screen = 0;
-            screen < xcb_setup_roots_length(xcb_get_setup(_G_connection));
-            screen++)
-        {
-            if(ev->window == xutil_screen_get(_G_connection, screen)->root)
-                tag_view_only_byindex(&globalconf.screens.tab[screen], ev->data.data32[0]);
-        }
+        tag_view_only_byindex(ev->data.data32[0]);
     else if(ev->type == _NET_CLOSE_WINDOW)
     {
         if((c = client_getbywin(ev->window)))
@@ -481,15 +471,13 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
     {
         if((c = client_getbywin(ev->window)))
         {
-            tag_array_t *tags = &c->screen->tags;
-
             if(ev->data.data32[0] == 0xffffffff)
                 c->sticky = true;
             else
-                for(int i = 0; i < tags->len; i++)
+                for(int i = 0; i < _G_tags.len; i++)
                 {
                     luaA_object_push(globalconf.L, c);
-                    luaA_object_push(globalconf.L, tags->tab[i]);
+                    luaA_object_push(globalconf.L, _G_tags.tab[i]);
                     if((int) ev->data.data32[0] == i)
                         tag_ewindow(globalconf.L, -2, -1);
                     else
@@ -543,17 +531,15 @@ ewmh_client_check_hints(client_t *c)
     reply = xcb_get_property_reply(_G_connection, c0, NULL);
     if(reply && reply->value_len && (data = xcb_get_property_value(reply)))
     {
-        tag_array_t *tags = &c->screen->tags;
-
         desktop = *(uint32_t *) data;
         if(desktop == -1)
             c->sticky = true;
         else
         {
             luaA_object_push(globalconf.L, c);
-            for(int i = 0; i < tags->len; i++)
+            for(int i = 0; i < _G_tags.len; i++)
             {
-                luaA_object_push(globalconf.L, tags->tab[i]);
+                luaA_object_push(globalconf.L, _G_tags.tab[i]);
                 if(desktop == i)
                     tag_ewindow(globalconf.L, -2, -1);
                 else
