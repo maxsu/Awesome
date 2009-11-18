@@ -36,22 +36,10 @@ tag_wipe(tag_t *tag)
 
 OBJECT_EXPORT_PROPERTY(tag, tag_t, selected)
 OBJECT_EXPORT_PROPERTY(tag, tag_t, name)
-
-/** View or unview a tag.
- * \param L The Lua VM state.
- * \param udx The index of the tag on the stack.
- * \param view Set visible or not.
- */
-static void
-tag_view(lua_State *L, int udx, bool view)
-{
-    tag_t *tag = luaA_checkudata(L, udx, &tag_class);
-    if(tag->selected != view)
-    {
-        tag->selected = view;
-        luaA_object_emit_signal(L, udx, "property::selected", 0);
-    }
-}
+static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, name, lua_pushstring)
+static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, selected, lua_pushboolean)
+static LUA_OBJECT_DO_SET_PROPERTY_FUNC(tag, &tag_class, tag_t, selected)
+static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(tag, tag_t, selected, luaA_checkboolean)
 
 /** Append a tag to the tag list.
  * \param L The Lua VM state.
@@ -195,7 +183,7 @@ tag_view_only(tag_t *target)
         foreach(tag, _G_tags)
         {
             luaA_object_push(globalconf.L, *tag);
-            tag_view(globalconf.L, -1, *tag == target);
+            tag_set_selected(globalconf.L, -1, *tag == target);
             lua_pop(globalconf.L, 1);
         }
 }
@@ -260,9 +248,6 @@ luaA_tag_windows(lua_State *L)
     return 1;
 }
 
-static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, name, lua_pushstring)
-static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, selected, lua_pushboolean)
-
 /** Set the tag name.
  * \param L The Lua VM state.
  * \param tag The tag to name.
@@ -276,18 +261,6 @@ luaA_tag_set_name(lua_State *L, tag_t *tag)
     p_delete(&tag->name);
     a_iso2utf8(buf, len, &tag->name, NULL);
     luaA_object_emit_signal(L, -3, "property::name", 0);
-    return 0;
-}
-
-/** Set the tag selection status.
- * \param L The Lua VM state.
- * \param tag The tag to set the selection status for.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_tag_set_selected(lua_State *L, tag_t *tag)
-{
-    tag_view(L, -3, luaA_checkboolean(L, -1));
     return 0;
 }
 
