@@ -416,7 +416,7 @@ window_set_geometry(lua_State *L, int udx, area_t geometry)
             xcb_configure_window(_G_connection, w->window, mask_vals, set_geometry_win_vals);
 
         /* Check if the screen has changed */
-        screen_t *screen = screen_getbycoord(w->screen, w->geometry.x, w->geometry.y);
+        screen_t *screen = screen_getbycoord(w->geometry.x, w->geometry.y);
         if(screen != w->screen)
         {
             w->screen = screen;

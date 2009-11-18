@@ -120,7 +120,7 @@ luaA_mouse_index(lua_State *L)
         if(!mouse_query_pointer_root(&screen, &mouse_x, &mouse_y, NULL, NULL))
             return 0;
 
-        screen  = screen_getbycoord(screen, mouse_x, mouse_y);
+        screen  = screen_getbycoord(mouse_x, mouse_y);
 
         lua_pushnumber(L, screen_array_indexof(&globalconf.screens, screen) + 1);
         break;
