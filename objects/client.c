@@ -189,7 +189,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     client_array_insert(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
     ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) c);
 
-    c->screen = screen_getbycoord(globalconf.screens.tab, wgeom->x, wgeom->y);
+    c->screen = screen_getbycoord(wgeom->x, wgeom->y);
 
     /* Store initial geometry and emits signals so we inform that geometry have
      * been set. */

@@ -55,7 +55,7 @@ window_t *_G_root;
 
 void screen_class_setup(lua_State *);
 void screen_scan(void);
-screen_t *screen_getbycoord(screen_t *, int, int);
+screen_t *screen_getbycoord(int, int);
 area_t screen_area_get(screen_t *, bool);
 
 #endif

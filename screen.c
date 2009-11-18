@@ -271,18 +271,13 @@ screen_scan(void)
  * \return Screen pointer or screen param if no match or no multi-head.
  */
 screen_t *
-screen_getbycoord(screen_t *screen, int x, int y)
+screen_getbycoord(int x, int y)
 {
-    /* don't waste our time */
-    if(!globalconf.xinerama_is_active)
-        return screen;
-
     foreach(s, globalconf.screens)
         if((x < 0 || (x >= s->geometry.x && x < s->geometry.x + s->geometry.width))
            && (y < 0 || (y >= s->geometry.y && y < s->geometry.y + s->geometry.height)))
             return s;
-
-    return screen;
+    return NULL;
 }
 
 /** Get screens info.
