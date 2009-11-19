@@ -253,6 +253,7 @@ luaA_tag_set_name(lua_State *L, tag_t *tag)
     const char *buf = luaL_checklstring(L, -1, &len);
     p_delete(&tag->name);
     a_iso2utf8(buf, len, &tag->name, NULL);
+    ewmh_update_net_desktop_names();
     luaA_object_emit_signal(L, -3, "property::name", 0);
     return 0;
 }
