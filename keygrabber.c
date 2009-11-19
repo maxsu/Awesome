@@ -27,7 +27,6 @@
 #include "objects/key.h"
 #include "luaa.h"
 #include "keyresolv.h"
-#include "screen.h"
 #include "objects/window.h"
 #include "common/xutil.h"
 

@@ -39,7 +39,6 @@
 #include "systray.h"
 #include "event.h"
 #include "property.h"
-#include "screen.h"
 #include "luaa.h"
 #include "common/version.h"
 #include "common/atoms.h"

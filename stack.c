@@ -24,7 +24,6 @@
 #include "stack.h"
 #include "objects/client.h"
 #include "objects/wibox.h"
-#include "screen.h"
 
 static void
 stack_window_remove(window_t *window)

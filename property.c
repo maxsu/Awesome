@@ -23,7 +23,6 @@
 
 #include "awesome.h"
 #include "event.h"
-#include "screen.h"
 #include "property.h"
 #include "objects/client.h"
 #include "ewmh.h"

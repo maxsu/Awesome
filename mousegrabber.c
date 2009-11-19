@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 #include "awesome.h"
-#include "screen.h"
 #include "mouse.h"
 #include "luaa.h"
 #include "mousegrabber.h"

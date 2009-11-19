@@ -23,8 +23,8 @@
 #include <pango/pangocairo.h>
 
 #include "font.h"
-#include "screen.h"
 #include "awesome.h"
+#include "objects/screen.h"
 
 /** Init a new Pango font.
  * \param font The font to init.
