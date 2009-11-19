@@ -483,7 +483,7 @@ luaA_wibox_get_bg(lua_State *L, wibox_t *wibox)
 static int
 luaA_wibox_set_bg_image(lua_State *L, wibox_t *wibox)
 {
-    luaA_checkudata(L, -1, &image_class);
+    luaA_checkudataornil(L, -1, &image_class);
     luaA_object_unref_item(L, -3, wibox->bg_image);
     wibox->bg_image = luaA_object_ref_item(L, -3, -1);
     wibox->need_update = true;
