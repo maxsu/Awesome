@@ -41,48 +41,41 @@ static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, selected, lua_pushboolean)
 static LUA_OBJECT_DO_SET_PROPERTY_FUNC(tag, &tag_class, tag_t, selected)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(tag, tag_t, selected, luaA_checkboolean)
 
-/** Append a tag to the tag list.
- * \param L The Lua VM state.
- * \param udx The tag index on the stack.
- */
-static void
-tag_append(lua_State *L, int udx)
+static int
+luaA_tag_get_attached(lua_State *L, tag_t *tag)
 {
-    tag_t *tag = luaA_checkudata(L, udx, &tag_class);
-
-    /* can't attach a tag twice */
-    if(tag_array_find(&_G_tags, tag))
-    {
-        lua_remove(L, udx);
-        return;
-    }
-
-    tag_array_append(&_G_tags, luaA_object_ref(L, udx));
-
-    ewmh_update_net_numbers_of_desktop();
-    ewmh_update_net_desktop_names();
-    ewmh_update_workarea();
-
-    luaA_object_push(L, tag);
-    signal_object_emit(L, &global_signals, "tag::attach", 1);
+    lua_pushboolean(L, tag_array_find(&_G_tags, tag) != NULL);
+    return 1;
 }
 
-/** Remove a tag from the tag list.
- * \param tag The tag to remove.
- */
-static void
-tag_remove(tag_t *tag)
+static int
+luaA_tag_set_attached(lua_State *L, tag_t *tag)
 {
-    tag_array_find_and_remove(&_G_tags, tag);
+    bool attach = luaA_checkboolean(L, 3);
+    tag_t **tag_index = tag_array_find(&_G_tags, tag);
 
-    ewmh_update_net_numbers_of_desktop();
-    ewmh_update_net_desktop_names();
-    ewmh_update_workarea();
+    if(attach)
+    {
+        /* Tag not already attached? */
+        if(!tag_index)
+        {
+            tag_array_append(&_G_tags, luaA_object_ref(L, 1));
+            ewmh_update_net_numbers_of_desktop();
+            ewmh_update_net_desktop_names();
+            ewmh_update_workarea();
+            luaA_object_emit_signal(L, 1, "property::attached", 0);
+        }
+    }
+    else if(tag_index)
+    {
+        tag_array_remove(&_G_tags, tag_index);
+        ewmh_update_net_numbers_of_desktop();
+        ewmh_update_net_desktop_names();
+        ewmh_update_workarea();
+        luaA_object_emit_signal(L, 1, "property::attached", 0);
+    }
 
-    luaA_object_push(globalconf.L, tag);
-    luaA_object_emit_signal(globalconf.L, -2, "tag::detach", 1);
-
-    luaA_object_unref(globalconf.L, tag);
+    return 0;
 }
 
 static void
@@ -294,6 +287,10 @@ tag_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_tag_set_selected,
                             (lua_class_propfunc_t) luaA_tag_get_selected,
                             (lua_class_propfunc_t) luaA_tag_set_selected);
+    luaA_class_add_property(&tag_class, A_TK_ATTACHED,
+                            (lua_class_propfunc_t) luaA_tag_set_attached,
+                            (lua_class_propfunc_t) luaA_tag_get_attached,
+                            (lua_class_propfunc_t) luaA_tag_set_attached);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
