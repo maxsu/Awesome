@@ -98,6 +98,10 @@ luaA_restart(lua_State *L)
     return 0;
 }
 
+/** Use XTest extension to fake input from mouse or keyboard.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
 static int
 luaA_awesome_fake_input(lua_State *L)
 {
