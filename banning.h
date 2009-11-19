@@ -1,5 +1,5 @@
 /*
- * banning.h - client banning management header
+ * banning.h - ewindow banning management header
  *
  * Copyright © 2007-2009 Julien Danjou <julien@danjou.info>
  *
