@@ -27,7 +27,6 @@
 #include <glib/gspawn.h>
 
 #include "spawn.h"
-#include "screen.h"
 #include "luaa.h"
 #include "event.h"
 

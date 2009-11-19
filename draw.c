@@ -30,7 +30,7 @@
 
 #include "draw.h"
 #include "awesome.h"
-#include "screen.h"
+#include "objects/screen.h"
 #include "font.h"
 
 #include "common/tokenize.h"

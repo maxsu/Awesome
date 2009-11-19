@@ -50,7 +50,6 @@ set(AWE_SRCS
     ${SOURCE_DIR}/mouse.c
     ${SOURCE_DIR}/mousegrabber.c
     ${SOURCE_DIR}/property.c
-    ${SOURCE_DIR}/screen.c
     ${SOURCE_DIR}/selection.c
     ${SOURCE_DIR}/spawn.c
     ${SOURCE_DIR}/stack.c
@@ -72,6 +71,7 @@ set(AWE_SRCS
     ${SOURCE_DIR}/objects/ewindow.c
     ${SOURCE_DIR}/objects/image.c
     ${SOURCE_DIR}/objects/key.c
+    ${SOURCE_DIR}/objects/screen.c
     ${SOURCE_DIR}/objects/tag.c
     ${SOURCE_DIR}/objects/timer.c
     ${SOURCE_DIR}/objects/wibox.c

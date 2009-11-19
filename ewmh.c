@@ -28,7 +28,6 @@
 #include "awesome.h"
 #include "ewmh.h"
 #include "objects/tag.h"
-#include "screen.h"
 #include "objects/client.h"
 #include "objects/wibox.h"
 #include "luaa.h"
