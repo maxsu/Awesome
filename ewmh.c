@@ -304,6 +304,39 @@ ewmh_update_net_desktop_names(lua_State *L)
     return 0;
 }
 
+static int
+ewmh_update_net_numbers_of_desktop(lua_State *L)
+{
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        _G_root->window,
+			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &_G_tags.len);
+
+    return 0;
+}
+
+/** Update the work area space for each physical screen and each desktop.
+ */
+static int
+ewmh_update_workarea(lua_State *L)
+{
+    uint32_t *area = p_alloca(uint32_t, _G_tags.len * 4);
+    area_t geom = screen_area_get(globalconf.screens.tab, true);
+
+    for(int i = 0; i < _G_tags.len; i++)
+    {
+        area[4 * i + 0] = geom.x;
+        area[4 * i + 1] = geom.y;
+        area[4 * i + 2] = geom.width;
+        area[4 * i + 3] = geom.height;
+    }
+
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        _G_root->window,
+                        _NET_WORKAREA, CARDINAL, 32, _G_tags.len * 4, area);
+
+    return 0;
+}
+
 void
 ewmh_init(void)
 {
@@ -329,38 +362,11 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::window", ewmh_update_strut);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::name", ewmh_update_net_desktop_names);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_net_desktop_names);
+    luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_net_numbers_of_desktop);
+    luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_workarea);
 }
 
 DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
-
-void
-ewmh_update_net_numbers_of_desktop(void)
-{
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        _G_root->window,
-			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &_G_tags.len);
-}
-
-/** Update the work area space for each physical screen and each desktop.
- */
-void
-ewmh_update_workarea(void)
-{
-    uint32_t *area = p_alloca(uint32_t, _G_tags.len * 4);
-    area_t geom = screen_area_get(globalconf.screens.tab, true);
-
-    for(int i = 0; i < _G_tags.len; i++)
-    {
-        area[4 * i + 0] = geom.x;
-        area[4 * i + 1] = geom.y;
-        area[4 * i + 2] = geom.width;
-        area[4 * i + 3] = geom.height;
-    }
-
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        _G_root->window,
-                        _NET_WORKAREA, CARDINAL, 32, _G_tags.len * 4, area);
-}
 
 static void
 ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)

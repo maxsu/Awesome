@@ -26,11 +26,9 @@
 
 void ewmh_init_screen(void);
 void ewmh_init(void);
-void ewmh_update_net_numbers_of_desktop(void);
 int ewmh_process_client_message(xcb_client_message_event_t *);
 void ewmh_update_net_client_list_stacking(void);
 void ewmh_client_check_hints(client_t *);
-void ewmh_update_workarea(void);
 void ewmh_process_client_strut(client_t *, xcb_get_property_reply_t *);
 xcb_get_property_cookie_t ewmh_window_icon_get_unchecked(xcb_window_t);
 int ewmh_window_icon_from_reply(xcb_get_property_reply_t *);
