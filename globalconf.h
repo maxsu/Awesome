@@ -22,9 +22,6 @@
 #ifndef AWESOME_GLOBALCONF_H
 #define AWESOME_GLOBALCONF_H
 
-#include <ev.h>
-
-#include <xcb/xcb_icccm.h>
 #include <xcb/xcb_keysyms.h>
 
 #define SN_API_NOT_YET_FROZEN

@@ -57,6 +57,7 @@ xwindow_get_state_unchecked(xcb_window_t w)
  * \param cookie The cookie.
  * \return The current state of the window, or 0 on error.
  */
+#include <xcb/xcb_icccm.h>
 uint32_t
 xwindow_get_state_reply(xcb_get_property_cookie_t cookie)
 {

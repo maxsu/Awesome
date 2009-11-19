@@ -22,6 +22,8 @@
 #ifndef AWESOME_OBJECTS_WINDOW_H
 #define AWESOME_OBJECTS_WINDOW_H
 
+#include <xcb/xcb_icccm.h>
+
 #include "globalconf.h"
 #include "area.h"
 #include "objects/button.h"
