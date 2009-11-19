@@ -436,10 +436,7 @@ main(int argc, char **argv)
 
     keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
 
-    /* do this only for real screen */
-    ewmh_init();
     systray_init();
-
     ewmh_init();
     spawn_init();
     banning_init();

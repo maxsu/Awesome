@@ -207,10 +207,9 @@ ewmh_init(void)
         _NET_WM_STATE_HIDDEN,
         _NET_WM_STATE_DEMANDS_ATTENTION
     };
-    int i;
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        xscreen->root, _NET_SUPPORTED, XCB_ATOM_ATOM, 32,
+                        xscreen->root, _NET_SUPPORTED, ATOM, 32,
                         countof(atom), atom);
 
     /* create our own window */
@@ -220,11 +219,11 @@ ewmh_init(void)
                       XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        xscreen->root, _NET_SUPPORTING_WM_CHECK, XCB_ATOM_WINDOW, 32,
+                        xscreen->root, _NET_SUPPORTING_WM_CHECK, WINDOW, 32,
                         1, &father);
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        father, _NET_SUPPORTING_WM_CHECK, XCB_ATOM_WINDOW, 32,
+                        father, _NET_SUPPORTING_WM_CHECK, WINDOW, 32,
                         1, &father);
 
     /* set the window manager name */
@@ -232,9 +231,9 @@ ewmh_init(void)
                         father, _NET_WM_NAME, UTF8_STRING, 8, 7, "awesome");
 
     /* set the window manager PID */
-    i = getpid();
+    int i = getpid();
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        father, _NET_WM_PID, XCB_ATOM_CARDINAL, 32, 1, &i);
+                        father, _NET_WM_PID, CARDINAL, 32, 1, &i);
 
     ewmh_update_desktop_geometry();
 
