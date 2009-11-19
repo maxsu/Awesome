@@ -476,9 +476,7 @@ main(int argc, char **argv)
                                  | XCB_EVENT_MASK_PROPERTY_CHANGE
                                  | XCB_EVENT_MASK_FOCUS_CHANGE
                                  });
-    ewmh_init_screen();
     systray_init();
-
     ewmh_init();
     spawn_init();
     banning_init();

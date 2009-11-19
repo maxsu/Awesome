@@ -135,89 +135,6 @@ ewmh_update_net_current_desktop(lua_State *L)
     return 0;
 }
 
-void
-ewmh_init_screen(void)
-{
-    xcb_window_t father;
-    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, _G_default_screen);
-    xcb_atom_t atom[] =
-    {
-        _NET_SUPPORTED,
-        _NET_SUPPORTING_WM_CHECK,
-        _NET_STARTUP_ID,
-        _NET_CLIENT_LIST,
-        _NET_NUMBER_OF_DESKTOPS,
-        _NET_CURRENT_DESKTOP,
-        _NET_DESKTOP_NAMES,
-        _NET_ACTIVE_WINDOW,
-        _NET_WORKAREA,
-        _NET_DESKTOP_GEOMETRY,
-        _NET_CLOSE_WINDOW,
-        _NET_WM_NAME,
-        _NET_WM_STRUT_PARTIAL,
-        _NET_WM_ICON_NAME,
-        _NET_WM_VISIBLE_ICON_NAME,
-        _NET_WM_DESKTOP,
-        _NET_WM_WINDOW_TYPE,
-        _NET_WM_WINDOW_TYPE_DESKTOP,
-        _NET_WM_WINDOW_TYPE_DOCK,
-        _NET_WM_WINDOW_TYPE_TOOLBAR,
-        _NET_WM_WINDOW_TYPE_MENU,
-        _NET_WM_WINDOW_TYPE_UTILITY,
-        _NET_WM_WINDOW_TYPE_SPLASH,
-        _NET_WM_WINDOW_TYPE_DIALOG,
-        _NET_WM_WINDOW_TYPE_DROPDOWN_MENU,
-        _NET_WM_WINDOW_TYPE_POPUP_MENU,
-        _NET_WM_WINDOW_TYPE_TOOLTIP,
-        _NET_WM_WINDOW_TYPE_NOTIFICATION,
-        _NET_WM_WINDOW_TYPE_COMBO,
-        _NET_WM_WINDOW_TYPE_DND,
-        _NET_WM_WINDOW_TYPE_NORMAL,
-        _NET_WM_ICON,
-        _NET_WM_PID,
-        _NET_WM_STATE,
-        _NET_WM_STATE_STICKY,
-        _NET_WM_STATE_SKIP_TASKBAR,
-        _NET_WM_STATE_FULLSCREEN,
-        _NET_WM_STATE_MAXIMIZED_HORZ,
-        _NET_WM_STATE_MAXIMIZED_VERT,
-        _NET_WM_STATE_ABOVE,
-        _NET_WM_STATE_BELOW,
-        _NET_WM_STATE_MODAL,
-        _NET_WM_STATE_HIDDEN,
-        _NET_WM_STATE_DEMANDS_ATTENTION
-    };
-
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        xscreen->root, _NET_SUPPORTED, ATOM, 32,
-                        countof(atom), atom);
-
-    /* create our own window */
-    father = xcb_generate_id(_G_connection);
-    xcb_create_window(_G_connection, xscreen->root_depth,
-                      father, xscreen->root, -1, -1, 1, 1, 0,
-                      XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
-
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        xscreen->root, _NET_SUPPORTING_WM_CHECK, WINDOW, 32,
-                        1, &father);
-
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        father, _NET_SUPPORTING_WM_CHECK, WINDOW, 32,
-                        1, &father);
-
-    /* set the window manager name */
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        father, _NET_WM_NAME, UTF8_STRING, 8, 7, "awesome");
-
-    /* set the window manager PID */
-    int i = getpid();
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        father, _NET_WM_PID, CARDINAL, 32, 1, &i);
-
-    ewmh_update_desktop_geometry();
-};
-
 /** Update the client active desktop.
  * This is "wrong" since it can be on several tags, but EWMH has a strict view
  * of desktop system so just take the first tag.
@@ -340,6 +257,85 @@ ewmh_update_workarea(lua_State *L)
 void
 ewmh_init(void)
 {
+    xcb_window_t father;
+    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, _G_default_screen);
+    xcb_atom_t atom[] =
+    {
+        _NET_SUPPORTED,
+        _NET_SUPPORTING_WM_CHECK,
+        _NET_STARTUP_ID,
+        _NET_CLIENT_LIST,
+        _NET_NUMBER_OF_DESKTOPS,
+        _NET_CURRENT_DESKTOP,
+        _NET_DESKTOP_NAMES,
+        _NET_ACTIVE_WINDOW,
+        _NET_WORKAREA,
+        _NET_DESKTOP_GEOMETRY,
+        _NET_CLOSE_WINDOW,
+        _NET_WM_NAME,
+        _NET_WM_STRUT_PARTIAL,
+        _NET_WM_ICON_NAME,
+        _NET_WM_VISIBLE_ICON_NAME,
+        _NET_WM_DESKTOP,
+        _NET_WM_WINDOW_TYPE,
+        _NET_WM_WINDOW_TYPE_DESKTOP,
+        _NET_WM_WINDOW_TYPE_DOCK,
+        _NET_WM_WINDOW_TYPE_TOOLBAR,
+        _NET_WM_WINDOW_TYPE_MENU,
+        _NET_WM_WINDOW_TYPE_UTILITY,
+        _NET_WM_WINDOW_TYPE_SPLASH,
+        _NET_WM_WINDOW_TYPE_DIALOG,
+        _NET_WM_WINDOW_TYPE_DROPDOWN_MENU,
+        _NET_WM_WINDOW_TYPE_POPUP_MENU,
+        _NET_WM_WINDOW_TYPE_TOOLTIP,
+        _NET_WM_WINDOW_TYPE_NOTIFICATION,
+        _NET_WM_WINDOW_TYPE_COMBO,
+        _NET_WM_WINDOW_TYPE_DND,
+        _NET_WM_WINDOW_TYPE_NORMAL,
+        _NET_WM_ICON,
+        _NET_WM_PID,
+        _NET_WM_STATE,
+        _NET_WM_STATE_STICKY,
+        _NET_WM_STATE_SKIP_TASKBAR,
+        _NET_WM_STATE_FULLSCREEN,
+        _NET_WM_STATE_MAXIMIZED_HORZ,
+        _NET_WM_STATE_MAXIMIZED_VERT,
+        _NET_WM_STATE_ABOVE,
+        _NET_WM_STATE_BELOW,
+        _NET_WM_STATE_MODAL,
+        _NET_WM_STATE_HIDDEN,
+        _NET_WM_STATE_DEMANDS_ATTENTION
+    };
+
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        xscreen->root, _NET_SUPPORTED, ATOM, 32,
+                        countof(atom), atom);
+
+    /* create our own window */
+    father = xcb_generate_id(_G_connection);
+    xcb_create_window(_G_connection, xscreen->root_depth,
+                      father, xscreen->root, -1, -1, 1, 1, 0,
+                      XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
+
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        xscreen->root, _NET_SUPPORTING_WM_CHECK, WINDOW, 32,
+                        1, &father);
+
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        father, _NET_SUPPORTING_WM_CHECK, WINDOW, 32,
+                        1, &father);
+
+    /* set the window manager name */
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        father, _NET_WM_NAME, UTF8_STRING, 8, 7, "awesome");
+
+    /* set the window manager PID */
+    int i = getpid();
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        father, _NET_WM_PID, CARDINAL, 32, 1, &i);
+
+    ewmh_update_desktop_geometry();
+
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "focus", ewmh_update_net_active_window);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "unfocus", ewmh_reset_net_active_window);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "manage", ewmh_update_net_client_list);
@@ -364,6 +360,7 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_net_desktop_names);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_net_numbers_of_desktop);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_workarea);
+
 }
 
 DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
