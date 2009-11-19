@@ -20,14 +20,8 @@
  */
 
 #include "mouse.h"
-#include "screen.h"
 #include "objects/client.h"
-#include "globalconf.h"
 #include "awesome.h"
-#include "objects/wibox.h"
-#include "luaa.h"
-#include "common/tokenize.h"
-#include "common/xutil.h"
 
 /** Get the pointer position.
  * \param window The window to get position on.
@@ -37,59 +31,42 @@
  * \param mask will be set to the current buttons state
  * \return true on success, false if an error occurred
  **/
-bool
+static bool
 mouse_query_pointer(xcb_window_t window, int16_t *x, int16_t *y, xcb_window_t *child, uint16_t *mask)
 {
-    xcb_query_pointer_cookie_t query_ptr_c;
-    xcb_query_pointer_reply_t *query_ptr_r;
-
-    query_ptr_c = xcb_query_pointer_unchecked(_G_connection, window);
-    query_ptr_r = xcb_query_pointer_reply(_G_connection, query_ptr_c, NULL);
+    xcb_query_pointer_cookie_t query_ptr_c = xcb_query_pointer_unchecked(_G_connection, window);
+    xcb_query_pointer_reply_t *query_ptr_r = xcb_query_pointer_reply(_G_connection, query_ptr_c, NULL);
 
     if(!query_ptr_r || !query_ptr_r->same_screen)
         return false;
 
     *x = query_ptr_r->win_x;
     *y = query_ptr_r->win_y;
-    if(mask)
-        *mask = query_ptr_r->mask;
-    if(child)
-        *child = query_ptr_r->child;
+    *mask = query_ptr_r->mask;
+    *child = query_ptr_r->child;
 
     p_delete(&query_ptr_r);
 
     return true;
 }
 
-/** Get the pointer position on the screen.
- * \param x This will be set to the Pointer-x-coordinate relative to window.
- * \param y This will be set to the Pointer-y-coordinate relative to window.
- * \param child This will be set to the window under the pointer.
- * \param mask This will be set to the current buttons state.
- * \return True on success, false if an error occurred.
- */
-static bool
-mouse_query_pointer_root(int16_t *x, int16_t *y, xcb_window_t *child, uint16_t *mask)
+static int
+luaA_mouse_pushmask(lua_State *L, uint16_t mask)
 {
-    xcb_window_t root = globalconf.screen->root;
+    lua_createtable(L, 5, 0);
 
-    if(mouse_query_pointer(root, x, y, child, mask))
+    int i = 1;
+
+    for(uint16_t maski = XCB_BUTTON_MASK_1; maski <= XCB_BUTTON_MASK_5; maski <<= 1)
     {
-        return true;
+        if(mask & maski)
+            lua_pushboolean(L, true);
+        else
+            lua_pushboolean(L, false);
+        lua_rawseti(L, -2, i++);
     }
-    return false;
-}
 
-/** Set the pointer position.
- * \param window The destination window.
- * \param x X-coordinate inside window.
- * \param y Y-coordinate inside window.
- */
-static inline void
-mouse_warp_pointer(xcb_window_t window, int x, int y)
-{
-    xcb_warp_pointer(_G_connection, XCB_NONE, window,
-                     0, 0, 0, 0, x, y );
+    return 1;
 }
 
 /** Push a table with mouse status.
@@ -107,79 +84,47 @@ luaA_mouse_pushstatus(lua_State *L, int x, int y, uint16_t mask)
     lua_pushnumber(L, y);
     lua_setfield(L, -2, "y");
 
-    lua_createtable(L, 5, 0);
-
-    int i = 1;
-
-    for(uint16_t maski = XCB_BUTTON_MASK_1; maski <= XCB_BUTTON_MASK_5; maski <<= 1)
-    {
-        if(mask & maski)
-            lua_pushboolean(L, true);
-        else
-            lua_pushboolean(L, false);
-        lua_rawseti(L, -2, i++);
-    }
+    luaA_mouse_pushmask(L, mask);
     lua_setfield(L, -2, "buttons");
+
     return 1;
 }
 
-/** Get or set the mouse coords.
+/** Query mouse information.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
  */
 static int
-luaA_mouse_coords(lua_State *L)
+luaA_mouse_query(lua_State *L)
 {
     uint16_t mask;
-    int x, y;
-    int16_t mouse_x, mouse_y;
-
-    if(lua_gettop(L) >= 1)
-    {
-        luaA_checktable(L, 1);
-
-        if(!mouse_query_pointer_root(&mouse_x, &mouse_y, NULL, &mask))
-            return 0;
-
-        x = luaA_getopt_number(L, 1, "x", mouse_x);
-        y = luaA_getopt_number(L, 1, "y", mouse_y);
-
-        mouse_warp_pointer(globalconf.screen->root, x, y);
-
-        lua_pop(L, 1);
-    }
-
-    if(!mouse_query_pointer_root(&mouse_x, &mouse_y, NULL, &mask))
-        return 0;
-
-    return luaA_mouse_pushstatus(L, mouse_x, mouse_y, mask);
-}
-
-/** Get the client which is under the pointer.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lreturn A client or nil.
- */
-static int
-luaA_mouse_object_under_pointer(lua_State *L)
-{
-    int16_t mouse_x, mouse_y;
+    int16_t x, y;
     xcb_window_t child;
 
-    if(!mouse_query_pointer_root(&mouse_x, &mouse_y, &child, NULL))
+    if(!mouse_query_pointer(globalconf.screen->root, &x, &y, &child, &mask))
         return 0;
 
-    if(child == globalconf.screen->root)
-        luaA_object_push(L, globalconf.screens.tab[0].root);
+    luaA_object_push(L, ewindow_getbywin(child));
+    lua_pushinteger(L, x);
+    lua_pushinteger(L, y);
+    luaA_mouse_pushmask(L, mask);
 
-    return luaA_object_push(L, ewindow_getbywin(child));
+    return 4;
+}
+
+static int
+luaA_mouse_warp(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+    int x = luaL_checknumber(L, 2), y = luaL_checknumber(L, 3);
+    xcb_warp_pointer(_G_connection, XCB_NONE, window->window, 0, 0, 0, 0, x, y);
+    return 0;
 }
 
 const struct luaL_reg awesome_mouse_methods[] =
 {
-    { "coords", luaA_mouse_coords },
-    { "object_under_pointer", luaA_mouse_object_under_pointer },
+    { "query", luaA_mouse_query },
+    { "warp", luaA_mouse_warp },
     { NULL, NULL }
 };
 const struct luaL_reg awesome_mouse_meta[] =

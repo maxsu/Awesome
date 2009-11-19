@@ -22,12 +22,12 @@
 #include <unistd.h>
 
 #include "awesome.h"
-#include "globalconf.h"
+#include "screen.h"
 #include "mouse.h"
-#include "mousegrabber.h"
 #include "luaa.h"
+#include "mousegrabber.h"
+#include "objects/window.h"
 #include "common/xcursor.h"
-#include "common/xutil.h"
 
 /** Grab the mouse.
  * \param cursor The cursor to use while grabbing.
@@ -36,19 +36,17 @@
 static bool
 mousegrabber_grab(xcb_cursor_t cursor)
 {
-    xcb_window_t root = globalconf.screen->root;
-
     for(int i = 1000; i; i--)
     {
         xcb_grab_pointer_reply_t *grab_ptr_r;
         xcb_grab_pointer_cookie_t grab_ptr_c =
-            xcb_grab_pointer_unchecked(_G_connection, false, root,
+            xcb_grab_pointer_unchecked(_G_connection, false, globalconf.screen->root,
                                        XCB_EVENT_MASK_BUTTON_PRESS
                                        | XCB_EVENT_MASK_BUTTON_RELEASE
                                        | XCB_EVENT_MASK_POINTER_MOTION,
                                        XCB_GRAB_MODE_ASYNC,
                                        XCB_GRAB_MODE_ASYNC,
-                                       root, cursor, XCB_CURRENT_TIME);
+                                       globalconf.screen->root, cursor, XCB_CURRENT_TIME);
 
         if((grab_ptr_r = xcb_grab_pointer_reply(_G_connection, grab_ptr_c, NULL)))
         {
