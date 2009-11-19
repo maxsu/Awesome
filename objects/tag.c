@@ -41,6 +41,41 @@ static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, selected, lua_pushboolean)
 static LUA_OBJECT_DO_SET_PROPERTY_FUNC(tag, &tag_class, tag_t, selected)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(tag, tag_t, selected, luaA_checkboolean)
 
+static int
+luaA_tag_get_attached(lua_State *L, tag_t *tag)
+{
+    lua_pushboolean(L, tag_array_find(&_G_tags, tag) != NULL);
+    return 1;
+}
+
+static int
+luaA_tag_set_attached(lua_State *L, tag_t *tag)
+{
+    bool attach = luaA_checkboolean(L, 3);
+    tag_t **tag_index = tag_array_find(&_G_tags, tag);
+
+    if(attach)
+    {
+        /* Tag not already attached? */
+        if(!tag_index)
+        {
+            tag_array_append(&_G_tags, luaA_object_ref(L, 1));
+            ewmh_update_net_numbers_of_desktop();
+            ewmh_update_net_desktop_names();
+            luaA_object_emit_signal(L, 1, "property::attached", 0);
+        }
+    }
+    else if(tag_index)
+    {
+        tag_array_remove(&_G_tags, tag_index);
+        ewmh_update_net_numbers_of_desktop();
+        ewmh_update_net_desktop_names();
+        luaA_object_emit_signal(L, 1, "property::attached", 0);
+    }
+
+    return 0;
+}
+
 static void
 tag_ewindow_emit_signal(lua_State *L, int tidx, int widx, const char *signame)
 {
@@ -250,6 +285,10 @@ tag_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_tag_set_selected,
                             (lua_class_propfunc_t) luaA_tag_get_selected,
                             (lua_class_propfunc_t) luaA_tag_set_selected);
+    luaA_class_add_property(&tag_class, A_TK_ATTACHED,
+                            (lua_class_propfunc_t) luaA_tag_set_attached,
+                            (lua_class_propfunc_t) luaA_tag_get_attached,
+                            (lua_class_propfunc_t) luaA_tag_set_attached);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
