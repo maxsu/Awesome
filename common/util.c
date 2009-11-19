@@ -156,7 +156,7 @@ a_exec(const char *cmd)
 {
     static const char *shell = NULL;
 
-    if(!shell && !(shell = getenv("SHELL")))
+    if(unlikely(!shell) && !(shell = getenv("SHELL")))
         shell = "/bin/sh";
 
     execl(shell, shell, "-c", cmd, NULL);
