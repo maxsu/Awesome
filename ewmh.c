@@ -256,8 +256,6 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_net_desktop_names);
 }
 
-DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
-
 static void
 ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
 {
