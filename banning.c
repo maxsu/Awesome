@@ -1,5 +1,5 @@
 /*
- * banning.c - client banning management
+ * banning.c - ewindow banning management
  *
  * Copyright © 2007-2009 Julien Danjou <julien@danjou.info>
  *
@@ -20,15 +20,12 @@
  */
 
 #include "banning.h"
-#include "objects/tag.h"
 #include "objects/client.h"
-#include "screen.h"
+#include "objects/tag.h"
 
 /** True if the banning on this screen needs to be updated */
 static bool need_lazy_banning;
 
-/** Reban windows following current selected tags.
- */
 static int
 banning_need_update(lua_State *L)
 {
@@ -36,14 +33,10 @@ banning_need_update(lua_State *L)
      * excessive updates...  */
     need_lazy_banning = true;
 
-    /* But if a client will be banned in our next update we unfocus it now. */
-    foreach(c, globalconf.clients)
-    {
-        luaA_object_push(globalconf.L, *c);
-        if(window_isvisible(L, -1))
-            window_ban_unfocus((window_t *) *c);
-        lua_pop(globalconf.L, 1);
-    }
+    /* But if an ewindow will be banned in our next update we unfocus it now. */
+    foreach(ewindow, _G_ewindows)
+        if(ewindow_isvisible(*ewindow))
+            window_ban_unfocus((window_t *) *ewindow);
 
     return 0;
 }
@@ -57,32 +50,24 @@ banning_init(void)
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "tagged", banning_need_update);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "untagged", banning_need_update);
     luaA_class_connect_signal(globalconf.L, &tag_class, "property::selected", banning_need_update);
-    luaA_class_connect_signal(globalconf.L, &tag_class, "property::screen", banning_need_update);
+    luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", banning_need_update);
 }
 
 void
 banning_refresh(void)
 {
-    if (!need_lazy_banning)
+    if(!need_lazy_banning)
         return;
 
-    foreach(c, globalconf.clients)
-    {
-        luaA_object_push(globalconf.L, *c);
-        if(window_isvisible(globalconf.L, -1))
-            window_unban((window_t *) *c);
-        lua_pop(globalconf.L, 1);
-    }
+    foreach(ewindow, _G_ewindows)
+        if(ewindow_isvisible(*ewindow))
+            window_unban((window_t *) *ewindow);
 
     /* Some people disliked the short flicker of background, so we first unban everything.
      * Afterwards we ban everything we don't want. This should avoid that. */
-    foreach(c, globalconf.clients)
-    {
-        luaA_object_push(globalconf.L, *c);
-        if(!window_isvisible(globalconf.L, -1))
-            window_ban((window_t *) *c);
-        lua_pop(globalconf.L, 1);
-    }
+    foreach(ewindow, _G_ewindows)
+        if(!ewindow_isvisible(*ewindow))
+            window_ban((window_t *) *ewindow);
 
     need_lazy_banning = false;
 }
