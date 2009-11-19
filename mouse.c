@@ -170,6 +170,9 @@ luaA_mouse_object_under_pointer(lua_State *L)
     if(!mouse_query_pointer_root(&mouse_x, &mouse_y, &child, NULL))
         return 0;
 
+    if(child == globalconf.screen->root)
+        luaA_object_push(L, globalconf.screens.tab[0].root);
+
     return luaA_object_push(L, ewindow_getbywin(child));
 }
 
