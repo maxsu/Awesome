@@ -363,8 +363,6 @@ ewmh_init(void)
 
 }
 
-DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
-
 static void
 ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
 {
