@@ -25,7 +25,6 @@
 #include "stack.h"
 #include "awesome.h"
 #include "xwindow.h"
-#include "ewmh.h"
 #include "objects/window.h"
 #include "objects/tag.h"
 #include "common/luaobject.h"

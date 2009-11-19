@@ -22,7 +22,6 @@
 #include "awesome.h"
 #include "luaa.h"
 #include "xwindow.h"
-#include "ewmh.h"
 #include "screen.h"
 #include "objects/window.h"
 #include "objects/tag.h"
