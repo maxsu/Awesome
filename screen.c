@@ -167,10 +167,6 @@ screen_scan_xrandr(void)
 
     p_delete(&screen_res_r);
 
-    /* If RandR provides more than 2 active CRTC, Xinerama is enabled */
-    if(globalconf.screens.len > 1)
-        globalconf.xinerama_is_active = true;
-
     return true;
 }
 
@@ -180,16 +176,18 @@ screen_scan_xrandr(void)
 static bool
 screen_scan_xinerama(void)
 {
+    bool xinerama_is_active = false;
+
     /* Check for extension before checking for Xinerama */
     if(xcb_get_extension_data(_G_connection, &xcb_xinerama_id)->present)
     {
         xcb_xinerama_is_active_reply_t *xia;
         xia = xcb_xinerama_is_active_reply(_G_connection, xcb_xinerama_is_active(_G_connection), NULL);
-        globalconf.xinerama_is_active = xia->state;
+        xinerama_is_active = xia->state;
         p_delete(&xia);
     }
 
-    if(!globalconf.xinerama_is_active)
+    if(!xinerama_is_active)
         return false;
 
     xcb_xinerama_query_screens_reply_t *xsq;
