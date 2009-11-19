@@ -283,6 +283,27 @@ ewmh_update_strut(lua_State *L)
     return 0;
 }
 
+static int
+ewmh_update_net_desktop_names(lua_State *L)
+{
+    buffer_t buf;
+
+    buffer_inita(&buf, BUFSIZ);
+
+    foreach(tag, _G_tags)
+    {
+        buffer_adds(&buf, tag_get_name(*tag));
+        buffer_addc(&buf, '\0');
+    }
+
+    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
+                        _G_root->window,
+			_NET_DESKTOP_NAMES, UTF8_STRING, 8, buf.len, buf.s);
+    buffer_wipe(&buf);
+
+    return 0;
+}
+
 void
 ewmh_init(void)
 {
@@ -306,6 +327,8 @@ ewmh_init(void)
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &client_class, "focus", ewmh_client_reset_urgent);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::struts", ewmh_update_strut);
     luaA_class_connect_signal(globalconf.L, (lua_class_t *) &ewindow_class, "property::window", ewmh_update_strut);
+    luaA_class_connect_signal(globalconf.L, &tag_class, "property::name", ewmh_update_net_desktop_names);
+    luaA_class_connect_signal(globalconf.L, &tag_class, "property::attached", ewmh_update_net_desktop_names);
 }
 
 DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
@@ -316,25 +339,6 @@ ewmh_update_net_numbers_of_desktop(void)
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
                         _G_root->window,
 			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &_G_tags.len);
-}
-
-void
-ewmh_update_net_desktop_names(void)
-{
-    buffer_t buf;
-
-    buffer_inita(&buf, BUFSIZ);
-
-    foreach(tag, _G_tags)
-    {
-        buffer_adds(&buf, tag_get_name(*tag));
-        buffer_addc(&buf, '\0');
-    }
-
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        _G_root->window,
-			_NET_DESKTOP_NAMES, UTF8_STRING, 8, buf.len, buf.s);
-    buffer_wipe(&buf);
 }
 
 /** Update the work area space for each physical screen and each desktop.
