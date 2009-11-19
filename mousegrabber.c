@@ -22,12 +22,12 @@
 #include <unistd.h>
 
 #include "awesome.h"
+#include "screen.h"
 #include "mouse.h"
-#include "mousegrabber.h"
 #include "luaa.h"
-#include "common/luaobject.h"
+#include "mousegrabber.h"
+#include "objects/window.h"
 #include "common/xcursor.h"
-#include "common/xutil.h"
 
 /** Grab the mouse.
  * \param cursor The cursor to use while grabbing.
@@ -36,31 +36,17 @@
 static bool
 mousegrabber_grab(xcb_cursor_t cursor)
 {
-    xcb_window_t root = XCB_NONE;
-
-    for(int screen = 0;
-        screen < xcb_setup_roots_length(xcb_get_setup(_G_connection));
-        screen++)
-    {
-        int16_t x, y;
-        uint16_t mask;
-
-        root = xutil_screen_get(_G_connection, screen)->root;
-        if(mouse_query_pointer(root, &x, &y, NULL, &mask))
-            break;
-    }
-
     for(int i = 1000; i; i--)
     {
         xcb_grab_pointer_reply_t *grab_ptr_r;
         xcb_grab_pointer_cookie_t grab_ptr_c =
-            xcb_grab_pointer_unchecked(_G_connection, false, root,
+            xcb_grab_pointer_unchecked(_G_connection, false, _G_root->window,
                                        XCB_EVENT_MASK_BUTTON_PRESS
                                        | XCB_EVENT_MASK_BUTTON_RELEASE
                                        | XCB_EVENT_MASK_POINTER_MOTION,
                                        XCB_GRAB_MODE_ASYNC,
                                        XCB_GRAB_MODE_ASYNC,
-                                       root, cursor, XCB_CURRENT_TIME);
+                                       _G_root->window, cursor, XCB_CURRENT_TIME);
 
         if((grab_ptr_r = xcb_grab_pointer_reply(_G_connection, grab_ptr_c, NULL)))
         {
