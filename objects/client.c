@@ -214,25 +214,20 @@ HANDLE_GEOM(height)
     property_update_wm_window_role(c, NULL);
     property_update_net_wm_pid(c, NULL);
     property_update_net_wm_icon(c, NULL);
-
-    ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(c->window));
-
-    /* Then check clients hints */
-    ewmh_client_check_hints(c);
-
-    /* Push client in stack */
-    stack_window_raise(globalconf.L, -1);
-
-    /* update window title */
     property_update_wm_name(c, NULL);
     property_update_net_wm_name(c, NULL);
     property_update_wm_icon_name(c, NULL);
     property_update_net_wm_icon_name(c, NULL);
     property_update_wm_class(c, NULL);
     property_update_wm_protocols(c, NULL);
-
-    /* update strut */
+    /* Then check clients hints */
+    ewmh_client_check_hints(c);
     ewmh_process_client_strut(c, NULL);
+
+    ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(c->window));
+
+    /* Push client in stack */
+    stack_window_raise(globalconf.L, -1);
 
     /* Always stay in NORMAL_STATE. Even though iconified seems more
      * appropriate sometimes. The only possible loss is that clients not using
