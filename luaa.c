@@ -98,6 +98,10 @@ luaA_restart(lua_State *L __attribute__ ((unused)))
     return 0;
 }
 
+/** Use XTest extension to fake input from mouse or keyboard.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
 static int
 luaA_awesome_fake_input(lua_State *L)
 {
@@ -121,7 +125,6 @@ luaA_awesome_fake_input(lua_State *L)
     const char *stype = luaL_checklstring(L, 1, &tlen);
     uint8_t type, detail;
     int x = 0, y = 0;
-    xcb_window_t root = XCB_NONE;
 
     switch(a_tokenize(stype, tlen))
     {
@@ -146,12 +149,6 @@ luaA_awesome_fake_input(lua_State *L)
         detail = luaA_checkboolean(L, 2); /* relative to the current position or not */
         x = luaL_checknumber(L, 3);
         y = luaL_checknumber(L, 4);
-        if(lua_gettop(L) == 5 && !globalconf.xinerama_is_active)
-        {
-            int screen = luaL_checknumber(L, 5) - 1;
-            luaA_checkscreen(screen);
-            root = xutil_screen_get(_G_connection, screen)->root;
-        }
         break;
       default:
         return 0;
@@ -161,7 +158,7 @@ luaA_awesome_fake_input(lua_State *L)
                         type,
                         detail,
                         XCB_CURRENT_TIME,
-                        root,
+                        XCB_NONE,
                         x, y,
                         0);
     return 0;
