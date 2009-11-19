@@ -259,14 +259,6 @@ ewmh_init(void)
 
 DO_ARRAY(xcb_window_t, xcb_window, DO_NOTHING)
 
-void
-ewmh_update_net_numbers_of_desktop(void)
-{
-    xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
-			_NET_NUMBER_OF_DESKTOPS, CARDINAL, 32, 1, &_G_tags.len);
-}
-
 static void
 ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
 {

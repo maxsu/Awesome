@@ -25,7 +25,6 @@
 #include "globalconf.h"
 
 void ewmh_init(void);
-void ewmh_update_net_numbers_of_desktop(void);
 int ewmh_process_client_message(xcb_client_message_event_t *);
 void ewmh_update_net_client_list_stacking(void);
 void ewmh_client_check_hints(client_t *);
