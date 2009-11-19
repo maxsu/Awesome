@@ -51,8 +51,6 @@ typedef struct
     xcb_key_symbols_t *keysyms;
     /** Logical screens */
     screen_array_t screens;
-    /** True if xinerama is active */
-    bool xinerama_is_active;
     /** Clients list */
     client_array_t clients;
     /** Lua VM state */
