@@ -107,7 +107,7 @@ luaA_awesome_fake_input(lua_State *L)
 {
     static int have_xtest = -11;
 
-    if(have_xtest == -1)
+    if(unlikely(have_xtest == -1))
     {
         /* check for xtest extension */
         const xcb_query_extension_reply_t *xtest_query;
