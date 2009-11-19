@@ -24,7 +24,6 @@
 
 #include "objects/client.h"
 
-void ewmh_init_screen(void);
 void ewmh_init(void);
 int ewmh_process_client_message(xcb_client_message_event_t *);
 void ewmh_update_net_client_list_stacking(void);
