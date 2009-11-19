@@ -92,67 +92,6 @@ mouse_warp_pointer(xcb_window_t window, int x, int y)
                      0, 0, 0, 0, x, y );
 }
 
-/** Mouse library.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lfield coords Mouse coordinates.
- * \lfield screen Mouse screen number.
- */
-static int
-luaA_mouse_index(lua_State *L)
-{
-    size_t len;
-    const char *attr = luaL_checklstring(L, 2, &len);
-    int16_t mouse_x, mouse_y;
-    screen_t *screen;
-
-    switch(a_tokenize(attr, len))
-    {
-      case A_TK_SCREEN:
-        if(!mouse_query_pointer_root(&mouse_x, &mouse_y, NULL, NULL))
-            return 0;
-
-        screen  = screen_getbycoord(mouse_x, mouse_y);
-
-        lua_pushnumber(L, screen_array_indexof(&globalconf.screens, screen) + 1);
-        break;
-      default:
-        return 0;
-    }
-
-    return 1;
-}
-
-/** Newindex for mouse.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_mouse_newindex(lua_State *L)
-{
-    size_t len;
-    const char *attr = luaL_checklstring(L, 2, &len);
-    int x, y, screen;
-
-    switch(a_tokenize(attr, len))
-    {
-      case A_TK_SCREEN:
-        screen = luaL_checknumber(L, 3) - 1;
-        luaA_checkscreen(screen);
-
-        x = globalconf.screens.tab[screen].geometry.x;
-        y = globalconf.screens.tab[screen].geometry.y;
-
-        mouse_warp_pointer(globalconf.screen->root, x, y);
-        break;
-      default:
-        return 0;
-    }
-
-    return 0;
-}
-
 /** Push a table with mouse status.
  * \param L The Lua VM state.
  * \param x The x coordinate.
@@ -236,8 +175,6 @@ luaA_mouse_object_under_pointer(lua_State *L)
 
 const struct luaL_reg awesome_mouse_methods[] =
 {
-    { "__index", luaA_mouse_index },
-    { "__newindex", luaA_mouse_newindex },
     { "coords", luaA_mouse_coords },
     { "object_under_pointer", luaA_mouse_object_under_pointer },
     { NULL, NULL }
