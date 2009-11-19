@@ -22,7 +22,6 @@
 #include "screen.h"
 #include "tag.h"
 #include "objects/ewindow.h"
-#include "ewmh.h"
 #include "luaa.h"
 
 LUA_OBJECT_FUNCS(&tag_class, tag_t, tag)
@@ -60,16 +59,12 @@ luaA_tag_set_attached(lua_State *L, tag_t *tag)
         if(!tag_index)
         {
             tag_array_append(&_G_tags, luaA_object_ref(L, 1));
-            ewmh_update_net_numbers_of_desktop();
-            ewmh_update_workarea();
             luaA_object_emit_signal(L, 1, "property::attached", 0);
         }
     }
     else if(tag_index)
     {
         tag_array_remove(&_G_tags, tag_index);
-        ewmh_update_net_numbers_of_desktop();
-        ewmh_update_workarea();
         luaA_object_emit_signal(L, 1, "property::attached", 0);
     }
 
