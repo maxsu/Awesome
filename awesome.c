@@ -26,7 +26,6 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <xcb/xtest.h>
 #include <xcb/xcb_event.h>
 
 #include "awesome.h"
