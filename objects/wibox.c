@@ -28,7 +28,6 @@
 #include "screen.h"
 #include "xwindow.h"
 #include "luaa.h"
-#include "ewmh.h"
 #include "objects/tag.h"
 #include "common/xcursor.h"
 #include "common/xutil.h"
