@@ -22,12 +22,6 @@
 #ifndef AWESOME_GLOBALCONF_H
 #define AWESOME_GLOBALCONF_H
 
-#define SN_API_NOT_YET_FROZEN
-#include <libsn/sn.h>
-
-#include <ev.h>
-
-#include <xcb/xcb_icccm.h>
 #include <xcb/xcb_keysyms.h>
 
 #include "color.h"
