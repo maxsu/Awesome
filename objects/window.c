@@ -19,6 +19,8 @@
  *
  */
 
+#include <unistd.h>
+
 #include <xcb/xcb_image.h>
 
 #include "luaa.h"
@@ -697,6 +699,46 @@ luaA_window_lower(lua_State *L)
     return 0;
 }
 
+/** Grab keyboard on window.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_grab_keyboard(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+    xcb_grab_keyboard_reply_t *xgb_r = NULL;
+
+    /** Try to grab keyboard */
+    for(int i = 1000; i; i--)
+    {
+        xcb_grab_keyboard_cookie_t xgb_c = xcb_grab_keyboard(_G_connection, true,
+                                                             window->window,
+                                                             XCB_CURRENT_TIME, XCB_GRAB_MODE_ASYNC,
+                                                             XCB_GRAB_MODE_ASYNC);
+        if((xgb_r = xcb_grab_keyboard_reply(_G_connection, xgb_c, NULL)))
+            break;
+
+        usleep(1000);
+    }
+
+    lua_pushboolean(L, xgb_r != NULL);
+    p_delete(&xgb_r);
+
+    return 1;
+}
+
+/** Stop grabbing the keyboard.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_ungrab_keyboard(lua_State *L)
+{
+    xcb_ungrab_keyboard(_G_connection, XCB_CURRENT_TIME);
+    return 0;
+}
+
 void
 window_class_setup(lua_State *L)
 {
@@ -710,6 +752,8 @@ window_class_setup(lua_State *L)
         { "isvisible", luaA_window_isvisible },
         { "raise", luaA_window_raise },
         { "lower", luaA_window_lower },
+        { "grab_keyboard", luaA_window_grab_keyboard },
+        { "ungrab_keyboard", luaA_window_ungrab_keyboard },
         { NULL, NULL }
     };
 
