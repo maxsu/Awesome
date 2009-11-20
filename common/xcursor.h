@@ -25,6 +25,8 @@
 #include <X11/cursorfont.h>
 #include <xcb/xcb.h>
 
+#define CURSOR_DEFAULT_NAME "left_ptr"
+
 uint16_t xcursor_font_fromstr(const char *);
 const char * xcursor_font_tostr(uint16_t);
 xcb_cursor_t xcursor_new(xcb_connection_t *, uint16_t);

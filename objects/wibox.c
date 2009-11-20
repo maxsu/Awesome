@@ -537,7 +537,7 @@ wibox_new_init(lua_State *L)
     wibox->ctx.fg = globalconf.colors.fg;
     wibox->ctx.bg = globalconf.colors.bg;
     wibox->opacity = -1;
-    wibox->cursor = a_strdup("left_ptr");
+    wibox->cursor = a_strdup(CURSOR_DEFAULT_NAME);
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
     wibox->need_update = true;
