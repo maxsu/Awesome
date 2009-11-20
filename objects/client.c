@@ -35,8 +35,6 @@
 #include "common/atoms.h"
 #include "common/xutil.h"
 
-extern window_t *_G_window_focused;
-
 /** Collect a client.
  * \param L The Lua VM state.
  * \return The number of element pushed on stack.
@@ -432,26 +430,6 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, transient_for, luaA_object_push)
 LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, (lua_class_t *) &client_class, client_t, transient_for)
 
-/* Client module.
- * \param L The Lua VM state.
- * \return The number of pushed elements.
- */
-static int
-luaA_client_module_index(lua_State *L)
-{
-    size_t len;
-    const char *buf = luaL_checklstring(L, 2, &len);
-
-    switch(a_tokenize(buf, len))
-    {
-      case A_TK_FOCUS:
-        return luaA_object_push(globalconf.L, _G_window_focused);
-        break;
-      default:
-        return 0;
-    }
-}
-
 static bool
 client_checker(client_t *c)
 {
@@ -479,18 +457,12 @@ client_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
-    static const struct luaL_reg client_module_meta[] =
-    {
-        { "__index", luaA_client_module_index },
-        { NULL, NULL }
-    };
-
     luaA_class_setup(L, (lua_class_t *) &client_class, "client", (lua_class_t *) &ewindow_class,
                      (lua_class_allocator_t) client_new,
                      (lua_class_collector_t) client_wipe,
                      (lua_class_checker_t) client_checker,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
-                     client_methods, client_module_meta, NULL);
+                     client_methods, NULL, NULL);
 
     luaA_class_add_property((lua_class_t *) &client_class, A_TK_NAME,
                             NULL,
