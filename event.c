@@ -96,6 +96,14 @@ event_button_match(xcb_button_press_event_t *ev, button_t *b, void *data)
 DO_EVENT_HOOK_CALLBACK(button_t, button, XCB_BUTTON, button_array_t, event_button_match)
 DO_EVENT_HOOK_CALLBACK(keyb_t, key, XCB_KEY, key_array_t, event_key_match)
 
+static window_t *
+window_getbywin(xcb_window_t window)
+{
+    if(globalconf.screen->root == window)
+        return globalconf.screens.tab[0].root;
+    return (window_t *) ewindow_getbywin(window);
+}
+
 /** Handle an event with mouse grabber if needed
  * \param x The x coordinate.
  * \param y The y coordinate.
@@ -133,26 +141,13 @@ event_handle_button(xcb_button_press_event_t *ev)
     if(event_handle_mousegrabber(ev->root_x, ev->root_y, 1 << (ev->detail - 1 + 8)))
         return;
 
-    /* ev->state is
-     * button status (8 bits) + modifiers status (8 bits)
-     * we don't care for button status that we get, especially on release, so
-     * drop them */
-    ev->state &= 0x00ff;
+    window_t *window = window_getbywin(ev->event);
 
-    ewindow_t *ewindow = ewindow_getbywin(ev->event);
-
-    if(ewindow)
+    if(window)
     {
-        luaA_object_push(globalconf.L, ewindow);
-        event_button_callback(ev, &ewindow->buttons, 1, NULL);
+        luaA_object_push(globalconf.L, window);
+        event_button_callback(ev, &window->buttons, 1, NULL);
     }
-    else if(ev->child == XCB_NONE)
-        if(globalconf.screen->root == ev->event)
-        {
-            luaA_object_push(globalconf.L, globalconf.screens.tab[0].root);
-            event_button_callback(ev, &globalconf.screens.tab[0].root->buttons, 1, NULL);
-            return;
-        }
 }
 
 static void
@@ -292,11 +287,11 @@ event_handle_leavenotify(xcb_leave_notify_event_t *ev)
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return;
 
-    ewindow_t *ewindow = ewindow_getbywin(ev->event);
+    window_t *window = window_getbywin(ev->event);
 
-    if(ewindow)
+    if(window)
     {
-        luaA_object_push(globalconf.L, ewindow);
+        luaA_object_push(globalconf.L, window);
         luaA_object_emit_signal(globalconf.L, -1, "mouse::leave", 0);
         lua_pop(globalconf.L, 1);
     }
@@ -313,11 +308,11 @@ event_handle_enternotify(xcb_enter_notify_event_t *ev)
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return;
 
-    ewindow_t *ewindow = ewindow_getbywin(ev->event);
+    window_t *window = window_getbywin(ev->event);
 
-    if(ewindow)
+    if(window)
     {
-        luaA_object_push(globalconf.L, ewindow);
+        luaA_object_push(globalconf.L, window);
         luaA_object_emit_signal(globalconf.L, -1, "mouse::enter", 0);
         lua_pop(globalconf.L, 1);
     }
@@ -343,10 +338,10 @@ event_handle_focusin(xcb_focus_in_event_t *ev)
         case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
         case XCB_NOTIFY_DETAIL_NONLINEAR:
           {
-            ewindow_t *ewindow = ewindow_getbywin(ev->event);
+            window_t *window = window_getbywin(ev->event);
 
-            if(ewindow)
-                window_focus_update((window_t *) ewindow);
+            if(window)
+                window_focus_update(window);
           }
         /* all other events are ignored */
         default:
@@ -376,10 +371,10 @@ event_handle_focusout(xcb_focus_in_event_t *ev)
         case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
         case XCB_NOTIFY_DETAIL_NONLINEAR:
           {
-            ewindow_t *ewindow = ewindow_getbywin(ev->event);
+            window_t *window = window_getbywin(ev->event);
 
-            if(ewindow)
-                window_unfocus_update((window_t *) ewindow);
+            if(window)
+                window_unfocus_update((window_t *) window);
           }
         /* all other events are ignored */
         default:
@@ -432,39 +427,12 @@ event_handle_key(xcb_key_press_event_t *ev)
     {
         /* get keysym ignoring all modifiers */
         xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, 0);
-        ewindow_t *ewindow = ewindow_getbywin(ev->event);
-        if(ewindow)
+        window_t *window = window_getbywin(ev->event);
+        if(window)
         {
-            /* first emit key bindings */
-            luaA_object_push(globalconf.L, ewindow);
-            event_key_callback(ev, &ewindow->keys, 1, &keysym);
-            /* transfer event (keycode + modifiers) to keysym and then convert
-             * keysym to string */
-            char buf[MAX(MB_LEN_MAX, 32)];
-            if(keyresolv_keysym_to_string(keyresolv_get_keysym(ev->detail, ev->state), buf, countof(buf)))
-            {
-                luaA_object_push(globalconf.L, ewindow);
-                luaA_pushmodifiers(globalconf.L, ev->state);
-                lua_pushstring(globalconf.L, buf);
-                switch(ev->response_type)
-                {
-                  case XCB_KEY_PRESS:
-                    luaA_object_emit_signal(globalconf.L, -3, "key::press", 2);
-                    break;
-                  case XCB_KEY_RELEASE:
-                    luaA_object_emit_signal(globalconf.L, -3, "key::release", 2);
-                    break;
-                }
-                lua_pop(globalconf.L, 1);
-            }
+            luaA_object_push(globalconf.L, window);
+            event_key_callback(ev, &window->keys, 1, &keysym);
         }
-        else
-            if(globalconf.screen->root == ev->event)
-            {
-                luaA_object_push(globalconf.L, globalconf.screens.tab[0].root);
-                event_key_callback(ev, &globalconf.screens.tab[0].root->keys, 1, &keysym);
-                return;
-            }
     }
 }
 
