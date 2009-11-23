@@ -739,6 +739,56 @@ luaA_window_ungrab_keyboard(lua_State *L)
     return 0;
 }
 
+/** Grab the mouse.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_grab_pointer(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+    uint16_t cfont = xcursor_font_fromstr(luaL_optstring(L, 2, CURSOR_DEFAULT_NAME));
+    xcb_grab_pointer_reply_t *grab_ptr_r = NULL;
+
+    if(!cfont)
+        luaL_error(L, "invalid cursor name");
+
+    xcb_cursor_t cursor = xcursor_new(_G_connection, cfont);
+
+    for(int i = 1000; i; i--)
+    {
+        xcb_grab_pointer_cookie_t grab_ptr_c =
+            xcb_grab_pointer_unchecked(_G_connection, false, window->window,
+                                       XCB_EVENT_MASK_BUTTON_PRESS
+                                       | XCB_EVENT_MASK_BUTTON_RELEASE
+                                       | XCB_EVENT_MASK_POINTER_MOTION,
+                                       XCB_GRAB_MODE_ASYNC,
+                                       XCB_GRAB_MODE_ASYNC,
+                                       window->window, cursor, XCB_CURRENT_TIME);
+
+        if((grab_ptr_r = xcb_grab_pointer_reply(_G_connection, grab_ptr_c, NULL)))
+            break;
+
+        usleep(1000);
+    }
+
+    lua_pushboolean(L, grab_ptr_r != NULL);
+    p_delete(&grab_ptr_r);
+
+    return 1;
+}
+
+/** Stop grabbing the mouse.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_window_ungrab_pointer(lua_State *L)
+{
+    xcb_ungrab_pointer(_G_connection, XCB_CURRENT_TIME);
+    return 0;
+}
+
 void
 window_class_setup(lua_State *L)
 {
@@ -754,6 +804,8 @@ window_class_setup(lua_State *L)
         { "lower", luaA_window_lower },
         { "grab_keyboard", luaA_window_grab_keyboard },
         { "ungrab_keyboard", luaA_window_ungrab_keyboard },
+        { "grab_pointer", luaA_window_grab_pointer },
+        { "ungrab_pointer", luaA_window_ungrab_pointer },
         { NULL, NULL }
     };
 
