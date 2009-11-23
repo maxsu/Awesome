@@ -373,7 +373,11 @@ luaA_object_emit_signal(lua_State *L, int oud,
 {
     lua_object_t *obj = lua_touserdata(L, oud);
     if(!obj)
+    {
+        /* Consume arguments at least */
+        lua_pop(L, nargs);
         return;
+    }
 
     /* Push object */
     lua_pushvalue(L, oud);
