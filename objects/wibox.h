@@ -28,14 +28,6 @@
 #include "objects/image.h"
 #include "common/luaobject.h"
 
-#define WIBOX_SELECT_INPUT_EVENT_MASK (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT \
-                                       | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY \
-                                       | XCB_EVENT_MASK_ENTER_WINDOW \
-                                       | XCB_EVENT_MASK_LEAVE_WINDOW \
-                                       | XCB_EVENT_MASK_STRUCTURE_NOTIFY \
-                                       | XCB_EVENT_MASK_EXPOSURE \
-                                       | XCB_EVENT_MASK_PROPERTY_CHANGE)
-
 /** Wibox type */
 struct wibox_t
 {
@@ -60,9 +52,7 @@ struct wibox_t
     image_t *shape_bounding;
 };
 
-void wibox_unref_simplified(wibox_t **);
-
-BARRAY_FUNCS(wibox_t *, wibox, wibox_unref_simplified, window_cmp)
+BARRAY_FUNCS(wibox_t *, wibox, DO_NOTHING, window_cmp)
 
 void wibox_refresh(void);
 
