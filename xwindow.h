@@ -23,14 +23,12 @@
 #define AWESOME_WINDOW_H
 
 #include "draw.h"
-#include "objects/button.h"
 #include "objects/key.h"
 
 void xwindow_set_state(xcb_window_t, long);
 xcb_get_property_cookie_t xwindow_get_state_unchecked(xcb_window_t);
 uint32_t xwindow_get_state_reply(xcb_get_property_cookie_t);
 void xwindow_configure(xcb_window_t, area_t, int);
-void xwindow_buttons_grab(xcb_window_t, button_array_t *);
 double xwindow_get_opacity(xcb_window_t);
 double xwindow_get_opacity_from_reply(xcb_get_property_reply_t *);
 void xwindow_set_opacity(xcb_window_t, double);

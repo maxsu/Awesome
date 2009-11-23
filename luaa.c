@@ -490,9 +490,6 @@ luaA_init(xdgHandle* xdg)
     /* Export mouse */
     luaA_openlib(L, "mouse", awesome_mouse_methods, awesome_mouse_meta);
 
-    /* Export button */
-    button_class_setup(L);
-
     /* Export image */
     image_class_setup(L);
 
