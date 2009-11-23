@@ -32,7 +32,6 @@
 #include "ewmh.h"
 #include "objects/client.h"
 #include "keyresolv.h"
-#include "mousegrabber.h"
 #include "luaa.h"
 #include "systray.h"
 #include "spawn.h"
@@ -101,32 +100,6 @@ window_getbywin(xcb_window_t window)
     return (window_t *) ewindow_getbywin(window);
 }
 
-/** Handle an event with mouse grabber if needed
- * \param x The x coordinate.
- * \param y The y coordinate.
- * \param mask The mask buttons.
- * \return True if the event was handled.
- */
-static bool
-event_handle_mousegrabber(int x, int y, uint16_t mask)
-{
-    if(_G_mousegrabber)
-    {
-        luaA_object_push(globalconf.L, _G_mousegrabber);
-        mousegrabber_handleevent(globalconf.L, x, y, mask);
-        if(lua_pcall(globalconf.L, 1, 1, 0))
-        {
-            warn("error running function: %s", lua_tostring(globalconf.L, -1));
-            luaA_mousegrabber_stop(globalconf.L);
-        }
-        else if(!lua_isboolean(globalconf.L, -1) || !lua_toboolean(globalconf.L, -1))
-            luaA_mousegrabber_stop(globalconf.L);
-        lua_pop(globalconf.L, 1);  /* pop returned value */
-        return true;
-    }
-    return false;
-}
-
 /** The button press event handler.
  * \param data The type of mouse event.
  * \param connection The connection to the X server.
@@ -135,9 +108,6 @@ event_handle_mousegrabber(int x, int y, uint16_t mask)
 static int
 event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_event_t *ev)
 {
-    if(event_handle_mousegrabber(ev->root_x, ev->root_y, 1 << (ev->detail - 1 + 8)))
-        return 0;
-
     window_t *window = window_getbywin(ev->event);
 
     if(window)
@@ -295,7 +265,6 @@ event_handle_motionnotify(void *data __attribute__ ((unused)),
                           xcb_connection_t *connection,
                           xcb_motion_notify_event_t *ev)
 {
-    event_handle_mousegrabber(ev->root_x, ev->root_y, ev->state);
     return 0;
 }
 

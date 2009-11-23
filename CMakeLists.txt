@@ -47,7 +47,6 @@ set(AWE_SRCS
     ${SOURCE_DIR}/keyresolv.c
     ${SOURCE_DIR}/luaa.c
     ${SOURCE_DIR}/mouse.c
-    ${SOURCE_DIR}/mousegrabber.c
     ${SOURCE_DIR}/property.c
     ${SOURCE_DIR}/selection.c
     ${SOURCE_DIR}/spawn.c
