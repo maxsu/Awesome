@@ -281,52 +281,38 @@ event_handle_motionnotify(void *data __attribute__ ((unused)),
     return 0;
 }
 
-/** The leave notify event handler.
+/** The enter and leave notify event handler.
  * \param data currently unused.
  * \param connection The connection to the X server.
  * \param ev The event.
  */
 static int
-event_handle_leavenotify(void *data __attribute__ ((unused)),
-                         xcb_connection_t *connection,
-                         xcb_leave_notify_event_t *ev)
+event_handle_enterleavenotify(void *data __attribute__ ((unused)),
+                              xcb_connection_t *connection,
+                              xcb_enter_notify_event_t *ev)
 {
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return 0;
 
-    window_t *window = window_getbywin(ev->event);
-
-    if(window)
+    luaA_object_push(globalconf.L, window_getbywin(ev->event));
+    luaA_pushmodifiers(globalconf.L, ev->state);
+    lua_pushinteger(globalconf.L, ev->event_x);
+    lua_pushinteger(globalconf.L, ev->event_y);
+    lua_pushinteger(globalconf.L, ev->root_x);
+    lua_pushinteger(globalconf.L, ev->root_y);
+    switch(ev->response_type)
     {
-        luaA_object_push(globalconf.L, window);
-        luaA_object_emit_signal(globalconf.L, -1, "mouse::leave", 0);
-        lua_pop(globalconf.L, 1);
+      case XCB_ENTER_NOTIFY:
+        luaA_object_emit_signal(globalconf.L, -6, "mouse::enter", 5);
+        break;
+      case XCB_LEAVE_NOTIFY:
+        luaA_object_emit_signal(globalconf.L, -6, "mouse::leave", 5);
+        break;
+      default: /* wtf */
+        lua_pop(globalconf.L, 3);
+        break;
     }
-
-    return 0;
-}
-
-/** The enter notify event handler.
- * \param data currently unused.
- * \param connection The connection to the X server.
- * \param ev The event.
- */
-static int
-event_handle_enternotify(void *data __attribute__ ((unused)),
-                         xcb_connection_t *connection,
-                         xcb_enter_notify_event_t *ev)
-{
-    if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
-        return 0;
-
-    window_t *window = window_getbywin(ev->event);
-
-    if(window)
-    {
-        luaA_object_push(globalconf.L, window);
-        luaA_object_emit_signal(globalconf.L, -1, "mouse::enter", 0);
-        lua_pop(globalconf.L, 1);
-    }
+    lua_pop(globalconf.L, 1);
 
     return 0;
 }
@@ -345,7 +331,7 @@ event_handle_focusin(void *data __attribute__ ((unused)),
     switch(ev->detail)
     {
         /* These are events that jump between root windows.
-         */
+        */
         case XCB_NOTIFY_DETAIL_ANCESTOR:
         case XCB_NOTIFY_DETAIL_INFERIOR:
 
@@ -660,8 +646,8 @@ void a_xcb_set_event_handlers(void)
     xcb_event_set_configure_request_handler(&_G_evenths, event_handle_configurerequest, NULL);
     xcb_event_set_configure_notify_handler(&_G_evenths, event_handle_configurenotify, NULL);
     xcb_event_set_destroy_notify_handler(&_G_evenths, event_handle_destroynotify, NULL);
-    xcb_event_set_enter_notify_handler(&_G_evenths, event_handle_enternotify, NULL);
-    xcb_event_set_leave_notify_handler(&_G_evenths, event_handle_leavenotify, NULL);
+    xcb_event_set_enter_notify_handler(&_G_evenths, event_handle_enterleavenotify, NULL);
+    xcb_event_set_leave_notify_handler(&_G_evenths, event_handle_enterleavenotify, NULL);
     xcb_event_set_focus_in_handler(&_G_evenths, event_handle_focusin, NULL);
     xcb_event_set_focus_out_handler(&_G_evenths, event_handle_focusout, NULL);
     xcb_event_set_motion_notify_handler(&_G_evenths, event_handle_motionnotify, NULL);
