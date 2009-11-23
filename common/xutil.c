@@ -62,15 +62,19 @@ xutil_key_mask_tostr(uint16_t mask, const char **name, size_t *len)
         *name = #res; \
         *len = sizeof(#res) - 1; \
         return;
-      case XCB_MOD_MASK_SHIFT:   SET_RESULT(Shift)
-      case XCB_MOD_MASK_LOCK:    SET_RESULT(Lock)
-      case XCB_MOD_MASK_CONTROL: SET_RESULT(Control)
-      case XCB_MOD_MASK_1:       SET_RESULT(Mod1)
-      case XCB_MOD_MASK_2:       SET_RESULT(Mod2)
-      case XCB_MOD_MASK_3:       SET_RESULT(Mod3)
-      case XCB_MOD_MASK_4:       SET_RESULT(Mod4)
-      case XCB_MOD_MASK_5:       SET_RESULT(Mod5)
-      case XCB_BUTTON_MASK_ANY:  SET_RESULT(Any)
+      case XCB_KEY_BUT_MASK_SHIFT:    SET_RESULT(Shift)
+      case XCB_KEY_BUT_MASK_LOCK:     SET_RESULT(Lock)
+      case XCB_KEY_BUT_MASK_CONTROL:  SET_RESULT(Control)
+      case XCB_KEY_BUT_MASK_MOD_1:    SET_RESULT(Mod1)
+      case XCB_KEY_BUT_MASK_MOD_2:    SET_RESULT(Mod2)
+      case XCB_KEY_BUT_MASK_MOD_3:    SET_RESULT(Mod3)
+      case XCB_KEY_BUT_MASK_MOD_4:    SET_RESULT(Mod4)
+      case XCB_KEY_BUT_MASK_MOD_5:    SET_RESULT(Mod5)
+      case XCB_KEY_BUT_MASK_BUTTON_1: SET_RESULT(Button1)
+      case XCB_KEY_BUT_MASK_BUTTON_2: SET_RESULT(Button2)
+      case XCB_KEY_BUT_MASK_BUTTON_3: SET_RESULT(Button3)
+      case XCB_KEY_BUT_MASK_BUTTON_4: SET_RESULT(Button4)
+      case XCB_KEY_BUT_MASK_BUTTON_5: SET_RESULT(Button5)
       default:                   SET_RESULT(Unknown)
 #undef SET_RESULT
     }
