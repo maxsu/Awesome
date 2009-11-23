@@ -117,18 +117,23 @@ luaA_key_array_get(lua_State *L, key_array_t *keys)
 int
 luaA_pushmodifiers(lua_State *L, uint16_t modifiers)
 {
-    lua_newtable(L);
+    lua_createtable(L, 8, 8);
+    int i = 1;
+    for(uint32_t mask = XCB_MOD_MASK_SHIFT; mask <= XCB_KEY_BUT_MASK_BUTTON_5; mask <<= 1)
     {
-        int i = 1;
-        for(uint32_t maski = XCB_MOD_MASK_SHIFT; maski <= XCB_BUTTON_MASK_ANY; maski <<= 1)
-            if(maski & modifiers)
-            {
-                const char *mod;
-                size_t slen;
-                xutil_key_mask_tostr(maski, &mod, &slen);
-                lua_pushlstring(L, mod, slen);
-                lua_rawseti(L, -2, i++);
-            }
+        const char *mod;
+        size_t slen;
+        xutil_key_mask_tostr(mask, &mod, &slen);
+        if(mask & modifiers)
+        {
+            lua_pushlstring(L, mod, slen);
+            lua_rawseti(L, -2, i++);
+        }
+
+        lua_pushlstring(L, mod, slen);
+        lua_pushboolean(L, mask & modifiers);
+        lua_rawset(L, -3);
+
     }
     return 1;
 }
