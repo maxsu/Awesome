@@ -242,46 +242,38 @@ event_handle_motionnotify(xcb_motion_notify_event_t *ev)
 {
 }
 
-/** The leave notify event handler.
+/** The enter and leave notify event handler.
+ * \param data currently unused.
+ * \param connection The connection to the X server.
  * \param ev The event.
  */
 static void
-event_handle_leavenotify(xcb_leave_notify_event_t *ev)
+event_handle_enterleavenotify(xcb_enter_notify_event_t *ev)
 {
     globalconf.timestamp = ev->time;
 
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return;
 
-    window_t *window = window_getbywin(ev->event);
-
-    if(window)
+    luaA_object_push(globalconf.L, window_getbywin(ev->event));
+    luaA_pushmodifiers(globalconf.L, ev->state);
+    lua_pushinteger(globalconf.L, ev->event_x);
+    lua_pushinteger(globalconf.L, ev->event_y);
+    lua_pushinteger(globalconf.L, ev->root_x);
+    lua_pushinteger(globalconf.L, ev->root_y);
+    switch(ev->response_type)
     {
-        luaA_object_push(globalconf.L, window);
-        luaA_object_emit_signal(globalconf.L, -1, "mouse::leave", 0);
-        lua_pop(globalconf.L, 1);
+      case XCB_ENTER_NOTIFY:
+        luaA_object_emit_signal(globalconf.L, -6, "mouse::enter", 5);
+        break;
+      case XCB_LEAVE_NOTIFY:
+        luaA_object_emit_signal(globalconf.L, -6, "mouse::leave", 5);
+        break;
+      default: /* wtf */
+        lua_pop(globalconf.L, 3);
+        break;
     }
-}
-
-/** The enter notify event handler.
- * \param ev The event.
- */
-static void
-event_handle_enternotify(xcb_enter_notify_event_t *ev)
-{
-    globalconf.timestamp = ev->time;
-
-    if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
-        return;
-
-    window_t *window = window_getbywin(ev->event);
-
-    if(window)
-    {
-        luaA_object_push(globalconf.L, window);
-        luaA_object_emit_signal(globalconf.L, -1, "mouse::enter", 0);
-        lua_pop(globalconf.L, 1);
-    }
+    lua_pop(globalconf.L, 1);
 }
 
 /** The focus in event handler.
@@ -294,7 +286,7 @@ event_handle_focusin(xcb_focus_in_event_t *ev)
     switch(ev->detail)
     {
         /* These are events that jump between root windows.
-         */
+        */
         case XCB_NOTIFY_DETAIL_ANCESTOR:
         case XCB_NOTIFY_DETAIL_INFERIOR:
 
@@ -601,14 +593,14 @@ void event_handle(xcb_generic_event_t *event)
         EVENT(XCB_CONFIGURE_REQUEST, event_handle_configurerequest);
         EVENT(XCB_CONFIGURE_NOTIFY, event_handle_configurenotify);
         EVENT(XCB_DESTROY_NOTIFY, event_handle_destroynotify);
-        EVENT(XCB_ENTER_NOTIFY, event_handle_enternotify);
+        EVENT(XCB_ENTER_NOTIFY, event_handle_enterleavenotify);
         EVENT(XCB_CLIENT_MESSAGE, event_handle_clientmessage);
         EVENT(XCB_EXPOSE, event_handle_expose);
         EVENT(XCB_FOCUS_IN, event_handle_focusin);
         EVENT(XCB_FOCUS_OUT, event_handle_focusout);
         EVENT(XCB_KEY_PRESS, event_handle_key);
         EVENT(XCB_KEY_RELEASE, event_handle_key);
-        EVENT(XCB_LEAVE_NOTIFY, event_handle_leavenotify);
+        EVENT(XCB_LEAVE_NOTIFY, event_handle_enterleavenotify);
         EVENT(XCB_MAPPING_NOTIFY, event_handle_mappingnotify);
         EVENT(XCB_MAP_REQUEST, event_handle_maprequest);
         EVENT(XCB_MOTION_NOTIFY, event_handle_motionnotify);
