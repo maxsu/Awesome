@@ -28,7 +28,6 @@
 #include <libsn/sn.h>
 
 #include "objects/key.h"
-#include "objects/button.h"
 #include "color.h"
 #include "common/xembed.h"
 

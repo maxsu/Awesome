@@ -40,7 +40,6 @@ static void
 window_wipe(window_t *window)
 {
     p_delete(&window->cursor);
-    button_array_wipe(&window->buttons);
     key_array_wipe(&window->keys);
 }
 
@@ -534,25 +533,6 @@ luaA_window_get_height(lua_State *L, window_t *window)
     return 1;
 }
 
-/** Get or set mouse buttons bindings on a window.
- * \param L The Lua VM state.
- * \return The number of elements pushed on the stack.
- */
-static int
-luaA_window_buttons(lua_State *L)
-{
-    window_t *window = luaA_checkudata(L, 1, &window_class);
-
-    if(lua_gettop(L) == 2)
-    {
-        luaA_button_array_set(L, 1, 2, &window->buttons);
-        luaA_object_emit_signal(L, 1, "property::buttons", 0);
-        xwindow_buttons_grab(window->window, &window->buttons);
-    }
-
-    return luaA_button_array_get(L, &window->buttons);
-}
-
 /** Get or set keys bindings for a window.
  * \param L The Lua VM state.
  * \return The number of element pushed on stack.
@@ -795,7 +775,6 @@ window_class_setup(lua_State *L)
     static const struct luaL_reg window_methods[] =
     {
         LUA_CLASS_METHODS(window)
-        { "buttons", luaA_window_buttons },
         { "focus", luaA_window_focus },
         { "keys", luaA_window_keys },
         { "geometry", luaA_window_geometry },

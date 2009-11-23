@@ -84,14 +84,6 @@ event_key_match(xcb_key_press_event_t *ev, keyb_t *k, void *data)
             && (k->modifiers == XCB_BUTTON_MASK_ANY || k->modifiers == ev->state));
 }
 
-static bool
-event_button_match(xcb_button_press_event_t *ev, button_t *b, void *data)
-{
-    return ((!b->button || ev->detail == b->button)
-            && (b->modifiers == XCB_BUTTON_MASK_ANY || b->modifiers == ev->state));
-}
-
-DO_EVENT_HOOK_CALLBACK(button_t, button, XCB_BUTTON, button_array_t, event_button_match)
 DO_EVENT_HOOK_CALLBACK(keyb_t, key, XCB_KEY, key_array_t, event_key_match)
 
 static window_t *
@@ -108,15 +100,22 @@ window_getbywin(xcb_window_t window)
 static void
 event_handle_button(xcb_button_press_event_t *ev)
 {
-    globalconf.timestamp = ev->time;
-
-    window_t *window = window_getbywin(ev->event);
-
-    if(window)
+    luaA_object_push(globalconf.L, window_getbywin(ev->event));
+    luaA_pushmodifiers(globalconf.L, ev->state);
+    lua_pushinteger(globalconf.L, ev->detail);
+    switch(ev->response_type)
     {
-        luaA_object_push(globalconf.L, window);
-        event_button_callback(ev, &window->buttons, 1, NULL);
+      case XCB_BUTTON_PRESS:
+        luaA_object_emit_signal(globalconf.L, -3, "button::press", 2);
+        break;
+      case XCB_BUTTON_RELEASE:
+        luaA_object_emit_signal(globalconf.L, -3, "button::release", 2);
+        break;
+      default: /* wtf? */
+        lua_pop(globalconf.L, 2);
+        break;
     }
+    lua_pop(globalconf.L, 1);
 }
 
 static void

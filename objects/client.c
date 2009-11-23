@@ -544,6 +544,47 @@ client_take_focus(lua_State *L)
     return 0;
 }
 
+static int
+luaA_window_ungrab_button(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+    xcb_ungrab_button(_G_connection, luaL_checknumber(L, 3), window->window, luaA_tomodifiers(L, 2));
+    return 0;
+}
+
+/** Grab a button on a window.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on the stack.
+ */
+static int
+luaA_window_grab_button(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+
+    luaA_checktable(L, 2);
+
+    /* Set modifiers */
+    lua_getfield(L, 2, "modifiers");
+    luaA_checktable(L, -1);
+    uint16_t modifiers = luaA_tomodifiers(L, -1);
+    /* Set button */
+    lua_getfield(L, 2, "button");
+    xcb_button_t button = luaL_checknumber(L, -1);
+
+    /* Grab buttons */
+    xcb_grab_button(_G_connection, false, window->window,
+                    XCB_EVENT_MASK_BUTTON_PRESS
+                    | XCB_EVENT_MASK_BUTTON_RELEASE
+                    | XCB_EVENT_MASK_POINTER_MOTION,
+                    XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE,
+                    button, modifiers);
+
+    /* Remove button and modifiers field */
+    lua_pop(L, 2);
+
+    return 0;
+}
+
 void
 client_class_setup(lua_State *L)
 {
@@ -553,6 +594,8 @@ client_class_setup(lua_State *L)
         { "get", luaA_client_get },
         { "kill", luaA_client_kill },
         { "unmanage", luaA_client_unmanage },
+        { "grab_button", luaA_window_grab_button },
+        { "ungrab_button", luaA_window_ungrab_button },
         { NULL, NULL }
     };
 

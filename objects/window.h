@@ -26,7 +26,6 @@
 
 #include "globalconf.h"
 #include "area.h"
-#include "objects/button.h"
 #include "objects/key.h"
 #include "common/luaclass.h"
 
@@ -38,8 +37,6 @@
     xcb_window_t frame_window; \
     /** Cursor */ \
     char *cursor; \
-    /** Button bindings */ \
-    button_array_t buttons; \
     /** True if the window is banned from the view */ \
     bool banned; \
     /** True if the window can have focus */ \
