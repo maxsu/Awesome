@@ -372,8 +372,6 @@ luaA_wibox_new(lua_State *L)
 
     wibox_draw_context_update(wibox);
 
-    xwindow_buttons_grab(wibox->window, &wibox->buttons);
-
     xwindow_set_cursor(wibox->window, xcursor_new(_G_connection, xcursor_font_fromstr(wibox->cursor)));
 
     xwindow_set_opacity(wibox->window, wibox->opacity);

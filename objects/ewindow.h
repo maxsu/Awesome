@@ -24,7 +24,6 @@
 
 #include "strut.h"
 #include "objects/window.h"
-#include "objects/button.h"
 #include "common/luaclass.h"
 
 /** ewindows type */

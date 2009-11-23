@@ -82,14 +82,6 @@ event_key_match(xcb_key_press_event_t *ev, keyb_t *k, void *data)
             && (k->modifiers == XCB_BUTTON_MASK_ANY || k->modifiers == ev->state));
 }
 
-static bool
-event_button_match(xcb_button_press_event_t *ev, button_t *b, void *data)
-{
-    return ((!b->button || ev->detail == b->button)
-            && (b->modifiers == XCB_BUTTON_MASK_ANY || b->modifiers == ev->state));
-}
-
-DO_EVENT_HOOK_CALLBACK(button_t, button, XCB_BUTTON, button_array_t, event_button_match)
 DO_EVENT_HOOK_CALLBACK(keyb_t, key, XCB_KEY, key_array_t, event_key_match)
 
 static window_t *
@@ -108,13 +100,22 @@ window_getbywin(xcb_window_t window)
 static int
 event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_event_t *ev)
 {
-    window_t *window = window_getbywin(ev->event);
-
-    if(window)
+    luaA_object_push(globalconf.L, window_getbywin(ev->event));
+    luaA_pushmodifiers(globalconf.L, ev->state);
+    lua_pushinteger(globalconf.L, ev->detail);
+    switch(ev->response_type)
     {
-        luaA_object_push(globalconf.L, window);
-        event_button_callback(ev, &window->buttons, 1, NULL);
+      case XCB_BUTTON_PRESS:
+        luaA_object_emit_signal(globalconf.L, -3, "button::press", 2);
+        break;
+      case XCB_BUTTON_RELEASE:
+        luaA_object_emit_signal(globalconf.L, -3, "button::release", 2);
+        break;
+      default: /* wtf? */
+        lua_pop(globalconf.L, 2);
+        break;
     }
+    lua_pop(globalconf.L, 1);
 
     return 0;
 }
@@ -265,6 +266,19 @@ event_handle_motionnotify(void *data __attribute__ ((unused)),
                           xcb_connection_t *connection,
                           xcb_motion_notify_event_t *ev)
 {
+    window_t *window;
+    if(ev->child)
+        window = window_getbywin(ev->child);
+    else
+        window = window_getbywin(ev->event);
+    luaA_object_push(globalconf.L, window);
+    luaA_pushmodifiers(globalconf.L, ev->state);
+    lua_pushinteger(globalconf.L, ev->event_x);
+    lua_pushinteger(globalconf.L, ev->event_y);
+    lua_pushinteger(globalconf.L, ev->root_x);
+    lua_pushinteger(globalconf.L, ev->root_y);
+    luaA_object_emit_signal(globalconf.L, -6, "mouse::move", 5);
+    lua_pop(globalconf.L, 1);
     return 0;
 }
 
