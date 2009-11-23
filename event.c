@@ -32,7 +32,6 @@
 #include "ewmh.h"
 #include "objects/client.h"
 #include "keyresolv.h"
-#include "keygrabber.h"
 #include "mousegrabber.h"
 #include "luaa.h"
 #include "systray.h"
@@ -455,31 +454,13 @@ event_handle_key(void *data __attribute__ ((unused)),
                  xcb_connection_t *connection __attribute__ ((unused)),
                  xcb_key_press_event_t *ev)
 {
-    if(_G_keygrabber)
+    /* get keysym ignoring all modifiers */
+    xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, 0);
+    window_t *window = window_getbywin(ev->event);
+    if(window)
     {
-        luaA_object_push(globalconf.L, _G_keygrabber);
-        if(keygrabber_handlekpress(globalconf.L, ev))
-        {
-            if(lua_pcall(globalconf.L, 3, 1, 0))
-            {
-                warn("error running function: %s", lua_tostring(globalconf.L, -1));
-                luaA_keygrabber_stop(globalconf.L);
-            }
-            else if(!lua_isboolean(globalconf.L, -1) || !lua_toboolean(globalconf.L, -1))
-                luaA_keygrabber_stop(globalconf.L);
-        }
-        lua_pop(globalconf.L, 1);  /* pop returned value or function if not called */
-    }
-    else
-    {
-        /* get keysym ignoring all modifiers */
-        xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, 0);
-        window_t *window = window_getbywin(ev->event);
-        if(window)
-        {
-            luaA_object_push(globalconf.L, window);
-            event_key_callback(ev, &window->keys, 1, &keysym);
-        }
+        luaA_object_push(globalconf.L, window);
+        event_key_callback(ev, &window->keys, 1, &keysym);
     }
 
     return 0;
