@@ -23,6 +23,9 @@
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
 
+/* XStringToKeysym() */
+#include <X11/Xlib.h>
+
 #include "globalconf.h"
 #include "keyresolv.h"
 
@@ -937,6 +940,29 @@ keyresolv_get_keysym(xcb_keycode_t detail, uint16_t state)
         return k1;
 
     return XCB_NO_SYMBOL;
+}
+
+xcb_keycode_t *
+keyresolv_string_to_keycode(const char *str, ssize_t len)
+{
+    xcb_keycode_t *keycodes = NULL;
+    if(len)
+    {
+        if(*str != '#')
+        {
+            xcb_keysym_t keysym = XStringToKeysym(str);
+            if(!keysym && len == 1)
+                keysym = *str;
+            keycodes = xcb_key_symbols_get_keycode(globalconf.keysyms, keysym);
+        }
+        else
+        {
+            keycodes = p_new(xcb_keycode_t, 2);
+            keycodes[0] = atoi(str + 1);
+            keycodes[1] = XCB_NO_SYMBOL;
+        }
+    }
+    return keycodes;
 }
 
 /** Get the lock masks (shiftlock, numlock, capslock, modeswitch).

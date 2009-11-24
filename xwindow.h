@@ -22,7 +22,6 @@
 #define AWESOME_WINDOW_H
 
 #include "draw.h"
-#include "objects/key.h"
 
 void xwindow_set_state(xcb_window_t, long);
 xcb_get_property_cookie_t xwindow_get_state_unchecked(xcb_window_t);
@@ -31,7 +30,6 @@ void xwindow_configure(xcb_window_t, area_t, int);
 double xwindow_get_opacity(xcb_window_t);
 double xwindow_get_opacity_from_reply(xcb_get_property_reply_t *);
 void xwindow_set_opacity(xcb_window_t, double);
-void xwindow_grabkeys(xcb_window_t, key_array_t *);
 void xwindow_takefocus(xcb_window_t);
 void xwindow_set_cursor(xcb_window_t, xcb_cursor_t);
 void xwindow_set_border_color(xcb_window_t, xcolor_t *);

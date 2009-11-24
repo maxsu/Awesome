@@ -37,58 +37,41 @@
 #include "common/atoms.h"
 #include "common/xutil.h"
 
-#define DO_EVENT_HOOK_CALLBACK(type, xcbtype, xcbeventprefix, arraytype, match) \
-    static void \
-    event_##xcbtype##_callback(xcb_##xcbtype##_press_event_t *ev, \
-                               arraytype *arr, \
-                               int nargs, \
-                               void *data) \
-    { \
-        int item_matching = 0; \
-        foreach(item, *arr) \
-            if(match(ev, *item, data)) \
-            { \
-                luaA_object_push(globalconf.L, *item); \
-                item_matching++; \
-            } \
-        for(; item_matching > 0; item_matching--) \
-        { \
-            switch(ev->response_type) \
-            { \
-              case xcbeventprefix##_PRESS: \
-                for(int i = 0; i < nargs; i++) \
-                    lua_pushvalue(globalconf.L, - nargs - item_matching); \
-                luaA_object_emit_signal(globalconf.L, - nargs - 1, "press", nargs); \
-                break; \
-              case xcbeventprefix##_RELEASE: \
-                for(int i = 0; i < nargs; i++) \
-                    lua_pushvalue(globalconf.L, - nargs - item_matching); \
-                luaA_object_emit_signal(globalconf.L, - nargs - 1, "release", nargs); \
-                break; \
-            } \
-            lua_pop(globalconf.L, 1); \
-        } \
-        lua_pop(globalconf.L, nargs); \
-    }
-
-static bool
-event_key_match(xcb_key_press_event_t *ev, keyb_t *k, void *data)
-{
-    assert(data);
-    xcb_keysym_t keysym = *(xcb_keysym_t *) data;
-    return (((k->keycode && ev->detail == k->keycode)
-             || (k->keysym && keysym == k->keysym))
-            && (k->modifiers == XCB_BUTTON_MASK_ANY || k->modifiers == ev->state));
-}
-
-DO_EVENT_HOOK_CALLBACK(keyb_t, key, XCB_KEY, key_array_t, event_key_match)
-
 static window_t *
 window_getbywin(xcb_window_t window)
 {
     if(_G_root->window == window)
         return _G_root;
     return (window_t *) ewindow_getbywin(window);
+}
+
+/** Push a modifier set to a Lua table.
+ * \param L The Lua VM state.
+ * \param modifiers The modifier.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_pushmodifiers(lua_State *L, uint16_t modifiers)
+{
+    lua_createtable(L, 8, 8);
+    int i = 1;
+    for(uint32_t mask = XCB_MOD_MASK_SHIFT; mask <= XCB_KEY_BUT_MASK_BUTTON_5; mask <<= 1)
+    {
+        const char *mod;
+        size_t slen;
+        xutil_key_mask_tostr(mask, &mod, &slen);
+        if(mask & modifiers)
+        {
+            lua_pushlstring(L, mod, slen);
+            lua_rawseti(L, -2, i++);
+        }
+
+        lua_pushlstring(L, mod, slen);
+        lua_pushboolean(L, mask & modifiers);
+        lua_rawset(L, -3);
+
+    }
+    return 1;
 }
 
 /** The button press event handler.
@@ -423,13 +406,38 @@ event_handle_key(void *data __attribute__ ((unused)),
                  xcb_key_press_event_t *ev)
 {
     /* get keysym ignoring all modifiers */
-    xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, 0);
-    window_t *window = window_getbywin(ev->event);
-    if(window)
+    xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, ev->state);
+
+    luaA_object_push(globalconf.L, window_getbywin(ev->event));
+    /* Push modifiers */
+    luaA_pushmodifiers(globalconf.L, ev->state);
+    /* Push keycode */
+    lua_pushinteger(globalconf.L, ev->detail);
+    /* Push keysym */
+    char buf[MAX(MB_LEN_MAX, 64)];
+    if(keyresolv_keysym_to_string(keysym, buf, sizeof(buf)))
+        lua_pushstring(globalconf.L, buf);
+    else
+        lua_pushnil(globalconf.L);
+    lua_pushinteger(globalconf.L, ev->event_x);
+    lua_pushinteger(globalconf.L, ev->event_y);
+    lua_pushinteger(globalconf.L, ev->root_x);
+    lua_pushinteger(globalconf.L, ev->root_y);
+
+    switch(ev->response_type)
     {
-        luaA_object_push(globalconf.L, window);
-        event_key_callback(ev, &window->keys, 1, &keysym);
+      case XCB_KEY_PRESS:
+        luaA_object_emit_signal(globalconf.L, -8, "key::press", 7);
+        break;
+      case XCB_KEY_RELEASE:
+        luaA_object_emit_signal(globalconf.L, -8, "key::release", 7);
+        break;
+      default: /* wtf? */
+        lua_pop(globalconf.L, 7);
+        break;
     }
+
+    lua_pop(globalconf.L, 1);
 
     return 0;
 }
@@ -611,14 +619,7 @@ event_handle_mappingnotify(void *data,
         /* Free and then allocate the key symbols */
         xcb_key_symbols_free(globalconf.keysyms);
         globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
-
         keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
-
-        /* regrab everything */
-        xwindow_grabkeys(_G_root->window, &_G_root->keys);
-
-        foreach(c, globalconf.clients)
-            xwindow_grabkeys((*c)->window, &(*c)->keys);
     }
 
     return 0;

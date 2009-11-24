@@ -26,6 +26,7 @@
 
 xcb_keysym_t keyresolv_get_keysym(xcb_keycode_t, uint16_t);
 bool keyresolv_keysym_to_string(xcb_keysym_t, char *, ssize_t);
+xcb_keycode_t * keyresolv_string_to_keycode(const char *, ssize_t);
 void keyresolv_lock_mask_refresh(xcb_connection_t *, xcb_get_modifier_mapping_cookie_t,
                                  xcb_key_symbols_t *);
 
