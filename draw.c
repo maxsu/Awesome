@@ -151,25 +151,13 @@ void
 draw_context_wipe(draw_context_t *ctx)
 {
     if(ctx->pixmap)
-    {
         xcb_free_pixmap(_G_connection, ctx->pixmap);
-        ctx->pixmap = XCB_NONE;
-    }
     if(ctx->layout)
-    {
         g_object_unref(ctx->layout);
-        ctx->layout = NULL;
-    }
     if(ctx->surface)
-    {
         cairo_surface_destroy(ctx->surface);
-        ctx->surface = NULL;
-    }
     if(ctx->cr)
-    {
         cairo_destroy(ctx->cr);
-        ctx->cr = NULL;
-    }
 }
 
 /** Draw text into a draw context.
