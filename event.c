@@ -487,6 +487,12 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
     }
     else
     {
+        if(systray_iskdedockapp(ev->window))
+        {
+            systray_request_handle(ev->window, NULL);
+            goto bailout;
+        }
+
         geom_c = xcb_get_geometry_unchecked(connection, ev->window);
 
         if(!(geom_r = xcb_get_geometry_reply(connection, geom_c, NULL)))
