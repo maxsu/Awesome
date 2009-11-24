@@ -416,6 +416,10 @@ luaA_init(xdgHandle* xdg)
         { "connect_signal", luaA_awesome_connect_signal },
         { "disconnect_signal", luaA_awesome_disconnect_signal },
         { "emit_signal", luaA_awesome_emit_signal },
+        { NULL, NULL }
+    };
+    static const struct luaL_reg awesome_lib_meta[] =
+    {
         { "__index", luaA_awesome_index },
         { "__newindex", luaA_awesome_newindex },
         { NULL, NULL }
@@ -436,7 +440,11 @@ luaA_init(xdgHandle* xdg)
     luaA_object_setup(L);
 
     /* Export awesome lib */
-    luaA_openlib(L, "awesome", awesome_lib, awesome_lib);
+    luaL_register(L, "awesome", awesome_lib);
+    lua_newtable(L);
+    luaL_register(L, NULL, awesome_lib_meta);
+    lua_setmetatable(L, -2);
+    lua_pop(L, 1);
 
 #ifdef WITH_DBUS
     /* Export D-Bus lib */
