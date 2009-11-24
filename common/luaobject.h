@@ -57,20 +57,6 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
 #define LUA_OBJECT_FUNCS(lua_class, type, prefix)                              \
     LUA_CLASS_FUNCS(prefix, lua_class)                                         \
     static inline type *                                                       \
-    prefix##_new(lua_State *L)                                                 \
-    {                                                                          \
-        type *p = lua_newuserdata(L, sizeof(type));                            \
-        p_clear(p, 1);                                                         \
-        luaA_settype(L, (lua_class));                                          \
-        lua_newtable(L);                                                       \
-        lua_newtable(L);                                                       \
-        lua_setmetatable(L, -2);                                               \
-        lua_setfenv(L, -2);                                                    \
-        lua_pushvalue(L, -1);                                                  \
-        luaA_class_emit_signal(L, (lua_class), "new", 1);                      \
-        return p;                                                              \
-    }                                                                          \
-    static inline type *                                                       \
     prefix##_make_light(lua_State *L, type *item)                              \
     {                                                                          \
         lua_pushlightuserdata(L, item);                                        \

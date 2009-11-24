@@ -88,10 +88,7 @@ screen_scan_randr(void)
             /* A quick XRandR recall:
              * You have CRTC that manages a part of a SCREEN.
              * Each CRTC can draw stuff on one or more OUTPUT. */
-            window_t *root = window_new(globalconf.L);
             luaA_object_ref(globalconf.L, -1);
-            root->focusable = true;
-            root->window = globalconf.screen->root;
 
             xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, globalconf.screen->root);
             xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(_G_connection, screen_res_c, NULL);
@@ -124,7 +121,6 @@ screen_scan_randr(void)
                 new_screen.geometry.y = crtc_info_r->y;
                 new_screen.geometry.width= crtc_info_r->width;
                 new_screen.geometry.height= crtc_info_r->height;
-                new_screen.root = root;
 
                 xcb_randr_output_t *randr_outputs = xcb_randr_get_crtc_info_outputs(crtc_info_r);
 
@@ -187,12 +183,6 @@ screen_scan_xinerama(void)
         xsi = xcb_xinerama_query_screens_screen_info(xsq);
         xinerama_screen_number = xcb_xinerama_query_screens_screen_info_length(xsq);
 
-        /* build root window */
-        window_t *root = window_new(globalconf.L);
-        luaA_object_ref(globalconf.L, -1);
-        root->focusable = true;
-        root->window = globalconf.screen->root;
-
         /* now check if screens overlaps (same x,y): if so, we take only the biggest one */
         for(int screen = 0; screen < xinerama_screen_number; screen++)
         {
@@ -215,7 +205,6 @@ screen_scan_xinerama(void)
                 screen_t new_screen;
                 p_clear(&new_screen, 1);
                 new_screen.geometry = screen_xsitoarea(xsi[screen]);
-                new_screen.root = root;
                 screen_array_append(&globalconf.screens, new_screen);
             }
         }
@@ -238,10 +227,6 @@ static void screen_scan_x11(void)
     s.geometry.y = 0;
     s.geometry.width = xcb_screen->width_in_pixels;
     s.geometry.height = xcb_screen->height_in_pixels;
-    window_new(globalconf.L);
-    s.root = luaA_object_ref(globalconf.L, -1);
-    s.root->focusable = true;
-    s.root->window = xcb_screen->root;
     screen_array_append(&globalconf.screens, s);
 }
 
@@ -431,7 +416,7 @@ screen_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
-    luaA_class_setup(L, &screen_class, "screen", NULL,
+    luaA_class_setup(L, &screen_class, "screen", NULL, sizeof(screen_t),
                      NULL, NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      screen_methods, screen_module_meta, NULL);

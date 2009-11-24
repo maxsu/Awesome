@@ -850,6 +850,12 @@ luaA_window_grab_key(lua_State *L)
     return 0;
 }
 
+static void
+window_init(window_t *window)
+{
+    window->cursor = a_strdup(CURSOR_DEFAULT_NAME);
+}
+
 void
 window_class_setup(lua_State *L)
 {
@@ -872,8 +878,9 @@ window_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
-    luaA_class_setup(L, &window_class, "window", NULL,
-                     (lua_class_allocator_t) window_new, (lua_class_collector_t) window_wipe, NULL,
+    luaA_class_setup(L, &window_class, "window", NULL, sizeof(window_t),
+                     (lua_class_initializer_t) window_init,
+                     (lua_class_collector_t) window_wipe, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      window_methods, NULL, NULL);
 
