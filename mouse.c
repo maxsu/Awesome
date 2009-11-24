@@ -120,14 +120,10 @@ luaA_mouse_warp(lua_State *L)
     return 0;
 }
 
-const struct luaL_reg awesome_mouse_methods[] =
+const struct luaL_reg awesome_mouse_lib[] =
 {
     { "query", luaA_mouse_query },
     { "warp", luaA_mouse_warp },
-    { NULL, NULL }
-};
-const struct luaL_reg awesome_mouse_meta[] =
-{
     { NULL, NULL }
 };
 
