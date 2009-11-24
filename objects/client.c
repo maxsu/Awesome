@@ -165,6 +165,9 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
                                                 | XCB_EVENT_MASK_LEAVE_WINDOW
                                                 | XCB_EVENT_MASK_FOCUS_CHANGE });
 
+    /* Add window to save set */
+    xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, w);
+
     client_t *c = client_new(globalconf.L);
 
     /* Store window */
