@@ -221,6 +221,9 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     /* Make sure the window is automatically mapped if awesome exits or dies. */
     xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, w);
 
+    /* Add window to save set */
+    xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, w);
+
     client_t *c = client_new(globalconf.L);
     xcb_screen_t *s = globalconf.screen;
 
