@@ -50,8 +50,7 @@
 #ifdef WITH_DBUS
 extern const struct luaL_reg awesome_dbus_lib[];
 #endif
-extern const struct luaL_reg awesome_mouse_methods[];
-extern const struct luaL_reg awesome_mouse_meta[];
+extern const struct luaL_reg awesome_mouse_lib[];
 
 /** Path to config file */
 static char *conffile;
@@ -486,8 +485,9 @@ luaA_init(xdgHandle* xdg)
     lua_pop(L, 1); /* luaL_register() leaves the table on stack */
 #endif
 
-    /* Export mouse */
-    luaA_openlib(L, "mouse", awesome_mouse_methods, awesome_mouse_meta);
+    /* Export D-Bus lib */
+    luaL_register(L, "mouse", awesome_mouse_lib);
+    lua_pop(L, 1); /* luaL_register() leaves the table on stack */
 
     /* Export image */
     image_class_setup(L);
