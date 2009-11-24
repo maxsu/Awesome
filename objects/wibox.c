@@ -352,6 +352,8 @@ luaA_wibox_new(lua_State *L)
                       | XCB_EVENT_MASK_BUTTON_PRESS
                       | XCB_EVENT_MASK_BUTTON_RELEASE
                       | XCB_EVENT_MASK_POINTER_MOTION
+                      | XCB_EVENT_MASK_KEY_PRESS
+                      | XCB_EVENT_MASK_KEY_RELEASE
                       | XCB_EVENT_MASK_STRUCTURE_NOTIFY
                       | XCB_EVENT_MASK_EXPOSURE
                       | XCB_EVENT_MASK_PROPERTY_CHANGE

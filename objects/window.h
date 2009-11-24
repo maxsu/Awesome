@@ -25,7 +25,6 @@
 
 #include "globalconf.h"
 #include "area.h"
-#include "objects/key.h"
 #include "common/luaclass.h"
 
 #define WINDOW_OBJECT_HEADER \
@@ -42,8 +41,6 @@
     bool focusable; \
     /** True if the window is resizable and/or movable. */ \
     bool movable, resizable; \
-    /** Key bindings */ \
-    key_array_t keys; \
     /** Parent window */ \
     window_t *parent; \
     /** Window geometry */ \
@@ -78,6 +75,8 @@ window_cmp(const void *a, const void *b)
     window_t *x = *((window_t **) a), *y = *((window_t**) b);
     return x->window > y->window ? 1 : (x->window < y->window ? -1 : 0);
 }
+
+#include "common/luaobject.h"
 
 lua_class_t window_class;
 LUA_OBJECT_FUNCS(&window_class, window_t, window)

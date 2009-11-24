@@ -95,42 +95,6 @@ xwindow_configure(xcb_window_t win, area_t geometry, int border)
     xcb_send_event(_G_connection, false, win, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (char *) &ce);
 }
 
-/** Grab key on a window.
- * \param win The window.
- * \param k The key.
- */
-static void
-xwindow_grabkey(xcb_window_t win, keyb_t *k)
-{
-    if(k->keycode)
-        xcb_grab_key(_G_connection, true, win,
-                     k->modifiers, k->keycode, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
-    else if(k->keysym)
-    {
-        xcb_keycode_t *keycodes = xcb_key_symbols_get_keycode(globalconf.keysyms, k->keysym);
-        if(keycodes)
-        {
-            for(xcb_keycode_t *kc = keycodes; *kc; kc++)
-                xcb_grab_key(_G_connection, true, win,
-                             k->modifiers, *kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
-            p_delete(&keycodes);
-        }
-    }
-}
-
-void
-xwindow_grabkeys(xcb_window_t win, key_array_t *keys)
-{
-    if(win)
-    {
-        /* Ungrab everything first */
-        xcb_ungrab_key(_G_connection, XCB_GRAB_ANY, win, XCB_BUTTON_MASK_ANY);
-
-        foreach(k, *keys)
-            xwindow_grabkey(win, *k);
-    }
-}
-
 /** Send a request for a window's opacity.
  * \param win The window
  * \return A cookie for xwindow_get_opacity_from_reply().

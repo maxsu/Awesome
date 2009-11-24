@@ -26,7 +26,6 @@
 #define SN_API_NOT_YET_FROZEN
 #include <libsn/sn.h>
 
-#include "objects/key.h"
 #include "color.h"
 #include "common/xembed.h"
 
@@ -47,8 +46,6 @@ typedef struct
     xcb_key_symbols_t *keysyms;
     /** Logical screens */
     screen_array_t screens;
-    /** Root window key bindings */
-    key_array_t keys;
     /** Clients list */
     client_array_t clients;
     /** Embedded windows */
