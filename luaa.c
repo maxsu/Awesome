@@ -233,41 +233,6 @@ luaA_fixups(lua_State *L)
     lua_settable(L, LUA_GLOBALSINDEX);
 }
 
-/** Try to use the metatable of an object.
- * \param L The Lua VM state.
- * \param idxobj The index of the object.
- * \param idxfield The index of the field (attribute) to get.
- * \return The number of element pushed on stack.
- */
-static int
-luaA_usemetatable(lua_State *L, int idxobj, int idxfield)
-{
-    lua_class_t *class = luaA_class_get(L, idxobj);
-
-    for(; class; class = class->parent)
-    {
-        /* Push the class */
-        lua_pushlightuserdata(L, class);
-        /* Get its metatable from registry */
-        lua_rawget(L, LUA_REGISTRYINDEX);
-        /* Push the field */
-        lua_pushvalue(L, idxfield);
-        /* Get the field in the metatable */
-        lua_rawget(L, -2);
-        /* Do we have a field like that? */
-        if(!lua_isnil(L, -1))
-        {
-            /* Yes, so remove the metatable and return it! */
-            lua_remove(L, -2);
-            return 1;
-        }
-        /* No, so remove the metatable and its value */
-        lua_pop(L, 2);
-    }
-
-    return 0;
-}
-
 /** awesome global table.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -279,9 +244,6 @@ luaA_usemetatable(lua_State *L, int idxobj, int idxfield)
 static int
 luaA_awesome_index(lua_State *L)
 {
-    if(luaA_usemetatable(L, 1, 2))
-        return 1;
-
     size_t len;
     const char *buf = luaL_checklstring(L, 2, &len);
 
@@ -326,9 +288,6 @@ luaA_awesome_index(lua_State *L)
 static int
 luaA_awesome_newindex(lua_State *L)
 {
-    if(luaA_usemetatable(L, 1, 2))
-        return 1;
-
     size_t len;
     const char *buf = luaL_checklstring(L, 2, &len);
 
