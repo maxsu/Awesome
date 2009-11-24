@@ -26,6 +26,7 @@
 #include "stack.h"
 #include "awesome.h"
 #include "xwindow.h"
+#include "keyresolv.h"
 #include "objects/window.h"
 #include "objects/tag.h"
 #include "common/luaobject.h"
@@ -748,6 +749,107 @@ luaA_window_ungrab_pointer(lua_State *L)
     return 0;
 }
 
+/** Take a modifier table from the stack and return modifiers mask.
+ * \param L The Lua VM state.
+ * \param ud The index of the table.
+ * \return The mask value.
+ */
+static uint16_t
+luaA_tomodifiers(lua_State *L, int ud)
+{
+    luaA_checktable(L, ud);
+    ssize_t len = lua_objlen(L, ud);
+    uint16_t mod = XCB_NONE;
+    for(int i = 1; i <= len; i++)
+    {
+        lua_rawgeti(L, ud, i);
+        size_t blen;
+        const char *key = luaL_checklstring(L, -1, &blen);
+        mod |= xutil_key_mask_fromstr(key, blen);
+        lua_pop(L, 1);
+    }
+    return mod;
+}
+
+static int
+luaA_window_ungrab_button(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+    xcb_ungrab_button(_G_connection, luaL_checknumber(L, 3), window->window, luaA_tomodifiers(L, 2));
+    return 0;
+}
+
+/** Grab a button on a window.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on the stack.
+ */
+static int
+luaA_window_grab_button(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+
+    luaA_checktable(L, 2);
+
+    /* Set modifiers */
+    lua_getfield(L, 2, "modifiers");
+    luaA_checktable(L, -1);
+    uint16_t modifiers = luaA_tomodifiers(L, -1);
+    /* Set button */
+    lua_getfield(L, 2, "button");
+    xcb_button_t button = luaL_checknumber(L, -1);
+
+    /* Grab buttons */
+    xcb_grab_button(_G_connection, false, window->window,
+                    XCB_EVENT_MASK_BUTTON_PRESS
+                    | XCB_EVENT_MASK_BUTTON_RELEASE
+                    | XCB_EVENT_MASK_POINTER_MOTION,
+                    XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE,
+                    button, modifiers);
+
+    /* Remove button and modifiers field */
+    lua_pop(L, 2);
+
+    return 0;
+}
+
+static int
+luaA_window_ungrab_key(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+    uint16_t modifiers = luaA_tomodifiers(L, 2);
+    size_t len;
+    const char *keysym_name = luaL_checklstring(L, 3, &len);
+    xcb_keycode_t *keycodes = keyresolv_string_to_keycode(keysym_name, len);
+
+    if(keycodes)
+    {
+        for(xcb_keycode_t *k = keycodes; *k; k++)
+            xcb_ungrab_key(_G_connection, *k, window->window, modifiers);
+        p_delete(&keycodes);
+    }
+
+    return 0;
+}
+
+static int
+luaA_window_grab_key(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+    uint16_t modifiers = luaA_tomodifiers(L, 2);
+    size_t len;
+    const char *keysym_name = luaL_checklstring(L, 3, &len);
+    xcb_keycode_t *keycodes = keyresolv_string_to_keycode(keysym_name, len);
+
+    if(keycodes)
+    {
+        for(xcb_keycode_t *k = keycodes; *k; k++)
+            xcb_grab_key(_G_connection, false, window->window, modifiers, *k, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
+        p_delete(&keycodes);
+    }
+
+    return 0;
+}
+
 void
 window_class_setup(lua_State *L)
 {
@@ -763,6 +865,10 @@ window_class_setup(lua_State *L)
         { "ungrab_keyboard", luaA_window_ungrab_keyboard },
         { "grab_pointer", luaA_window_grab_pointer },
         { "ungrab_pointer", luaA_window_ungrab_pointer },
+        { "grab_button", luaA_window_grab_button },
+        { "ungrab_button", luaA_window_ungrab_button },
+        { "grab_key", luaA_window_grab_key },
+        { "ungrab_key", luaA_window_ungrab_key },
         { NULL, NULL }
     };
 
