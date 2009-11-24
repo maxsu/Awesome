@@ -40,12 +40,11 @@ typedef struct
     LUA_OBJECT_HEADER
 } lua_object_t;
 
-typedef lua_object_t *(*lua_class_allocator_t)(lua_State *);
+typedef void (*lua_class_initializer_t)(lua_object_t *);
 typedef void (*lua_class_collector_t)(lua_object_t *);
+typedef bool (*lua_class_checker_t)(lua_object_t *);
 
 typedef int (*lua_class_propfunc_t)(lua_State *, lua_object_t *);
-
-typedef bool (*lua_class_checker_t)(lua_object_t *);
 
 typedef struct lua_class_t lua_class_t;
 
@@ -56,8 +55,10 @@ typedef struct lua_class_t lua_class_t;
     signal_array_t signals; \
     /** Parent class */ \
     lua_class_t *parent; \
-    /** Allocator for creating new objects of that class */\
-    lua_class_allocator_t allocator; \
+    /** Size of objects */ \
+    size_t object_size; \
+    /** Initializer for new objects of that class */\
+    lua_class_initializer_t initializer; \
     /** Garbage collection function */ \
     lua_class_collector_t collector; \
     /** Class properties */ \
@@ -83,8 +84,8 @@ void luaA_class_disconnect_signal_from_stack(lua_State *, lua_class_t *, const c
 void luaA_class_emit_signal(lua_State *, lua_class_t *, const char *, int);
 
 void luaA_openlib(lua_State *, const char *, const struct luaL_reg[], const struct luaL_reg[]);
-void luaA_class_setup(lua_State *, lua_class_t *, const char *, lua_class_t *,
-                      lua_class_allocator_t, lua_class_collector_t,
+void luaA_class_setup(lua_State *, lua_class_t *, const char *, lua_class_t *, size_t,
+                      lua_class_initializer_t, lua_class_collector_t,
                       lua_class_checker_t,
                       lua_class_propfunc_t, lua_class_propfunc_t,
                       const struct luaL_reg[], const struct luaL_reg[], const struct luaL_reg[]);
@@ -94,6 +95,7 @@ void luaA_class_add_property(lua_class_t *, awesome_token_t,
 
 int luaA_class_index(lua_State *);
 int luaA_class_newindex(lua_State *);
+lua_object_t * luaA_object_new(lua_State *, lua_class_t *);
 int luaA_class_new(lua_State *, lua_class_t *);
 
 void * luaA_checkudata(lua_State *, int, lua_class_t *);

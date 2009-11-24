@@ -211,8 +211,9 @@ luaA_class_tostring(lua_State *L)
  * \param L The Lua VM state.
  * \param name The class name.
  * \param parent The parent class (inheritance).
- * \param allocator The allocator function used when creating a new object.
- * \param Collector The collector function used when garbage collecting an
+ * \param object_size The object size.
+ * \param initializer The initializer function used to init new objects.
+ * \param collector The collector function used when garbage collecting an
  * object.
  * \param checker The check function to call when using luaA_checkudata().
  * \param index_miss_property Function to call when an object of this class
@@ -228,7 +229,8 @@ void
 luaA_class_setup(lua_State *L, lua_class_t *class,
                  const char *name,
                  lua_class_t *parent,
-                 lua_class_allocator_t allocator,
+                 size_t object_size,
+                 lua_class_initializer_t initializer,
                  lua_class_collector_t collector,
                  lua_class_checker_t checker,
                  lua_class_propfunc_t index_miss_property,
@@ -292,7 +294,8 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
     lua_pop(L, 1);
 
     class->collector = collector;
-    class->allocator = allocator;
+    class->initializer = initializer;
+    class->object_size = object_size;
     class->name = name;
     class->index_miss_property = index_miss_property;
     class->newindex_miss_property = newindex_miss_property;
@@ -548,6 +551,48 @@ luaA_class_newindex(lua_State *L)
     return 0;
 }
 
+static lua_class_t *
+lua_class_get_child(lua_class_t *base, lua_class_t *parent)
+{
+    for(; base && base->parent != parent; base = base->parent);
+    return base;
+}
+
+lua_object_t *
+luaA_object_new(lua_State *L, lua_class_t *lua_class)
+{
+    lua_object_t *object = lua_newuserdata(L, lua_class->object_size);
+    /* don't use p_clear, the size it's different of sizeof(lua_object_t) */
+    memset(object, 0, lua_class->object_size);
+
+    /* Get the top level class in the hierarchy */
+    lua_class_t *top_class;
+    for(top_class = lua_class; top_class->parent; top_class = top_class->parent);
+
+    /* Now, go backward from top_class (top level class) to our lua_class */
+    for(; top_class != lua_class; top_class = lua_class_get_child(lua_class, top_class))
+        if(top_class->initializer)
+            top_class->initializer(object);
+
+    if(lua_class->initializer)
+        lua_class->initializer(object);
+
+    /* Set object type */
+    luaA_settype(L, lua_class);
+    /* Create a env table */
+    lua_newtable(L);
+    /* Create a metatable for the env table */
+    lua_newtable(L);
+    /* Set metatable on en table */
+    lua_setmetatable(L, -2);
+    /* Set env table on object */
+    lua_setfenv(L, -2);
+    /* Emit class signal */
+    lua_pushvalue(L, -1);
+    luaA_class_emit_signal(L, lua_class, "new", 1);
+    return object;
+}
+
 /** Generic constructor function for objects.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -558,8 +603,7 @@ luaA_class_new(lua_State *L, lua_class_t *lua_class)
     /* Check we have a table that should contains some properties */
     luaA_checktable(L, 2);
 
-    /* Create a new object */
-    lua_class->allocator(L);
+    luaA_object_new(L, lua_class);
 
     /* Push the first key before iterating */
     lua_pushnil(L);

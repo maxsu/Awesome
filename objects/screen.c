@@ -81,7 +81,7 @@ protocol_screen_scan(void)
     _G_visual = screen_default_visual(xcb_screen);
 
     /* Create root window */
-    window_new(globalconf.L);
+    luaA_object_new(globalconf.L, &window_class);
     _G_root = luaA_object_ref(globalconf.L, -1);
     _G_root->focusable = true;
     _G_root->window = xcb_screen->root;
@@ -430,7 +430,7 @@ screen_class_setup(lua_State *L)
         { NULL, NULL }
     };
 
-    luaA_class_setup(L, &screen_class, "screen", NULL,
+    luaA_class_setup(L, &screen_class, "screen", NULL, sizeof(screen_t),
                      NULL, NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      screen_methods, screen_module_meta, NULL);

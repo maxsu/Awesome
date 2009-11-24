@@ -509,6 +509,12 @@ static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, below, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_horizontal, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_vertical, lua_pushboolean)
 
+static void
+ewindow_init(ewindow_t *ewindow)
+{
+    ewindow->opacity = -1;
+}
+
 void
 ewindow_class_setup(lua_State *L)
 {
@@ -521,7 +527,7 @@ ewindow_class_setup(lua_State *L)
     };
 
     luaA_class_setup(L, (lua_class_t *) &ewindow_class, "ewindow", &window_class,
-                     NULL, NULL, NULL,
+                     sizeof(ewindow_t), (lua_class_initializer_t) ewindow_init, NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      ewindow_methods, NULL, NULL);
 

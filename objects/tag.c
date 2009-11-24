@@ -265,8 +265,7 @@ tag_class_setup(lua_State *L)
         { NULL, NULL },
     };
 
-    luaA_class_setup(L, &tag_class, "tag", NULL,
-                     (lua_class_allocator_t) tag_new,
+    luaA_class_setup(L, &tag_class, "tag", NULL, sizeof(tag_t), NULL,
                      (lua_class_collector_t) tag_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
