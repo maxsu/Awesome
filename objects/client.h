@@ -28,12 +28,6 @@
 #include "objects/ewindow.h"
 #include "common/luaobject.h"
 
-#define CLIENT_SELECT_INPUT_EVENT_MASK (XCB_EVENT_MASK_STRUCTURE_NOTIFY \
-                                        | XCB_EVENT_MASK_PROPERTY_CHANGE \
-                                        | XCB_EVENT_MASK_ENTER_WINDOW \
-                                        | XCB_EVENT_MASK_LEAVE_WINDOW \
-                                        | XCB_EVENT_MASK_FOCUS_CHANGE)
-
 /** client_t type */
 struct client_t
 {

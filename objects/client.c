@@ -150,28 +150,33 @@ client_hasproto(client_t *c, xcb_atom_t atom)
 void
 client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
 {
-    const uint32_t select_input_val[] = { CLIENT_SELECT_INPUT_EVENT_MASK };
-
     /* If this is a new client that just has been launched, then request its
      * startup id. */
     xcb_get_property_cookie_t startup_id_q = { 0 };
+
     if(!startup)
         startup_id_q = xcb_get_any_property(_G_connection,
                                             false, w, _NET_STARTUP_ID, UINT_MAX);
 
-    xcb_change_window_attributes(_G_connection, w, XCB_CW_EVENT_MASK, select_input_val);
+    xcb_change_window_attributes(_G_connection, w, XCB_CW_EVENT_MASK,
+                                 (uint32_t[]) { XCB_EVENT_MASK_STRUCTURE_NOTIFY
+                                                | XCB_EVENT_MASK_PROPERTY_CHANGE
+                                                | XCB_EVENT_MASK_ENTER_WINDOW
+                                                | XCB_EVENT_MASK_LEAVE_WINDOW
+                                                | XCB_EVENT_MASK_FOCUS_CHANGE });
 
     client_t *c = client_new(globalconf.L);
 
-    /* consider the window banned */
-    c->banned = true;
     /* Store window */
     c->window = w;
+    luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
     /* Store parent */
     c->parent = _G_root;
-    luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
+    luaA_object_emit_signal(globalconf.L, -1, "property::parent", 0);
     /* Consider window is focusable by default */
     c->focusable = true;
+    /* Consider the window banned */
+    c->banned = true;
     /* Consider window movable/resizable by default */
     c->movable = c->resizable = true;
 
@@ -220,22 +225,6 @@ HANDLE_GEOM(height)
     /* Push client in stack */
     stack_window_raise(globalconf.L, -1);
 
-    /* Always stay in NORMAL_STATE. Even though iconified seems more
-     * appropriate sometimes. The only possible loss is that clients not using
-     * visibility events may continue to process data (when banned).
-     * Without any exposes or other events the cost should be fairly limited though.
-     *
-     * Some clients may expect the window to be unmapped when STATE_ICONIFIED.
-     * Two conflicting parts of the ICCCM v2.0 (section 4.1.4):
-     *
-     * "Normal -> Iconic - The client should send a ClientMessage event as described later in this section."
-     * (note no explicit mention of unmapping, while Normal->Widthdrawn does mention that)
-     *
-     * "Once a client's window has left the Withdrawn state, the window will be mapped
-     * if it is in the Normal state and the window will be unmapped if it is in the Iconic state."
-     *
-     * At this stage it's just safer to keep it in normal state and avoid confusion.
-     */
     xwindow_set_state(c->window, XCB_WM_STATE_NORMAL);
 
     if(!startup)
