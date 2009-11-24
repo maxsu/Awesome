@@ -139,6 +139,12 @@ scan(void)
 
     for(int i = 0; i < tree_c_len; i++)
     {
+        if(systray_iskdedockapp(wins[i]))
+        {
+            systray_request_handle(wins[i], NULL);
+            continue;
+        }
+
         xcb_get_geometry_reply_t *geom_r;
         if(!geom_wins[i].sequence
            || !(geom_r = xcb_get_geometry_reply(_G_connection,

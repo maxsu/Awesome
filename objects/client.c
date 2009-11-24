@@ -152,12 +152,6 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
 {
     const uint32_t select_input_val[] = { CLIENT_SELECT_INPUT_EVENT_MASK };
 
-    if(systray_iskdedockapp(w))
-    {
-        systray_request_handle(w, NULL);
-        return;
-    }
-
     /* If this is a new client that just has been launched, then request its
      * startup id. */
     xcb_get_property_cookie_t startup_id_q = { 0 };
