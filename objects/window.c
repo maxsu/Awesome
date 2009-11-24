@@ -39,7 +39,6 @@ static void
 window_wipe(window_t *window)
 {
     p_delete(&window->cursor);
-    key_array_wipe(&window->keys);
 }
 
 bool
@@ -532,25 +531,6 @@ luaA_window_get_height(lua_State *L, window_t *window)
     return 1;
 }
 
-/** Get or set keys bindings for a window.
- * \param L The Lua VM state.
- * \return The number of element pushed on stack.
- */
-static int
-luaA_window_keys(lua_State *L)
-{
-    window_t *window = luaA_checkudata(L, 1, (lua_class_t *) &window_class);
-
-    if(lua_gettop(L) == 2)
-    {
-        luaA_key_array_set(L, 1, 2, &window->keys);
-        luaA_object_emit_signal(L, 1, "property::keys", 0);
-        xwindow_grabkeys(window->window, &window->keys);
-    }
-
-    return luaA_key_array_get(L, &window->keys);
-}
-
 static int
 luaA_window_get_content(lua_State *L, window_t *window)
 {
@@ -775,7 +755,6 @@ window_class_setup(lua_State *L)
     {
         LUA_CLASS_METHODS(window)
         { "focus", luaA_window_focus },
-        { "keys", luaA_window_keys },
         { "geometry", luaA_window_geometry },
         { "isvisible", luaA_window_isvisible },
         { "raise", luaA_window_raise },

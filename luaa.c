@@ -507,9 +507,6 @@ luaA_init(xdgHandle* xdg)
     /* Export client */
     client_class_setup(L);
 
-    /* Export keys */
-    key_class_setup(L);
-
     /* Export timer */
     timer_class_setup(L);
 
