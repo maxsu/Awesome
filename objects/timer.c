@@ -119,8 +119,8 @@ timer_class_setup(lua_State *L)
         { NULL, NULL },
     };
 
-    luaA_class_setup(L, &timer_class, "timer", NULL,
-                     (lua_class_allocator_t) timer_new, NULL, NULL,
+    luaA_class_setup(L, &timer_class, "timer", NULL, sizeof(atimer_t),
+                     NULL, NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      timer_methods, timer_module_meta, NULL);
     luaA_class_add_property(&timer_class, A_TK_TIMEOUT,

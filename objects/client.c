@@ -168,7 +168,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     /* Add window to save set */
     xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, w);
 
-    client_t *c = client_new(globalconf.L);
+    client_t *c = (client_t *) luaA_object_new(globalconf.L, (lua_class_t *) &client_class);
 
     /* Store window */
     c->window = w;
@@ -443,7 +443,7 @@ client_class_setup(lua_State *L)
     };
 
     luaA_class_setup(L, (lua_class_t *) &client_class, "client", (lua_class_t *) &ewindow_class,
-                     (lua_class_allocator_t) client_new,
+                     sizeof(client_t), NULL,
                      (lua_class_collector_t) client_wipe,
                      (lua_class_checker_t) client_checker,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,

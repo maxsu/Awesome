@@ -527,25 +527,19 @@ luaA_wibox_set_shape_clip(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-/** Create a new wibox and init its default values.
- * The wibox is left on the stack.
- * \param L The Lua VM state.
- * \return A pointer to a wibox object, initialized.
+/** Initialize a new wibox with its default values.
+ * \param wibox The wibox.
  */
-static wibox_t *
-wibox_new_init(lua_State *L)
+static void
+wibox_init(wibox_t *wibox)
 {
-    wibox_t *wibox = wibox_new(L);
     wibox->visible = wibox->movable = wibox->resizable = true;
     wibox->parent = _G_root;
     wibox->ctx.fg = globalconf.colors.fg;
     wibox->ctx.bg = globalconf.colors.bg;
-    wibox->opacity = -1;
-    wibox->cursor = a_strdup(CURSOR_DEFAULT_NAME);
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
     wibox->need_update = true;
-    return wibox;
 }
 
 static int
@@ -730,7 +724,8 @@ wibox_class_setup(lua_State *L)
     };
 
     luaA_class_setup(L, (lua_class_t *) &wibox_class, "wibox", (lua_class_t *) &ewindow_class,
-                     (lua_class_allocator_t) wibox_new_init,
+                     sizeof(wibox_t),
+                     (lua_class_initializer_t) wibox_init,
                      (lua_class_collector_t) wibox_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,

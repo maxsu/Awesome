@@ -234,7 +234,7 @@ image_new_from_argb32(lua_State *L, int width, int height, uint32_t *data)
     {
         imlib_context_set_image(imimage);
         imlib_image_set_has_alpha(true);
-        image_t *image = image_new(L);
+        image_t *image = (image_t *) luaA_object_new(L, &image_class);
         image->image = imimage;
         return 1;
     }
@@ -260,7 +260,7 @@ image_new_blank(lua_State *L, int width, int height)
         /* After creation, an image has undefined content. Fix that up. */
         imlib_context_set_color(0, 0, 0, 0xff);
         imlib_image_fill_rectangle(0, 0, width, height);
-        image_t *image = image_new(L);
+        image_t *image = (image_t *) luaA_object_new(L, &image_class);
         image->image = imimage;
         return 1;
     }
@@ -276,19 +276,17 @@ image_new_blank(lua_State *L, int width, int height)
 static int
 image_new_from_file(lua_State *L, const char *filename)
 {
-    Imlib_Image imimage;
-    image_t *image;
-
     if(!filename)
         return 0;
 
+    Imlib_Image imimage;
     if(!(imimage = imlib_load_image_without_cache(filename)))
     {
         warn("cannot load image %s", filename);
         return 0;
     }
 
-    image = image_new(L);
+    image_t *image = (image_t *) luaA_object_new(L, &image_class);
     image->image = imimage;
 
     return 1;
@@ -380,10 +378,10 @@ luaA_image_orientate(lua_State *L)
 static int
 luaA_image_rotate(lua_State *L)
 {
-    image_t *image = luaA_checkudata(L, 1, &image_class), *new;
+    image_t *image = luaA_checkudata(L, 1, &image_class);
     double angle = luaL_checknumber(L, 2);
 
-    new = image_new(L);
+    image_t *new = (image_t *) luaA_object_new(L, &image_class);
 
     imlib_context_set_image(image->image);
     new->image = imlib_create_rotated_image(angle);
@@ -404,13 +402,13 @@ luaA_image_rotate(lua_State *L)
 static int
 luaA_image_crop(lua_State *L)
 {
-    image_t *image = luaA_checkudata(L, 1, &image_class), *new;
+    image_t *image = luaA_checkudata(L, 1, &image_class);
     int x = luaL_checkint(L, 2);
     int y = luaL_checkint(L, 3);
     int w = luaL_checkint(L, 4);
     int h = luaL_checkint(L, 5);
 
-    new = image_new(L);
+    image_t *new = (image_t *) luaA_object_new(L, &image_class);
 
     imlib_context_set_image(image->image);
     new->image = imlib_create_cropped_image(x, y, w, h);
@@ -434,7 +432,7 @@ luaA_image_crop(lua_State *L)
 static int
 luaA_image_crop_and_scale(lua_State *L)
 {
-    image_t *image = luaA_checkudata(L, 1, &image_class), *new;
+    image_t *image = luaA_checkudata(L, 1, &image_class);
     int source_x = luaL_checkint(L, 2);
     int source_y = luaL_checkint(L, 3);
     int w = luaL_checkint(L, 4);
@@ -442,7 +440,7 @@ luaA_image_crop_and_scale(lua_State *L)
     int dest_w = luaL_checkint(L, 6);
     int dest_h = luaL_checkint(L, 7);
 
-    new = image_new(L);
+    image_t *new = (image_t *) luaA_object_new(L, &image_class);
 
     imlib_context_set_image(image->image);
     new->image = imlib_create_cropped_scaled_image(source_x,
@@ -808,7 +806,7 @@ image_class_setup(lua_State *L)
     };
 
     luaA_class_setup(L, &image_class, "image", NULL,
-                     (lua_class_allocator_t) image_new,
+                     sizeof(image_t), NULL,
                      (lua_class_collector_t) image_wipe,
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
