@@ -19,8 +19,8 @@
  */
 
 #include "mouse.h"
-#include "objects/client.h"
 #include "awesome.h"
+#include "objects/client.h"
 #include "objects/screen.h"
 
 /** Get the pointer position.
