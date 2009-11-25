@@ -201,40 +201,40 @@ wibox_getbywin(xcb_window_t win)
 static void
 wibox_render(wibox_t *wibox)
 {
-    if(wibox->ctx.bg.alpha != 0xffff)
+    color_t bg;
+    xcolor_to_color(&wibox->ctx.bg, &bg);
+
+    if(bg.alpha != 0xff)
     {
         int x = wibox->geometry.x + wibox->border_width,
             y = wibox->geometry.y + wibox->border_width;
-        xcb_get_property_reply_t *prop_r;
         char *data;
         xcb_pixmap_t rootpix;
-        xcb_get_property_cookie_t prop_c;
-        prop_c = xcb_get_property_unchecked(_G_connection, false, _G_root->window, _XROOTPMAP_ID,
-                                            PIXMAP, 0, 1);
-        if((prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL)))
-        {
-            if(prop_r->value_len
-               && (data = xcb_get_property_value(prop_r))
-               && (rootpix = *(xcb_pixmap_t *) data))
-                xcb_copy_area(_G_connection, rootpix,
-                              wibox->ctx.pixmap, _G_gc,
-                              x, y,
-                              0, 0,
-                              wibox->geometry.width, wibox->geometry.height);
-            p_delete(&prop_r);
-        }
+        xcb_get_property_cookie_t prop_c = xcb_get_property_unchecked(_G_connection, false, _G_root->window, _XROOTPMAP_ID,
+                                                                      PIXMAP, 0, 1);
+        xcb_get_property_reply_t *prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL);
+        if(prop_r && prop_r->value_len
+           && (data = xcb_get_property_value(prop_r))
+           && (rootpix = *(xcb_pixmap_t *) data))
+            xcb_copy_area(_G_connection, rootpix,
+                          wibox->ctx.pixmap, _G_gc,
+                          x, y,
+                          0, 0,
+                          wibox->geometry.width, wibox->geometry.height);
+        else
+            /* no background :-( draw background color without alpha */
+            bg.alpha = 0xff;
+        p_delete(&prop_r);
     }
 
     /* draw background image */
     draw_image(&wibox->ctx, 0, 0, 1.0, wibox->bg_image);
 
     /* draw background color */
-    color_t col;
-    xcolor_to_color(&wibox->ctx.bg, &col);
     draw_rectangle(&wibox->ctx, (area_t) { .x = 0, .y = 0,
                                            .width = wibox->geometry.width,
                                            .height = wibox->geometry.height },
-                   1.0, true, &col);
+                   1.0, true, &bg);
 
     /* Compute where to draw text, using padding */
     area_t geometry =  { .x = wibox->text_padding.left,
