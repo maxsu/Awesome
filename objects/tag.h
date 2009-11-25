@@ -41,8 +41,6 @@ void untag_ewindow(lua_State *, int, int);
 bool ewindow_is_tagged(ewindow_t *, tag_t *);
 void tag_view_only_byindex(lua_State *, int);
 
-ARRAY_FUNCS(tag_t *, tag, DO_NOTHING)
-
 void tag_class_setup(lua_State *);
 
 bool tag_get_selected(tag_t *);
