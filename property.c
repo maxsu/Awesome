@@ -362,6 +362,11 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
                              xcb_atom_t name,
                              xcb_get_property_reply_t *reply)
 {
+    if(reply && reply->value_len)
+        _G_xrootpmap_id = *(xcb_pixmap_t *) xcb_get_property_value(reply);
+    else
+        _G_xrootpmap_id = XCB_NONE;
+
     /* Redraw all wiboxes.
      * \todo only do it for non-opaque wiboxes */
     foreach(wibox, _G_wiboxes)
