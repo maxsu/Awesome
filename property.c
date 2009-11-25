@@ -25,6 +25,7 @@
 #include "xwindow.h"
 #include "objects/wibox.h"
 #include "common/xutil.h"
+#include "objects/wibox.h"
 
 #define HANDLE_TEXT_PROPERTY(funcname, atom, setfunc) \
     xcb_get_property_cookie_t \

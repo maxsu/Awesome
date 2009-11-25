@@ -22,17 +22,11 @@
 #include <unistd.h>
 
 #include <xcb/xcb.h>
-#include <xcb/xcb_atom.h>
 
 #include "awesome.h"
 #include "ewmh.h"
 #include "objects/tag.h"
 #include "screen.h"
-#include "objects/client.h"
-#include "objects/wibox.h"
-#include "luaa.h"
-#include "screen.h"
-#include "common/atoms.h"
 #include "common/buffer.h"
 #include "common/xutil.h"
 
