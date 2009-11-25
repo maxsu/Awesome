@@ -39,12 +39,6 @@
         signal_object_emit(L, &global_signals, "debug::deprecation", 1); \
     } while(0)
 
-#define luaA_checkscreen(screen) \
-    do { \
-        if(screen < 0 || screen >= _G_screens.len) \
-            luaL_error(L, "invalid screen number: %d", screen + 1); \
-    } while(0)
-
 static inline bool
 luaA_checkboolean(lua_State *L, int n)
 {
