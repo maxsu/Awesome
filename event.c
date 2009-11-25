@@ -200,16 +200,31 @@ static int
 event_handle_configurenotify(void *data __attribute__ ((unused)),
                              xcb_connection_t *connection, xcb_configure_notify_event_t *ev)
 {
-    int screen_nbr;
-    const xcb_screen_t *screen;
+    if(ev->window == _G_root->window)
+    {
+        bool geometry_has_changed = false;
 
-    for(screen_nbr = 0; screen_nbr < xcb_setup_roots_length(xcb_get_setup (connection)); screen_nbr++)
-        if((screen = xutil_screen_get(connection, screen_nbr)) != NULL
-           && ev->window == screen->root
-           && (ev->width != screen->width_in_pixels
-               || ev->height != screen->height_in_pixels))
-            /* it's not that we panic, but restart */
-            awesome_restart();
+        luaA_object_push(globalconf.L, _G_root);
+
+        if(_G_root->geometry.width != ev->width)
+        {
+            _G_root->geometry.width = ev->width;
+            luaA_object_emit_signal(globalconf.L, -1, "property::width", 0);
+            geometry_has_changed = true;
+        }
+
+        if(_G_root->geometry.height != ev->height)
+        {
+            _G_root->geometry.height = ev->height;
+            luaA_object_emit_signal(globalconf.L, -1, "property:height", 0);
+            geometry_has_changed = true;
+        }
+
+        if(geometry_has_changed)
+            luaA_object_emit_signal(globalconf.L, -1, "property::geometry", 0);
+
+        lua_pop(globalconf.L, 1);
+    }
 
     return 0;
 }
