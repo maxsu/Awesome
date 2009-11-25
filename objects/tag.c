@@ -23,6 +23,8 @@
 #include "objects/ewindow.h"
 #include "luaa.h"
 
+ARRAY_FUNCS(tag_t *, tag, DO_NOTHING)
+
 LUA_OBJECT_FUNCS(&tag_class, tag_t, tag)
 
 static void
