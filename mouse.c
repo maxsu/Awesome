@@ -19,9 +19,9 @@
  */
 
 #include "mouse.h"
-#include "objects/client.h"
 #include "awesome.h"
 #include "screen.h"
+#include "objects/client.h"
 
 /** Get the pointer position.
  * \param window The window to get position on.

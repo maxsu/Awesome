@@ -21,7 +21,6 @@
 #ifndef AWESOME_MOUSE_H
 #define AWESOME_MOUSE_H
 
-#include <stdbool.h>
 #include <xcb/xcb.h>
 #include <lua.h>
 
