@@ -111,10 +111,10 @@ ewmh_reset_net_active_window(lua_State *L)
 static int
 ewmh_update_net_client_list(lua_State *L)
 {
-    xcb_window_t *wins = p_alloca(xcb_window_t, globalconf.clients.len);
+    xcb_window_t *wins = p_alloca(xcb_window_t, _G_clients.len);
 
     int n = 0;
-    foreach(client, globalconf.clients)
+    foreach(client, _G_clients)
         wins[n++] = (*client)->window;
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,

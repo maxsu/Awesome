@@ -24,7 +24,7 @@
 #define SN_API_NOT_YET_FROZEN
 #include <libsn/sn.h>
 
-#include "globalconf.h"
+#include "objects/client.h"
 
 void spawn_init(void);
 void spawn_start_notify(client_t *, const char *);
