@@ -531,55 +531,55 @@ ewindow_class_setup(lua_State *L)
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      ewindow_methods, NULL, NULL);
 
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_OPACITY,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "opacity",
                             (lua_class_propfunc_t) luaA_ewindow_set_opacity,
                             (lua_class_propfunc_t) luaA_ewindow_get_opacity,
                             (lua_class_propfunc_t) luaA_ewindow_set_opacity);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_BORDER_COLOR,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "border_color",
                             (lua_class_propfunc_t) luaA_ewindow_set_border_color,
                             (lua_class_propfunc_t) luaA_ewindow_get_border_color,
                             (lua_class_propfunc_t) luaA_ewindow_set_border_color);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_BORDER_WIDTH,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "border_width",
                             (lua_class_propfunc_t) luaA_ewindow_set_border_width,
                             (lua_class_propfunc_t) luaA_ewindow_get_border_width,
                             (lua_class_propfunc_t) luaA_ewindow_set_border_width);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_STICKY,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "sticky",
                             (lua_class_propfunc_t) luaA_ewindow_set_sticky,
                             (lua_class_propfunc_t) luaA_ewindow_get_sticky,
                             (lua_class_propfunc_t) luaA_ewindow_set_sticky);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_ONTOP,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "ontop",
                             (lua_class_propfunc_t) luaA_ewindow_set_ontop,
                             (lua_class_propfunc_t) luaA_ewindow_get_ontop,
                             (lua_class_propfunc_t) luaA_ewindow_set_ontop);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_ABOVE,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "above",
                             (lua_class_propfunc_t) luaA_ewindow_set_above,
                             (lua_class_propfunc_t) luaA_ewindow_get_above,
                             (lua_class_propfunc_t) luaA_ewindow_set_above);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_BELOW,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "below",
                             (lua_class_propfunc_t) luaA_ewindow_set_below,
                             (lua_class_propfunc_t) luaA_ewindow_get_below,
                             (lua_class_propfunc_t) luaA_ewindow_set_below);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_MINIMIZED,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "minimized",
                             (lua_class_propfunc_t) luaA_ewindow_set_minimized,
                             (lua_class_propfunc_t) luaA_ewindow_get_minimized,
                             (lua_class_propfunc_t) luaA_ewindow_set_minimized);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_FULLSCREEN,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "fullscreen",
                             (lua_class_propfunc_t) luaA_ewindow_set_fullscreen,
                             (lua_class_propfunc_t) luaA_ewindow_get_fullscreen,
                             (lua_class_propfunc_t) luaA_ewindow_set_fullscreen);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_MODAL,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "modal",
                             (lua_class_propfunc_t) luaA_ewindow_set_modal,
                             (lua_class_propfunc_t) luaA_ewindow_get_modal,
                             (lua_class_propfunc_t) luaA_ewindow_set_modal);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_MAXIMIZED_HORIZONTAL,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "maximized_horizontal",
                             (lua_class_propfunc_t) luaA_ewindow_set_maximized_horizontal,
                             (lua_class_propfunc_t) luaA_ewindow_get_maximized_horizontal,
                             (lua_class_propfunc_t) luaA_ewindow_set_maximized_horizontal);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_MAXIMIZED_VERTICAL,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "maximized_vertical",
                             (lua_class_propfunc_t) luaA_ewindow_set_maximized_vertical,
                             (lua_class_propfunc_t) luaA_ewindow_get_maximized_vertical,
                             (lua_class_propfunc_t) luaA_ewindow_set_maximized_vertical);
-    luaA_class_add_property((lua_class_t *) &ewindow_class, A_TK_TYPE,
+    luaA_class_add_property((lua_class_t *) &ewindow_class, "type",
                             (lua_class_propfunc_t) luaA_ewindow_set_type,
                             (lua_class_propfunc_t) luaA_ewindow_get_type,
                             (lua_class_propfunc_t) luaA_ewindow_set_type);

@@ -274,15 +274,15 @@ tag_class_setup(lua_State *L)
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      tag_methods, tag_module_meta, NULL);
-    luaA_class_add_property(&tag_class, A_TK_NAME,
+    luaA_class_add_property(&tag_class, "name",
                             (lua_class_propfunc_t) luaA_tag_set_name,
                             (lua_class_propfunc_t) luaA_tag_get_name,
                             (lua_class_propfunc_t) luaA_tag_set_name);
-    luaA_class_add_property(&tag_class, A_TK_SELECTED,
+    luaA_class_add_property(&tag_class, "selected",
                             (lua_class_propfunc_t) luaA_tag_set_selected,
                             (lua_class_propfunc_t) luaA_tag_get_selected,
                             (lua_class_propfunc_t) luaA_tag_set_selected);
-    luaA_class_add_property(&tag_class, A_TK_ATTACHED,
+    luaA_class_add_property(&tag_class, "attached",
                             (lua_class_propfunc_t) luaA_tag_set_attached,
                             (lua_class_propfunc_t) luaA_tag_get_attached,
                             (lua_class_propfunc_t) luaA_tag_set_attached);
