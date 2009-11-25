@@ -403,6 +403,9 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
         window_array_append(&new_parent->childrens, (window_t *) wibox);
         stack_window_raise(L, 1);
 
+        if(wibox->ctx.bg.alpha != 0xffff)
+            wibox->need_update = true;
+
         luaA_object_emit_signal(globalconf.L, 1, "property::parent", 0);
     }
 
