@@ -21,7 +21,6 @@
 #include <ev.h>
 
 #include "awesome.h"
-#include "globalconf.h"
 #include "luaa.h"
 #include "timer.h"
 #include "common/luaobject.h"
@@ -33,15 +32,23 @@ typedef struct
     struct ev_timer timer;
 } atimer_t;
 
+typedef struct
+{
+    lua_State *L;
+    atimer_t *timer;
+} timer_callback_data_t;
+
 static lua_class_t timer_class;
 LUA_OBJECT_FUNCS(&timer_class, atimer_t, timer)
 
 static void
 ev_timer_emit_signal(struct ev_loop *loop, struct ev_timer *w, int revents)
 {
-    luaA_object_push(globalconf.L, w->data);
-    luaA_object_emit_signal(globalconf.L, -1, "timeout", 0);
-    lua_pop(globalconf.L, 1);
+    timer_callback_data_t *data = w->data;
+    luaA_object_push(data->L, data->timer);
+    luaA_object_emit_signal(data->L, -1, "timeout", 0);
+    lua_pop(data->L, 1);
+    p_delete(&data);
 }
 
 static int
@@ -49,7 +56,10 @@ luaA_timer_new(lua_State *L)
 {
     luaA_class_new(L, &timer_class);
     atimer_t *timer = luaA_checkudata(L, -1, &timer_class);
-    timer->timer.data = timer;
+    timer_callback_data_t *data = p_new(timer_callback_data_t, 1);
+    data->L = L;
+    data->timer = timer;
+    timer->timer.data = data;
     ev_set_cb(&timer->timer, ev_timer_emit_signal);
     return 1;
 }
