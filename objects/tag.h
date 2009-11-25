@@ -39,7 +39,7 @@ int tags_get_first_selected_index(void);
 void tag_ewindow(lua_State *, int, int);
 void untag_ewindow(lua_State *, int, int);
 bool ewindow_is_tagged(ewindow_t *, tag_t *);
-void tag_view_only_byindex(int);
+void tag_view_only_byindex(lua_State *, int);
 
 ARRAY_FUNCS(tag_t *, tag, DO_NOTHING)
 
