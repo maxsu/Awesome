@@ -43,7 +43,7 @@ wibox_wipe(wibox_t *wibox)
     xcb_destroy_window(_G_connection, wibox->window);
 
     /* Remove it right away */
-    wibox_array_lookup_and_remove(&globalconf.wiboxes, &(wibox_t) { .window = wibox->window });
+    wibox_array_lookup_and_remove(&_G_wiboxes, &(wibox_t) { .window = wibox->window });
     ewindow_binary_array_lookup_and_remove(&_G_ewindows, &(ewindow_t) { .window = wibox->window });
     window_array_find_and_remove(&wibox->parent->childrens, (window_t *) wibox);
 
@@ -191,7 +191,7 @@ wibox_map(wibox_t *wibox)
 wibox_t *
 wibox_getbywin(xcb_window_t win)
 {
-    wibox_t **w = wibox_array_lookup(&globalconf.wiboxes, &(wibox_t) { .window = win });
+    wibox_t **w = wibox_array_lookup(&_G_wiboxes, &(wibox_t) { .window = win });
     return w ? *w : NULL;
 }
 
@@ -279,7 +279,7 @@ wibox_draw(wibox_t *wibox)
 void
 wibox_refresh(void)
 {
-    foreach(w, globalconf.wiboxes)
+    foreach(w, _G_wiboxes)
     {
         if((*w)->need_shape_update)
             wibox_shape_update(*w);
@@ -365,7 +365,7 @@ luaA_wibox_new(lua_State *L)
     stack_window_raise(L, -1);
 
     /* Now we can insert because we have a window id */
-    wibox_array_insert(&globalconf.wiboxes, wibox);
+    wibox_array_insert(&_G_wiboxes, wibox);
     ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) wibox);
 
     /* We store the object in the registry, but without incremting refcount:

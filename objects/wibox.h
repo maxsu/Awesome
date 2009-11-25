@@ -28,7 +28,7 @@
 #include "common/luaobject.h"
 
 /** Wibox type */
-struct wibox_t
+typedef struct
 {
     EWINDOW_OBJECT_HEADER
     /** Visible */
@@ -49,11 +49,11 @@ struct wibox_t
     image_t *shape_clip;
     /** The window's content and border (shape) */
     image_t *shape_bounding;
-    /** Has wibox an attached systray **/
-    bool has_systray;
-};
+} wibox_t;
+DO_BARRAY(wibox_t *, wibox, DO_NOTHING, window_cmp)
 
-BARRAY_FUNCS(wibox_t *, wibox, DO_NOTHING, window_cmp)
+/** Wiboxes list */
+wibox_array_t _G_wiboxes;
 
 void wibox_refresh(void);
 

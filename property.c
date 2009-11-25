@@ -315,8 +315,10 @@ static int
 property_handle_xrootpmap_id(uint8_t state,
                              xcb_window_t window)
 {
-    foreach(w, globalconf.wiboxes)
-       (*w)->need_update = true;
+    /* Redraw all wiboxes.
+     * \todo only do it for non-opaque wiboxes */
+    foreach(wibox, _G_wiboxes)
+        (*wibox)->need_update = true;
 
     return 0;
 }
