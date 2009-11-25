@@ -452,16 +452,12 @@ luaA_wibox_set_bg(lua_State *L, wibox_t *wibox)
     const char *buf = luaL_checklstring(L, -1, &len);
     if(xcolor_init_reply(xcolor_init_unchecked(&wibox->ctx.bg, buf, len)))
     {
-        uint32_t mask = XCB_CW_BACK_PIXEL;
-        uint32_t values[] = { wibox->ctx.bg.pixel };
-
-        wibox->need_update = true;
-
-        if (wibox->window != XCB_NONE)
+        if(wibox->window)
             xcb_change_window_attributes(_G_connection,
                                          wibox->window,
-                                         mask,
-                                         values);
+                                         XCB_CW_BACK_PIXEL,
+                                         (uint32_t[]) { wibox->ctx.bg.pixel });
+        wibox->need_update = true;
     }
     luaA_object_emit_signal(L, -3, "property::bg", 0);
     return 0;
