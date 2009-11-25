@@ -465,7 +465,7 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
     client_t *c;
 
     if(ev->type == _NET_CURRENT_DESKTOP)
-        tag_view_only_byindex(ev->data.data32[0]);
+        tag_view_only_byindex(globalconf.L, ev->data.data32[0]);
     else if(ev->type == _NET_CLOSE_WINDOW)
     {
         if((c = client_getbywin(ev->window)))
