@@ -412,7 +412,7 @@ main(int argc, char **argv)
     xcb_prefetch_maximum_request_length(_G_connection);
 
     /* Allocate the key symbols */
-    globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
+    _G_keysyms = xcb_key_symbols_alloc(_G_connection);
     xcb_get_modifier_mapping_cookie_t xmapping_cookie =
         xcb_get_modifier_mapping_unchecked(_G_connection);
 
@@ -434,7 +434,7 @@ main(int argc, char **argv)
     for(colors_nbr = 0; colors_nbr < 2; colors_nbr++)
         xcolor_init_reply(colors_reqs[colors_nbr]);
 
-    keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
+    keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, _G_keysyms);
 
     systray_init();
     ewmh_init(globalconf.L);

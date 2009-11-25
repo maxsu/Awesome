@@ -22,7 +22,6 @@
 #define AWESOME_GLOBALCONF_H
 
 #include <lua.h>
-#include <xcb/xcb_keysyms.h>
 
 #define SN_API_NOT_YET_FROZEN
 #include <libsn/sn.h>
@@ -41,8 +40,6 @@ ARRAY_TYPE(wibox_t *, wibox)
 /** Main configuration structure */
 typedef struct
 {
-    /** Keys symbol table */
-    xcb_key_symbols_t *keysyms;
     /** Clients list */
     client_array_t clients;
     /** Lua VM state */
