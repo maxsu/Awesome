@@ -356,7 +356,8 @@ luaA_screen_module_index(lua_State *L)
                 }
 
     int screen = luaL_checknumber(L, 2) - 1;
-    luaA_checkscreen(screen);
+    if(screen < 0 || screen >= _G_screens.len) \
+        luaL_error(L, "invalid screen number: %d", screen + 1); \
     lua_pushlightuserdata(L, &_G_screens.tab[screen]);
     return 1;
 }
