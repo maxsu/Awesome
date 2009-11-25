@@ -364,7 +364,7 @@ event_handle_focusout(void *data __attribute__ ((unused)),
             window_t *window = window_getbywin(ev->event);
 
             if(window)
-                window_unfocus_update((window_t *) window);
+                window_unfocus_update(window);
           }
         /* all other events are ignored */
         default:
