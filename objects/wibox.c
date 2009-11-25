@@ -336,26 +336,27 @@ luaA_wibox_new(lua_State *L)
                       wibox->geometry.x, wibox->geometry.y,
                       wibox->geometry.width, wibox->geometry.height,
                       wibox->border_width, XCB_COPY_FROM_PARENT, s->root_visual,
-                      XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
+                      XCB_CW_BACK_PIXMAP | XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
                       | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
                       (const uint32_t [])
                       {
-                      wibox->ctx.bg.pixel,
-                      wibox->border_color.pixel,
-                      XCB_GRAVITY_NORTH_WEST,
-                      true,
-                      XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
-                      | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
-                      | XCB_EVENT_MASK_ENTER_WINDOW
-                      | XCB_EVENT_MASK_LEAVE_WINDOW
-                      | XCB_EVENT_MASK_BUTTON_PRESS
-                      | XCB_EVENT_MASK_BUTTON_RELEASE
-                      | XCB_EVENT_MASK_POINTER_MOTION
-                      | XCB_EVENT_MASK_KEY_PRESS
-                      | XCB_EVENT_MASK_KEY_RELEASE
-                      | XCB_EVENT_MASK_STRUCTURE_NOTIFY
-                      | XCB_EVENT_MASK_EXPOSURE
-                      | XCB_EVENT_MASK_PROPERTY_CHANGE
+                          XCB_BACK_PIXMAP_PARENT_RELATIVE,
+                          wibox->ctx.bg.pixel,
+                          wibox->border_color.pixel,
+                          XCB_GRAVITY_NORTH_WEST,
+                          true,
+                          XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
+                          | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
+                          | XCB_EVENT_MASK_ENTER_WINDOW
+                          | XCB_EVENT_MASK_LEAVE_WINDOW
+                          | XCB_EVENT_MASK_BUTTON_PRESS
+                          | XCB_EVENT_MASK_BUTTON_RELEASE
+                          | XCB_EVENT_MASK_POINTER_MOTION
+                          | XCB_EVENT_MASK_KEY_PRESS
+                          | XCB_EVENT_MASK_KEY_RELEASE
+                          | XCB_EVENT_MASK_STRUCTURE_NOTIFY
+                          | XCB_EVENT_MASK_EXPOSURE
+                          | XCB_EVENT_MASK_PROPERTY_CHANGE
                       });
 
     luaA_object_emit_signal(globalconf.L, 1, "property::window", 0);
