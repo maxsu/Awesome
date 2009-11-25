@@ -371,7 +371,7 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
 {
     /* Redraw all wiboxes.
      * \todo only do it for non-opaque wiboxes */
-    foreach(wibox, globalconf.wiboxes)
+    foreach(wibox, _G_wiboxes)
         (*wibox)->need_update = true;
 
     return 0;

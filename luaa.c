@@ -299,7 +299,7 @@ luaA_awesome_newindex(lua_State *L)
             font_wipe(&_G_font);
             font_init(&_G_font, newfont);
             /* refresh all wiboxes */
-            foreach(wibox, globalconf.wiboxes)
+            foreach(wibox, _G_wiboxes)
                 (*wibox)->need_update = true;
         }
         break;
