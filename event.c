@@ -624,9 +624,9 @@ event_handle_mappingnotify(void *data,
             xcb_get_modifier_mapping_unchecked(_G_connection);
 
         /* Free and then allocate the key symbols */
-        xcb_key_symbols_free(globalconf.keysyms);
-        globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
-        keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
+        xcb_key_symbols_free(_G_keysyms);
+        _G_keysyms = xcb_key_symbols_alloc(_G_connection);
+        keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, _G_keysyms);
     }
 
     return 0;

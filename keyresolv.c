@@ -884,13 +884,13 @@ keyresolv_get_keysym(xcb_keycode_t detail, uint16_t state)
      */
     if(state & modeswitchmask)
     {
-        k0 = xcb_key_symbols_get_keysym(globalconf.keysyms, detail, 4);
-        k1 = xcb_key_symbols_get_keysym(globalconf.keysyms, detail, 5);
+        k0 = xcb_key_symbols_get_keysym(_G_keysyms, detail, 4);
+        k1 = xcb_key_symbols_get_keysym(_G_keysyms, detail, 5);
     }
     else
     {
-        k0 = xcb_key_symbols_get_keysym(globalconf.keysyms, detail, 0);
-        k1 = xcb_key_symbols_get_keysym(globalconf.keysyms, detail, 1);
+        k0 = xcb_key_symbols_get_keysym(_G_keysyms, detail, 0);
+        k1 = xcb_key_symbols_get_keysym(_G_keysyms, detail, 1);
     }
 
     /* If the second column does not exists use the first one. */
@@ -953,7 +953,7 @@ keyresolv_string_to_keycode(const char *str, ssize_t len)
             xcb_keysym_t keysym = XStringToKeysym(str);
             if(!keysym && len == 1)
                 keysym = *str;
-            keycodes = xcb_key_symbols_get_keycode(globalconf.keysyms, keysym);
+            keycodes = xcb_key_symbols_get_keycode(_G_keysyms, keysym);
         }
         else
         {
