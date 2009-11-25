@@ -34,6 +34,7 @@
 #include "luaa.h"
 #include "systray.h"
 #include "spawn.h"
+#include "objects/screen.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 

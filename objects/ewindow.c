@@ -69,7 +69,7 @@ luaA_ewindow_struts(lua_State *L)
         {
             lua_pushlightuserdata(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y));
             luaA_object_emit_signal(L, -1, "property::workarea", 0);
-            lua_pop(globalconf.L, 1);
+            lua_pop(L, 1);
         }
     }
 
@@ -97,7 +97,7 @@ ewindow_set_minimized(lua_State *L, int cidx, bool s)
         {
             lua_pushlightuserdata(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y));
             luaA_object_emit_signal(L, -1, "property::workarea", 0);
-            lua_pop(globalconf.L, 1);
+            lua_pop(L, 1);
         }
         luaA_object_emit_signal(L, cidx, "property::minimized", 0);
     }
