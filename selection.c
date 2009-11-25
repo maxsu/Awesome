@@ -23,8 +23,9 @@
 
 #include "selection.h"
 #include "event.h"
+#include "awesome.h"
+#include "screen.h"
 #include "common/atoms.h"
-#include "common/xutil.h"
 
 static xcb_window_t selection_window = XCB_NONE;
 
@@ -39,15 +40,11 @@ luaA_selection_get(lua_State *L)
 {
     if(selection_window == XCB_NONE)
     {
-        xcb_screen_t *screen = globalconf.screen;
-        uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
-        uint32_t values[] = { screen->black_pixel, 1, XCB_EVENT_MASK_PROPERTY_CHANGE };
-
         selection_window = xcb_generate_id(_G_connection);
-
-        xcb_create_window(_G_connection, screen->root_depth, selection_window, screen->root,
-                          0, 0, 1, 1, 0, XCB_COPY_FROM_PARENT, screen->root_visual,
-                          mask, values);
+        xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT, selection_window, globalconf.screen->root,
+                          0, 0, 1, 1, 0, XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT,
+                          XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
+                          (uint32_t[]) { true, XCB_EVENT_MASK_PROPERTY_CHANGE });
     }
 
     xcb_convert_selection(_G_connection, selection_window,

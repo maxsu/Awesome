@@ -26,7 +26,8 @@
 #include "screen.h"
 #include "systray.h"
 #include "xwindow.h"
-#include "common/xutil.h"
+#include "screen.h"
+#include "common/atoms.h"
 
 #define SYSTEM_TRAY_REQUEST_DOCK 0 /* Begin icon docking */
 
@@ -35,14 +36,56 @@
 void
 systray_init(void)
 {
-    xcb_screen_t *xscreen = globalconf.screen;
+    xcb_client_message_event_t ev;
+    char *atom_name;
+    xcb_intern_atom_cookie_t atom_systray_q;
+    xcb_intern_atom_reply_t *atom_systray_r;
+    xcb_atom_t atom_systray;
+
+    /* Send requests */
+    if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", _G_default_screen)))
+    {
+        warn("error getting systray atom");
+        return;
+    }
+
+    atom_systray_q = xcb_intern_atom_unchecked(_G_connection, false,
+                                               a_strlen(atom_name), atom_name);
+
+    p_delete(&atom_name);
 
     globalconf.systray.window = xcb_generate_id(_G_connection);
-    xcb_create_window(_G_connection, xscreen->root_depth,
-                      globalconf.systray.window,
-                      xscreen->root,
+    xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT,
+                      globalconf.systray.window, globalconf.screen->root,
                       -1, -1, 1, 1, 0,
-                      XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
+                      XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT, 0, NULL);
+
+    /* Fill event */
+    p_clear(&ev, 1);
+    ev.response_type = XCB_CLIENT_MESSAGE;
+    ev.window = globalconf.screen->root,
+    ev.format = 32;
+    ev.type = MANAGER;
+    ev.data.data32[0] = XCB_CURRENT_TIME;
+    ev.data.data32[2] = globalconf.systray.window;
+    ev.data.data32[3] = ev.data.data32[4] = 0;
+
+    if(!(atom_systray_r = xcb_intern_atom_reply(_G_connection, atom_systray_q, NULL)))
+    {
+        warn("error getting systray atom");
+        return;
+    }
+
+    ev.data.data32[1] = atom_systray = atom_systray_r->atom;
+
+    p_delete(&atom_systray_r);
+
+    xcb_set_selection_owner(_G_connection,
+                            globalconf.systray.window,
+                            atom_systray,
+                            XCB_CURRENT_TIME);
+
+    xcb_send_event(_G_connection, false, globalconf.screen->root, 0xFFFFFF, (char *) &ev);
 }
 
 
