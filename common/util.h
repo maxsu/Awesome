@@ -35,15 +35,6 @@
 #include <alloca.h>
 #endif
 
-/** A list of possible position, not sex related */
-typedef enum
-{
-    Top = 0,
-    Bottom,
-    Right,
-    Left
-} position_t;
-
 /** \brief replace \c NULL strings with empty strings */
 #define NONULL(x)       (x ? x : "")
 
@@ -330,8 +321,6 @@ void _fatal(int, const char *, const char *, ...)
 void _warn(int, const char *, const char *, ...)
     __attribute__ ((format(printf, 3, 4)));
 
-position_t position_fromstr(const char *, ssize_t);
-const char * position_tostr(position_t);
 void a_exec(const char *);
 
 #endif
