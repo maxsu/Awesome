@@ -26,7 +26,6 @@
 #include <fcntl.h>
 
 #include "common/util.h"
-#include "common/tokenize.h"
 
 /** Print error and exit with EXIT_FAILURE code.
  */
@@ -54,44 +53,6 @@ _warn(int line, const char *fct, const char *fmt, ...)
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "\n");
-}
-
-/** Get a position type from a string.
- * \param pos The position.
- * \param len The string length, -1 if unknown.
- * \return A position.
- */
-position_t
-position_fromstr(const char *pos, ssize_t len)
-{
-    switch(a_tokenize(pos, len))
-    {
-      default:
-        return Top;
-      case A_TK_BOTTOM:
-        return Bottom;
-      case A_TK_RIGHT:
-        return Right;
-      case A_TK_LEFT:
-        return Left;
-    }
-}
-
-/** Convert a position type to a string.
- * \param p The position.
- * \return A position string.
- */
-const char *
-position_tostr(position_t p)
-{
-    switch(p)
-    {
-      case Top:      return "top";
-      case Bottom:   return "bottom";
-      case Right:    return "right";
-      case Left:     return "left";
-      default:       return NULL;
-    }
 }
 
 /** \brief safe limited strcpy.
