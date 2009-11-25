@@ -26,12 +26,10 @@
 #include "color.h"
 #include "common/array.h"
 
-typedef struct wibox_t wibox_t;
 typedef struct window_t window_t;
 typedef struct tag tag_t;
 
 ARRAY_TYPE(tag_t *, tag)
-ARRAY_TYPE(wibox_t *, wibox)
 
 /** Main configuration structure */
 typedef struct
@@ -44,7 +42,6 @@ typedef struct
         xcolor_t fg, bg;
     } colors;
     /** Wiboxes */
-    wibox_array_t wiboxes;
 } awesome_t;
 
 extern awesome_t globalconf;
