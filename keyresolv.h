@@ -23,6 +23,7 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
+#include <stdbool.h>
 
 xcb_keysym_t keyresolv_get_keysym(xcb_keycode_t, uint16_t);
 bool keyresolv_keysym_to_string(xcb_keysym_t, char *, ssize_t);

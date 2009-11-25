@@ -26,8 +26,8 @@
 /* XStringToKeysym() */
 #include <X11/Xlib.h>
 
-#include "globalconf.h"
 #include "keyresolv.h"
+#include "common/util.h"
 
 static uint16_t numlockmask;
 static uint16_t shiftlockmask;

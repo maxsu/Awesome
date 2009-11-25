@@ -22,7 +22,6 @@
 #include <xcb/xcb_atom.h>
 
 #include "awesome.h"
-#include "globalconf.h"
 #include "xwindow.h"
 #include "common/atoms.h"
 
