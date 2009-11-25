@@ -516,7 +516,6 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
-static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, transient_for, luaA_object_push)
 LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, (lua_class_t *) &client_class, client_t, transient_for)
 
 static bool

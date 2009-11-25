@@ -22,7 +22,6 @@
 #include <xcb/xcb_atom.h>
 
 #include "awesome.h"
-#include "globalconf.h"
 #include "xwindow.h"
 #include "common/atoms.h"
 
@@ -161,6 +160,7 @@ xwindow_set_opacity(xcb_window_t win, double opacity)
 /** Send WM_TAKE_FOCUS client message to window
  * \param win destination window
  */
+#include "globalconf.h"
 void
 xwindow_takefocus(xcb_window_t win)
 {

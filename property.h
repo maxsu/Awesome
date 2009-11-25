@@ -23,6 +23,7 @@
 
 #include "globalconf.h"
 #include "objects/client.h"
+#include "objects/window.h"
 
 #define PROPERTY(funcname) \
     xcb_get_property_cookie_t property_get_##funcname(client_t *c); \

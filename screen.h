@@ -23,6 +23,7 @@
 
 #include "area.h"
 #include "objects/window.h"
+#include "objects/tag.h"
 
 typedef struct screen_output_t screen_output_t;
 ARRAY_TYPE(screen_output_t, screen_output)
