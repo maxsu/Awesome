@@ -32,11 +32,9 @@
 #include <xcb/xinerama.h>
 #include <xcb/xtest.h>
 
-#include "awesome.h"
 #include "keyresolv.h"
 #include "font.h"
 #include "spawn.h"
-#include "objects/client.h"
 #include "xwindow.h"
 #include "ewmh.h"
 #include "dbus.h"
@@ -44,11 +42,7 @@
 #include "event.h"
 #include "property.h"
 #include "screen.h"
-#include "luaa.h"
-#include "screen.h"
 #include "common/version.h"
-#include "common/atoms.h"
-#include "common/xcursor.h"
 #include "common/xutil.h"
 #include "common/backtrace.h"
 
