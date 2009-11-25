@@ -311,6 +311,9 @@ static int
 property_handle_xrootpmap_id(uint8_t state,
                              xcb_window_t window)
 {
+    /* rebases are evil! */
+    _G_xrootpmap_id = XCB_NONE;
+
     /* Redraw all wiboxes.
      * \todo only do it for non-opaque wiboxes */
     foreach(wibox, _G_wiboxes)

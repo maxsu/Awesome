@@ -206,25 +206,16 @@ wibox_render(wibox_t *wibox)
 
     if(bg.alpha != 0xff)
     {
-        int x = wibox->geometry.x + wibox->border_width,
-            y = wibox->geometry.y + wibox->border_width;
-        char *data;
-        xcb_pixmap_t rootpix;
-        xcb_get_property_cookie_t prop_c = xcb_get_property_unchecked(_G_connection, false, globalconf.screen->root, _XROOTPMAP_ID,
-                                                                      PIXMAP, 0, 1);
-        xcb_get_property_reply_t *prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL);
-        if(prop_r && prop_r->value_len
-           && (data = xcb_get_property_value(prop_r))
-           && (rootpix = *(xcb_pixmap_t *) data))
-            xcb_copy_area(_G_connection, rootpix,
+        if(_G_xrootpmap_id)
+            xcb_copy_area(_G_connection, _G_xrootpmap_id,
                           wibox->ctx.pixmap, globalconf.gc,
-                          x, y,
+                          wibox->geometry.x + wibox->border_width,
+                          wibox->geometry.y + wibox->border_width,
                           0, 0,
                           wibox->geometry.width, wibox->geometry.height);
         else
             /* no background :-( draw background color without alpha */
             bg.alpha = 0xff;
-        p_delete(&prop_r);
     }
 
     /* draw background image */
