@@ -344,8 +344,8 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
 
                 if(!type || len != 1)
                 {
-                    luaA_warn(globalconf.L,
-                              "your D-Bus signal handling method returned bad data");
+                    luaL_error(globalconf.L,
+                               "your D-Bus signal handling method returned bad data");
                     break;
                 }
 
