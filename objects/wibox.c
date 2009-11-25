@@ -226,9 +226,8 @@ wibox_render(wibox_t *wibox)
         }
     }
 
-    /* draw background image, only if the background color is not opaque */
-    if(wibox->bg_image && wibox->ctx.bg.alpha != 0xffff)
-        draw_image(&wibox->ctx, 0, 0, 1.0, wibox->bg_image);
+    /* draw background image */
+    draw_image(&wibox->ctx, 0, 0, 1.0, wibox->bg_image);
 
     /* draw background color */
     color_t col;
