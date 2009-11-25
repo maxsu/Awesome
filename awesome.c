@@ -445,7 +445,7 @@ main(int argc, char **argv)
     xutil_error_handler_catch_all_set(&_G_evenths, xerror, NULL);
 
     /* Allocate the key symbols */
-    globalconf.keysyms = xcb_key_symbols_alloc(_G_connection);
+    _G_keysyms = xcb_key_symbols_alloc(_G_connection);
     xcb_get_modifier_mapping_cookie_t xmapping_cookie =
         xcb_get_modifier_mapping_unchecked(_G_connection);
 
@@ -467,7 +467,7 @@ main(int argc, char **argv)
     for(colors_nbr = 0; colors_nbr < 2; colors_nbr++)
         xcolor_init_reply(colors_reqs[colors_nbr]);
 
-    keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
+    keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, _G_keysyms);
 
     /* select for events on root window */
     xcb_change_window_attributes(_G_connection, _G_root->window,
