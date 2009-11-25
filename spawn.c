@@ -68,22 +68,12 @@ spawn_monitor_timeout(struct ev_loop *loop, ev_timer *w, int revents)
 {
     if(spawn_sequence_remove(w->data))
     {
-         signal_t *sig = signal_array_getbyid(&global_signals,
-                                              a_strhash((const unsigned char *) "spawn::timeout"));
-         if(sig)
-         {
-             /* send a timeout signal */
-             lua_createtable(globalconf.L, 0, 2);
-             lua_pushstring(globalconf.L, sn_startup_sequence_get_id(w->data));
-             lua_setfield(globalconf.L, -2, "id");
-             foreach(func, sig->sigfuncs)
-             {
-                 lua_pushvalue(globalconf.L, -1);
-                 luaA_object_push(globalconf.L, (void *) *func);
-                 luaA_dofunction(globalconf.L, 1, 0);
-             }
-             lua_pop(globalconf.L, 1);
-         }
+        /* build argument */
+        lua_createtable(globalconf.L, 0, 2);
+        lua_pushstring(globalconf.L, sn_startup_sequence_get_id(w->data));
+        lua_setfield(globalconf.L, -2, "id");
+        /* send a timeout signal */
+        signal_object_emit(globalconf.L, &global_signals, "spawn::timeout", 1);
     }
     sn_startup_sequence_unref(w->data);
     p_delete(&w);
@@ -176,20 +166,7 @@ spawn_monitor_event(SnMonitorEvent *event, void *data)
         break;
     }
 
-    /* send the signal */
-    signal_t *sig = signal_array_getbyid(&global_signals,
-                                         a_strhash((const unsigned char *) event_type_str));
-
-    if(sig)
-    {
-        foreach(func, sig->sigfuncs)
-        {
-            lua_pushvalue(globalconf.L, -1);
-            luaA_object_push(globalconf.L, (void *) *func);
-            luaA_dofunction(globalconf.L, 1, 0);
-        }
-        lua_pop(globalconf.L, 1);
-    }
+    signal_object_emit(globalconf.L, &global_signals, event_type_str, 1);
 }
 
 /** Tell the spawn module that an app has been started.
