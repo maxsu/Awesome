@@ -21,7 +21,7 @@
 #ifndef AWESOME_EWMH_H
 #define AWESOME_EWMH_H
 
-#include "globalconf.h"
+#include "objects/client.h"
 
 void ewmh_init(lua_State *L);
 int ewmh_process_client_message(xcb_client_message_event_t *);

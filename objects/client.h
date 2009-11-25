@@ -60,7 +60,8 @@ typedef enum
     WINDOW_TYPE_DND
 } window_type_t;
 
-/** client_t type */
+typedef struct client_t client_t;
+/** Client type */
 struct client_t
 {
     EWINDOW_OBJECT_HEADER
@@ -90,12 +91,14 @@ struct client_t
     client_t *transient_for;
 };
 
-BARRAY_FUNCS(client_t *, client, DO_NOTHING, window_cmp)
+DO_BARRAY(client_t *, client, DO_NOTHING, window_cmp)
 
 /** Client class */
 lua_interface_window_t client_class;
-
 LUA_OBJECT_FUNCS((lua_class_t *) &client_class, client_t, client)
+
+/** Clients list */
+client_array_t _G_clients;
 
 client_t * client_getbywin(xcb_window_t);
 client_t * client_getbyframewin(xcb_window_t);

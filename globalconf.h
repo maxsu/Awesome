@@ -30,18 +30,14 @@
 #include "common/array.h"
 
 typedef struct wibox_t wibox_t;
-typedef struct client_t client_t;
 typedef struct tag tag_t;
 
 ARRAY_TYPE(tag_t *, tag)
-ARRAY_TYPE(client_t *, client)
 ARRAY_TYPE(wibox_t *, wibox)
 
 /** Main configuration structure */
 typedef struct
 {
-    /** Clients list */
-    client_array_t clients;
     /** Lua VM state */
     lua_State *L;
     /** Default colors */

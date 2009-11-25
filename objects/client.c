@@ -123,7 +123,7 @@ client_set_class_instance(lua_State *L, int cidx, const char *class, const char 
 client_t *
 client_getbywin(xcb_window_t w)
 {
-    client_t **c = client_array_lookup(&globalconf.clients, &(client_t) { .window = w });
+    client_t **c = client_array_lookup(&_G_clients, &(client_t) { .window = w });
     return c ? *c : NULL;
 }
 
@@ -134,9 +134,7 @@ client_getbywin(xcb_window_t w)
 client_t *
 client_getbyframewin(xcb_window_t w)
 {
-    foreach(c, globalconf.clients)
-        if((*c)->frame_window == w)
-            return *c;
+#warning :(
 
     return NULL;
 }
@@ -284,7 +282,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
 
     /* Duplicate client and push it in client list */
     lua_pushvalue(globalconf.L, -1);
-    client_array_insert(&globalconf.clients, luaA_object_ref(globalconf.L, -1));
+    client_array_insert(&_G_clients, luaA_object_ref(globalconf.L, -1));
     ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) c);
 
     /* Store initial geometry and emits signals so we inform that geometry have
@@ -341,7 +339,7 @@ void
 client_unmanage(client_t *c)
 {
     /* remove client from global list and everywhere else */
-    client_array_lookup_and_remove(&globalconf.clients, &(client_t) { .window = c->window });
+    client_array_lookup_and_remove(&_G_clients, &(client_t) { .window = c->window });
     ewindow_binary_array_lookup_and_remove(&_G_ewindows, &(ewindow_t) { .window = c->window });
 
     /* Tag and window reference each other so there are tight forever.
@@ -432,9 +430,9 @@ luaA_client_get(lua_State *L)
 {
     int i = 1;
 
-    lua_createtable(L, globalconf.clients.len, 0);
+    lua_createtable(L, _G_clients.len, 0);
 
-    foreach(c, globalconf.clients)
+    foreach(c, _G_clients)
     {
         luaA_object_push(L, *c);
         lua_rawseti(L, -2, i++);
