@@ -26,7 +26,6 @@
 #include "color.h"
 #include "common/array.h"
 
-typedef struct window_t window_t;
 typedef struct tag tag_t;
 
 ARRAY_TYPE(tag_t *, tag)
