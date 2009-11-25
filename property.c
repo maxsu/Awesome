@@ -18,20 +18,13 @@
  *
  */
 
-#include <xcb/xcb_atom.h>
-
 #include "awesome.h"
 #include "event.h"
 #include "property.h"
-#include "objects/client.h"
 #include "ewmh.h"
-#include "objects/wibox.h"
 #include "xwindow.h"
-#include "luaa.h"
 #include "systray.h"
-#include "common/atoms.h"
 #include "common/xutil.h"
-
 
 #define HANDLE_TEXT_PROPERTY(funcname, atom, setfunc) \
     void \
