@@ -23,7 +23,7 @@
 
 #include <lua.h>
 
-void stack_init(void);
+void stack_init(lua_State *L);
 void stack_window_raise(lua_State *L, int);
 void stack_window_lower(lua_State *L, int);
 

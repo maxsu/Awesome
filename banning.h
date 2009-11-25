@@ -21,7 +21,9 @@
 #ifndef AWESOME_BANNING_H
 #define AWESOME_BANNING_H
 
-void banning_init(void);
+#include <lua.h>
+
+void banning_init(lua_State *L);
 void banning_refresh(void);
 
 #endif
