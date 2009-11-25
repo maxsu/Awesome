@@ -19,12 +19,8 @@
  */
 
 #include "awesome.h"
-#include "ewmh.h"
-#include "screen.h"
 #include "stack.h"
-#include "objects/client.h"
-#include "objects/wibox.h"
-#include "screen.h"
+#include "objects/window.h"
 
 static void
 stack_window_remove(window_t *window)
