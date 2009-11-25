@@ -23,7 +23,6 @@
 
 #include <xcb/xcb_icccm.h>
 
-#include "globalconf.h"
 #include "area.h"
 #include "common/luaobject.h"
 
