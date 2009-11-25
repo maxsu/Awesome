@@ -885,55 +885,55 @@ window_class_setup(lua_State *L)
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      window_methods, NULL, NULL);
 
-    luaA_class_add_property(&window_class, A_TK_WINDOW,
+    luaA_class_add_property(&window_class, "window",
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_window,
                             NULL);
-    luaA_class_add_property(&window_class, A_TK_FOCUSABLE,
+    luaA_class_add_property(&window_class, "focusable",
                             (lua_class_propfunc_t) luaA_window_set_focusable,
                             (lua_class_propfunc_t) luaA_window_get_focusable,
                             (lua_class_propfunc_t) luaA_window_set_focusable);
-    luaA_class_add_property(&window_class, A_TK_CURSOR,
+    luaA_class_add_property(&window_class, "cursor",
                             (lua_class_propfunc_t) luaA_window_set_cursor,
                             (lua_class_propfunc_t) luaA_window_get_cursor,
                             (lua_class_propfunc_t) luaA_window_set_cursor);
-    luaA_class_add_property(&window_class, A_TK_PARENT,
+    luaA_class_add_property(&window_class, "parent",
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_parent,
                             NULL);
-    luaA_class_add_property(&window_class, A_TK_SIZE_HINTS,
+    luaA_class_add_property(&window_class, "size_hints",
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_size_hints,
                             NULL);
-    luaA_class_add_property(&window_class, A_TK_X,
+    luaA_class_add_property(&window_class, "x",
                             (lua_class_propfunc_t) luaA_window_set_x,
                             (lua_class_propfunc_t) luaA_window_get_x,
                             (lua_class_propfunc_t) luaA_window_set_x);
-    luaA_class_add_property(&window_class, A_TK_Y,
+    luaA_class_add_property(&window_class, "y",
                             (lua_class_propfunc_t) luaA_window_set_y,
                             (lua_class_propfunc_t) luaA_window_get_y,
                             (lua_class_propfunc_t) luaA_window_set_y);
-    luaA_class_add_property(&window_class, A_TK_WIDTH,
+    luaA_class_add_property(&window_class, "width",
                             (lua_class_propfunc_t) luaA_window_set_width,
                             (lua_class_propfunc_t) luaA_window_get_width,
                             (lua_class_propfunc_t) luaA_window_set_width);
-    luaA_class_add_property(&window_class, A_TK_HEIGHT,
+    luaA_class_add_property(&window_class, "height",
                             (lua_class_propfunc_t) luaA_window_set_height,
                             (lua_class_propfunc_t) luaA_window_get_height,
                             (lua_class_propfunc_t) luaA_window_set_height);
-    luaA_class_add_property(&window_class, A_TK_CONTENT,
+    luaA_class_add_property(&window_class, "content",
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_content,
                             NULL);
-    luaA_class_add_property(&window_class, A_TK_MOVABLE,
+    luaA_class_add_property(&window_class, "movable",
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_movable,
                             NULL);
-    luaA_class_add_property(&window_class, A_TK_RESIZABLE,
+    luaA_class_add_property(&window_class, "resizable",
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_resizable,
                             NULL);
-    luaA_class_add_property(&window_class, A_TK_LAYER,
+    luaA_class_add_property(&window_class, "layer",
                             (lua_class_propfunc_t) luaA_window_set_layer,
                             (lua_class_propfunc_t) luaA_window_get_layer,
                             (lua_class_propfunc_t) luaA_window_set_layer);
