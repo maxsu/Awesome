@@ -485,10 +485,10 @@ main(int argc, char **argv)
                                  | XCB_EVENT_MASK_KEY_RELEASE
                                  });
     systray_init();
-    ewmh_init();
+    ewmh_init(globalconf.L);
     spawn_init();
-    banning_init();
-    stack_init();
+    banning_init(globalconf.L);
+    stack_init(globalconf.L);
 
     /* Parse and run configuration file */
     if (!luaA_parserc(&xdg, confpath, true))
