@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef AWESOME_SCREEN_H
-#define AWESOME_SCREEN_H
+#ifndef AWESOME_OBJECTS_SCREEN_H
+#define AWESOME_OBJECTS_SCREEN_H
 
 #include "area.h"
 #include "objects/window.h"
@@ -27,7 +27,7 @@
 typedef struct screen_output_t screen_output_t;
 ARRAY_TYPE(screen_output_t, screen_output)
 
-struct a_screen
+typedef struct
 {
     LUA_OBJECT_HEADER
     /** Screen geometry */
@@ -40,15 +40,18 @@ struct a_screen
     bool need_lazy_banning;
     /** The screen outputs informations */
     screen_output_array_t outputs;
-};
-ARRAY_FUNCS(screen_t, screen, DO_NOTHING)
+} screen_t;
+DO_ARRAY(screen_t, screen, DO_NOTHING)
 
 void screen_emit_signal(lua_State *, screen_t *, const char *, int);
 
 void screen_class_setup(lua_State *);
-void screen_scan(void);
+void screen_scan(lua_State *);
 screen_t *screen_getbycoord(int, int);
 area_t screen_area_get(screen_t *, bool);
+
+/** All screens */
+screen_array_t _G_screens;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

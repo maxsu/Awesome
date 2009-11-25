@@ -142,7 +142,7 @@ screen_scan_randr(void)
                     p_delete(&output_info_r);
                 }
 
-                screen_array_append(&globalconf.screens, new_screen);
+                screen_array_append(&_G_screens, new_screen);
 
                 p_delete(&crtc_info_r);
             }
@@ -187,14 +187,14 @@ screen_scan_xinerama(void)
         for(int screen = 0; screen < xinerama_screen_number; screen++)
         {
             bool drop = false;
-            foreach(screen_to_test, globalconf.screens)
+            foreach(screen_to_test, _G_screens)
                 if(xsi[screen].x_org == screen_to_test->geometry.x
                    && xsi[screen].y_org == screen_to_test->geometry.y)
                     {
                         /* we already have a screen for this area, just check if
                          * it's not bigger and drop it */
                         drop = true;
-                        int i = screen_array_indexof(&globalconf.screens, screen_to_test);
+                        int i = screen_array_indexof(&_G_screens, screen_to_test);
                         screen_to_test->geometry.width =
                             MAX(xsi[screen].width, xsi[i].width);
                         screen_to_test->geometry.height =
@@ -205,7 +205,7 @@ screen_scan_xinerama(void)
                 screen_t new_screen;
                 p_clear(&new_screen, 1);
                 new_screen.geometry = screen_xsitoarea(xsi[screen]);
-                screen_array_append(&globalconf.screens, new_screen);
+                screen_array_append(&_G_screens, new_screen);
             }
         }
 
@@ -227,19 +227,19 @@ static void screen_scan_x11(void)
     s.geometry.y = 0;
     s.geometry.width = xcb_screen->width_in_pixels;
     s.geometry.height = xcb_screen->height_in_pixels;
-    screen_array_append(&globalconf.screens, s);
+    screen_array_append(&_G_screens, s);
 }
 
 /** Get screens informations and fill global configuration.
  */
 void
-screen_scan(void)
+screen_scan(lua_State *L)
 {
     if(!screen_scan_randr() && !screen_scan_xinerama())
         screen_scan_x11();
 
     /* Transforms all screen in lightuserdata */
-    foreach(screen, globalconf.screens)
+    foreach(screen, _G_screens)
         screen_make_light(globalconf.L, screen);
 
     globalconf.visual = screen_default_visual(globalconf.screen);
@@ -254,13 +254,13 @@ screen_scan(void)
 screen_t *
 screen_getbycoord(int x, int y)
 {
-    foreach(s, globalconf.screens)
+    foreach(s, _G_screens)
         if((x < 0 || (x >= s->geometry.x && x < s->geometry.x + s->geometry.width))
            && (y < 0 || (y >= s->geometry.y && y < s->geometry.y + s->geometry.height)))
             return s;
 
     /* No screen found, let's be creative. */
-    return &globalconf.screens.tab[0];
+    return &_G_screens.tab[0];
 }
 
 /** Get screens info.
@@ -331,7 +331,7 @@ luaA_screen_module_index(lua_State *L)
     const char *name;
 
     if((name = lua_tostring(L, 2)))
-        foreach(screen, globalconf.screens)
+        foreach(screen, _G_screens)
             foreach(output, screen->outputs)
                 if(!a_strcmp(output->name, name))
                 {
@@ -341,7 +341,7 @@ luaA_screen_module_index(lua_State *L)
 
     int screen = luaL_checknumber(L, 2) - 1;
     luaA_checkscreen(screen);
-    lua_pushlightuserdata(L, &globalconf.screens.tab[screen]);
+    lua_pushlightuserdata(L, &_G_screens.tab[screen]);
     return 1;
 }
 
@@ -355,14 +355,14 @@ luaA_screen_module_index(lua_State *L)
 static int
 luaA_screen_count(lua_State *L)
 {
-    lua_pushnumber(L, globalconf.screens.len);
+    lua_pushnumber(L, _G_screens.len);
     return 1;
 }
 
 static int
 luaA_screen_get_index(lua_State *L, screen_t *screen)
 {
-    lua_pushinteger(L, screen_array_indexof(&globalconf.screens, screen) + 1);
+    lua_pushinteger(L, screen_array_indexof(&_G_screens, screen) + 1);
     return 1;
 }
 

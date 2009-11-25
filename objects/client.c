@@ -231,7 +231,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     c->window = w;
     luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
     /* Store parent */
-    c->parent = globalconf.screens.tab[0].root;
+    c->parent = _G_screens.tab[0].root;
 
     c->frame_window = xcb_generate_id(_G_connection);
     xcb_create_window(_G_connection, s->root_depth, c->frame_window, s->root,

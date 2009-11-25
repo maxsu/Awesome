@@ -31,6 +31,7 @@
 #include "objects/client.h"
 #include "objects/wibox.h"
 #include "luaa.h"
+#include "screen.h"
 #include "common/atoms.h"
 #include "common/buffer.h"
 #include "common/xutil.h"
@@ -81,7 +82,7 @@ ewmh_client_update_hints(lua_State *L)
 static void
 ewmh_update_desktop_geometry(void)
 {
-    area_t geom = screen_area_get(&globalconf.screens.tab[0], false);
+    area_t geom = screen_area_get(_G_screens.tab, false);
     uint32_t sizes[] = { geom.width, geom.height };
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,

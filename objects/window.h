@@ -25,7 +25,7 @@
 
 #include "globalconf.h"
 #include "area.h"
-#include "common/luaclass.h"
+#include "common/luaobject.h"
 
 #define WINDOW_OBJECT_HEADER \
     LUA_OBJECT_HEADER \

@@ -22,6 +22,7 @@
 #define AWESOME_SYSTRAY_H
 
 #include "objects/window.h"
+#include "common/xembed.h"
 
 void systray_init(void);
 void systray_refresh(void);

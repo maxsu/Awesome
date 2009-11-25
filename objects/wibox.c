@@ -533,7 +533,7 @@ static void
 wibox_init(wibox_t *wibox)
 {
     wibox->visible = wibox->movable = wibox->resizable = true;
-    wibox->parent = globalconf.screens.tab[0].root;
+    wibox->parent = _G_screens.tab[0].root;
     wibox->ctx.fg = globalconf.colors.fg;
     wibox->ctx.bg = globalconf.colors.bg;
     wibox->geometry.width = wibox->geometry.height = 1;

@@ -41,7 +41,7 @@
 
 #define luaA_checkscreen(screen) \
     do { \
-        if(screen < 0 || screen >= globalconf.screens.len) \
+        if(screen < 0 || screen >= _G_screens.len) \
             luaL_error(L, "invalid screen number: %d", screen + 1); \
     } while(0)
 

@@ -43,6 +43,7 @@
 #include "event.h"
 #include "selection.h"
 #include "font.h"
+#include "screen.h"
 #include "common/xcursor.h"
 #include "common/xutil.h"
 #include "common/buffer.h"

@@ -21,21 +21,20 @@
 #ifndef AWESOME_GLOBALCONF_H
 #define AWESOME_GLOBALCONF_H
 
+#include <lua.h>
 #include <xcb/xcb_keysyms.h>
 
 #define SN_API_NOT_YET_FROZEN
 #include <libsn/sn.h>
 
 #include "color.h"
-#include "common/xembed.h"
+#include "common/array.h"
 
 typedef struct wibox_t wibox_t;
-typedef struct a_screen screen_t;
 typedef struct client_t client_t;
 typedef struct tag tag_t;
 
 ARRAY_TYPE(tag_t *, tag)
-ARRAY_TYPE(screen_t, screen)
 ARRAY_TYPE(client_t *, client)
 ARRAY_TYPE(wibox_t *, wibox)
 
@@ -44,12 +43,8 @@ typedef struct
 {
     /** Keys symbol table */
     xcb_key_symbols_t *keysyms;
-    /** Logical screens */
-    screen_array_t screens;
     /** Clients list */
     client_array_t clients;
-    /** Embedded windows */
-    xembed_window_array_t embedded;
     /** Lua VM state */
     lua_State *L;
     /** Default colors */

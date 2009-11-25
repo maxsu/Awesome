@@ -164,10 +164,6 @@ systray_request_handle(xcb_window_t embed_win, xembed_info_t *info)
             | XCB_EVENT_MASK_ENTER_WINDOW
     };
 
-    /* check if not already trayed */
-    if(xembed_getbywin(&globalconf.embedded, embed_win))
-        return -1;
-
     p_clear(&em_cookie, 1);
 
     if(!info)
@@ -195,8 +191,6 @@ systray_request_handle(xcb_window_t embed_win, xembed_info_t *info)
     xembed_embedded_notify(_G_connection, em.win,
                            globalconf.systray.window,
                            MIN(XEMBED_VERSION, em.info.version));
-
-    xembed_window_array_append(&globalconf.embedded, em);
 
     return 0;
 }

@@ -36,6 +36,7 @@
 #include "systray.h"
 #include "screen.h"
 #include "spawn.h"
+#include "screen.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 
@@ -43,7 +44,7 @@ static window_t *
 window_getbywin(xcb_window_t window)
 {
     if(globalconf.screen->root == window)
-        return globalconf.screens.tab[0].root;
+        return _G_screens.tab[0].root;
     return (window_t *) ewindow_getbywin(window);
 }
 
@@ -209,12 +210,6 @@ event_handle_destroynotify(xcb_destroy_notify_event_t *ev)
 
     if((c = client_getbywin(ev->window)))
         client_unmanage(c);
-    else
-        for(int i = 0; i < globalconf.embedded.len; i++)
-            if(globalconf.embedded.tab[i].win == ev->window)
-            {
-                xembed_window_array_take(&globalconf.embedded, i);
-            }
 }
 
 /** The motion notify event handler.
@@ -404,12 +399,7 @@ event_handle_maprequest(xcb_map_request_event_t *ev)
     if(wa_r->override_redirect)
         goto bailout;
 
-    if(xembed_getbywin(&globalconf.embedded, ev->window))
-    {
-        xcb_map_window(_G_connection, ev->window);
-        xembed_window_activate(_G_connection, ev->window);
-    }
-    else if((c = client_getbywin(ev->window)))
+    if((c = client_getbywin(ev->window)))
     {
         /* Check that it may be visible, but not asked to be hidden */
         if(ewindow_isvisible((ewindow_t *) c))
@@ -451,13 +441,6 @@ event_handle_unmapnotify(xcb_unmap_notify_event_t *ev)
     {
         client_unmanage(c);
     }
-    else
-        for(int i = 0; i < globalconf.embedded.len; i++)
-            if(globalconf.embedded.tab[i].win == ev->window)
-            {
-                xembed_window_array_take(&globalconf.embedded, i);
-                xcb_change_save_set(_G_connection, XCB_SET_MODE_DELETE, ev->window);
-            }
 }
 
 /** The randr screen change notify event handler.

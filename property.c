@@ -311,32 +311,6 @@ property_update_wm_protocols(client_t *c, xcb_get_property_cookie_t cookie)
     memcpy(&c->protocols, &protocols, sizeof(protocols));
 }
 
-/** The property notify event handler.
- * \param state currently unused
- * \param window The window to obtain update the property with.
- * \param name The protocol atom, currently unused.
- * \param reply (Optional) An existing reply.
- */
-static int
-property_handle_xembed_info(uint8_t state,
-                            xcb_window_t window)
-{
-    xembed_window_t *emwin = xembed_getbywin(&globalconf.embedded, window);
-
-    if(emwin)
-    {
-        xcb_get_property_cookie_t cookie =
-            xcb_get_property(_G_connection, 0, window, _XEMBED_INFO,
-                             XCB_GET_PROPERTY_TYPE_ANY, 0, 3);
-        xcb_get_property_reply_t *propr =
-            xcb_get_property_reply(_G_connection, cookie, 0);
-        xembed_property_update(_G_connection, emwin, propr);
-        p_delete(&propr);
-    }
-
-    return 0;
-}
-
 static int
 property_handle_xrootpmap_id(uint8_t state,
                              xcb_window_t window)
@@ -384,9 +358,6 @@ property_handle_propertynotify(xcb_property_notify_event_t *ev)
         handler = cb; \
     } else
 #define END return
-
-    /* Xembed stuff */
-    HANDLE(_XEMBED_INFO, property_handle_xembed_info)
 
     /* ICCCM stuff */
     HANDLE(XCB_ATOM_WM_TRANSIENT_FOR, property_handle_wm_transient_for)
