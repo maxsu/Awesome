@@ -21,7 +21,6 @@
 #include <ev.h>
 
 #include "awesome.h"
-#include "globalconf.h"
 #include "luaa.h"
 #include "timer.h"
 #include "common/luaobject.h"
@@ -33,15 +32,28 @@ typedef struct
     struct ev_timer timer;
 } atimer_t;
 
+typedef struct
+{
+    lua_State *L;
+    atimer_t *timer;
+} timer_callback_data_t;
+
 static lua_class_t timer_class;
 LUA_OBJECT_FUNCS(&timer_class, atimer_t, timer)
 
 static void
+timer_wipe(atimer_t *timer)
+{
+    p_delete(&timer->timer.data);
+}
+
+static void
 ev_timer_emit_signal(struct ev_loop *loop, struct ev_timer *w, int revents)
 {
-    luaA_object_push(globalconf.L, w->data);
-    luaA_object_emit_signal(globalconf.L, -1, "timeout", 0);
-    lua_pop(globalconf.L, 1);
+    timer_callback_data_t *data = w->data;
+    luaA_object_push(data->L, data->timer);
+    luaA_object_emit_signal(data->L, -1, "timeout", 0);
+    lua_pop(data->L, 1);
 }
 
 static int
@@ -49,7 +61,10 @@ luaA_timer_new(lua_State *L)
 {
     luaA_class_new(L, &timer_class);
     atimer_t *timer = luaA_checkudata(L, -1, &timer_class);
-    timer->timer.data = timer;
+    timer_callback_data_t *data = p_new(timer_callback_data_t, 1);
+    data->L = L;
+    data->timer = timer;
+    timer->timer.data = data;
     ev_set_cb(&timer->timer, ev_timer_emit_signal);
     return 1;
 }
@@ -120,7 +135,7 @@ timer_class_setup(lua_State *L)
     };
 
     luaA_class_setup(L, &timer_class, "timer", NULL, sizeof(atimer_t),
-                     NULL, NULL, NULL,
+                     NULL, (lua_class_collector_t) timer_wipe, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      timer_methods, timer_module_meta, NULL);
     luaA_class_add_property(&timer_class, A_TK_TIMEOUT,
