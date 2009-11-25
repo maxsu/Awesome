@@ -108,7 +108,7 @@ tag_ewindow(lua_State *L, int widx, int tidx)
     lua_pushvalue(L, tidx);
     tag_array_append(&ewindow->tags, luaA_object_ref_item(L, widx, -1));
 
-    tag_ewindow_emit_signal(globalconf.L, tidx, widx, "tagged");
+    tag_ewindow_emit_signal(L, tidx, widx, "tagged");
 }
 
 /** Untag a window with specified tag.
@@ -159,29 +159,31 @@ tags_get_first_selected_index(void)
 }
 
 /** Set a tag to be the only one viewed.
+ * \param L The Lua VM state.
  * \param target the tag to see
  */
 static void
-tag_view_only(tag_t *target)
+tag_view_only(lua_State *L, tag_t *target)
 {
     if(target)
         foreach(tag, _G_tags)
         {
-            luaA_object_push(globalconf.L, *tag);
-            tag_set_selected(globalconf.L, -1, *tag == target);
-            lua_pop(globalconf.L, 1);
+            luaA_object_push(L, *tag);
+            tag_set_selected(L, -1, *tag == target);
+            lua_pop(L, 1);
         }
 }
 
 /** View only a tag, selected by its index.
+ * \param L The Lua VM state.
  * \param dindex The index.
  */
 void
-tag_view_only_byindex(int dindex)
+tag_view_only_byindex(lua_State *L, int dindex)
 {
     if(dindex < 0 || dindex >= _G_tags.len)
         return;
-    tag_view_only(_G_tags.tab[dindex]);
+    tag_view_only(L, _G_tags.tab[dindex]);
 }
 
 /** Create a new tag.
