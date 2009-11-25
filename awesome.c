@@ -39,6 +39,7 @@
 #include "event.h"
 #include "property.h"
 #include "luaa.h"
+#include "objects/screen.h"
 #include "common/version.h"
 #include "common/atoms.h"
 #include "common/xcursor.h"
@@ -452,7 +453,7 @@ main(int argc, char **argv)
     atoms_init(_G_connection);
 
     /* init screens information */
-    screen_scan();
+    screen_scan(globalconf.L);
 
     /* init default font and colors */
     colors_reqs[0] = xcolor_init_unchecked(&globalconf.colors.fg,

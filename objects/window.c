@@ -29,6 +29,7 @@
 #include "keyresolv.h"
 #include "objects/window.h"
 #include "objects/tag.h"
+#include "objects/screen.h"
 #include "common/luaobject.h"
 #include "common/xutil.h"
 #include "common/xcursor.h"

@@ -24,9 +24,8 @@
 #include <xcb/xcb_icccm.h>
 
 #include "globalconf.h"
-#include "screen.h"
 #include "area.h"
-#include "common/luaclass.h"
+#include "common/luaobject.h"
 
 #define WINDOW_OBJECT_HEADER \
     LUA_OBJECT_HEADER \
