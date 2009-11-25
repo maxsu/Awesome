@@ -24,18 +24,13 @@
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_event.h>
 
-#include "awesome.h"
 #include "event.h"
-#include "objects/tag.h"
 #include "xwindow.h"
 #include "ewmh.h"
-#include "objects/client.h"
 #include "keyresolv.h"
-#include "luaa.h"
 #include "systray.h"
 #include "spawn.h"
 #include "objects/screen.h"
-#include "common/atoms.h"
 #include "common/xutil.h"
 
 static window_t *
