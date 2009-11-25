@@ -240,7 +240,7 @@ screen_scan(lua_State *L)
 
     /* Transforms all screen in lightuserdata */
     foreach(screen, _G_screens)
-        screen_make_light(globalconf.L, screen);
+        screen_make_light(L, screen);
 
     globalconf.visual = screen_default_visual(globalconf.screen);
 }
