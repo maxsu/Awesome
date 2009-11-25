@@ -46,7 +46,7 @@ window_wipe(window_t *window)
 bool
 window_isvisible(lua_State *L, int idx)
 {
-    window_t *window = luaA_checkudata(L, idx, (lua_class_t *) &window_class);
+    window_t *window = luaA_checkudata(L, idx, &window_class);
     lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(L, idx);
     /* Go check for parent classes, but stop on window_class since higher
      * classes would not implement the isvisible method :-) */
@@ -128,7 +128,7 @@ window_unfocus_update(window_t *window)
 void
 window_focus(lua_State *L, int idx)
 {
-    window_t *window = luaA_checkudata(L, idx, (lua_class_t *) &window_class);
+    window_t *window = luaA_checkudata(L, idx, &window_class);
 
     if(window->window)
     {
