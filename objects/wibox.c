@@ -730,53 +730,53 @@ wibox_class_setup(lua_State *L)
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      wibox_methods, wibox_module_meta, NULL);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_VISIBLE,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "visible",
                             (lua_class_propfunc_t) luaA_wibox_set_visible,
                             (lua_class_propfunc_t) luaA_wibox_get_visible,
                             (lua_class_propfunc_t) luaA_wibox_set_visible);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_FG,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "fg",
                             (lua_class_propfunc_t) luaA_wibox_set_fg,
                             (lua_class_propfunc_t) luaA_wibox_get_fg,
                             (lua_class_propfunc_t) luaA_wibox_set_fg);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_BG,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "bg",
                             (lua_class_propfunc_t) luaA_wibox_set_bg,
                             (lua_class_propfunc_t) luaA_wibox_get_bg,
                             (lua_class_propfunc_t) luaA_wibox_set_bg);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_BG_IMAGE,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "bg_image",
                             (lua_class_propfunc_t) luaA_wibox_set_bg_image,
                             (lua_class_propfunc_t) luaA_wibox_get_bg_image,
                             (lua_class_propfunc_t) luaA_wibox_set_bg_image);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SHAPE_BOUNDING,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "shape_bounding",
                             (lua_class_propfunc_t) luaA_wibox_set_shape_bounding,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_bounding,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_bounding);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_SHAPE_CLIP,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "shape_clip",
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_clip,
                             (lua_class_propfunc_t) luaA_wibox_set_shape_clip);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_TEXT,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "text",
                             (lua_class_propfunc_t) luaA_wibox_set_text,
                             (lua_class_propfunc_t) luaA_wibox_get_text,
                             (lua_class_propfunc_t) luaA_wibox_set_text);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ELLIPSIZE,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "ellipsize",
                             (lua_class_propfunc_t) luaA_wibox_set_ellipsize,
                             (lua_class_propfunc_t) luaA_wibox_get_ellipsize,
                             (lua_class_propfunc_t) luaA_wibox_set_ellipsize);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_WRAP,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "wrap",
                             (lua_class_propfunc_t) luaA_wibox_set_wrap,
                             (lua_class_propfunc_t) luaA_wibox_get_wrap,
                             (lua_class_propfunc_t) luaA_wibox_set_wrap);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_ALIGN,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "align",
                             (lua_class_propfunc_t) luaA_wibox_set_align,
                             (lua_class_propfunc_t) luaA_wibox_get_align,
                             (lua_class_propfunc_t) luaA_wibox_set_align);
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_VALIGN,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "valign",
                             (lua_class_propfunc_t) luaA_wibox_set_valign,
                             (lua_class_propfunc_t) luaA_wibox_get_valign,
                             (lua_class_propfunc_t) luaA_wibox_set_valign);
     /* Properties overwritten */
     /* Parent can be set on wiboxes */
-    luaA_class_add_property((lua_class_t *) &wibox_class, A_TK_PARENT,
+    luaA_class_add_property((lua_class_t *) &wibox_class, "parent",
                             (lua_class_propfunc_t) luaA_wibox_set_parent,
                             (lua_class_propfunc_t) luaA_window_get_parent,
                             (lua_class_propfunc_t) luaA_wibox_set_parent);
