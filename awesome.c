@@ -436,10 +436,10 @@ main(int argc, char **argv)
     keyresolv_lock_mask_refresh(_G_connection, xmapping_cookie, globalconf.keysyms);
 
     systray_init();
-    ewmh_init();
+    ewmh_init(globalconf.L);
     spawn_init();
-    banning_init();
-    stack_init();
+    banning_init(globalconf.L);
+    stack_init(globalconf.L);
 
     /* Parse and run configuration file */
     if (!luaA_parserc(&xdg, confpath, true))

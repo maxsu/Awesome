@@ -112,12 +112,12 @@ luaA_stack_window_remove(lua_State *L)
 }
 
 void
-stack_init(void)
+stack_init(lua_State *L)
 {
-    luaA_class_connect_signal(globalconf.L, &window_class, "property::layer", stack_refresh);
-    luaA_class_connect_signal(globalconf.L, &window_class, "raise", stack_refresh);
-    luaA_class_connect_signal(globalconf.L, &window_class, "lower", stack_refresh);
-    luaA_class_connect_signal(globalconf.L, &window_class, "property::window", luaA_stack_window_remove);
+    luaA_class_connect_signal(L, &window_class, "property::layer", stack_refresh);
+    luaA_class_connect_signal(L, &window_class, "raise", stack_refresh);
+    luaA_class_connect_signal(L, &window_class, "lower", stack_refresh);
+    luaA_class_connect_signal(L, &window_class, "property::window", luaA_stack_window_remove);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
