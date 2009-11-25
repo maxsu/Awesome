@@ -390,18 +390,21 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
 {
     window_t *new_parent = luaA_checkudata(L, 3, &window_class);
 
-    /* Remove from parent */
-    window_array_find_and_remove(&wibox->parent->childrens, (window_t *) wibox);
-    luaA_object_unref_item(L, 1, wibox->parent);
+    if(new_parent != wibox->parent)
+    {
+        /* Remove from parent */
+        window_array_find_and_remove(&wibox->parent->childrens, (window_t *) wibox);
+        luaA_object_unref_item(L, 1, wibox->parent);
 
-    xcb_reparent_window(_G_connection, wibox->window, new_parent->window,
-                        wibox->geometry.x, wibox->geometry.y);
+        xcb_reparent_window(_G_connection, wibox->window, new_parent->window,
+                            wibox->geometry.x, wibox->geometry.y);
 
-    wibox->parent = luaA_object_ref_item(L, 1, 3);
-    window_array_append(&new_parent->childrens, (window_t *) wibox);
-    stack_window_raise(L, 1);
+        wibox->parent = luaA_object_ref_item(L, 1, 3);
+        window_array_append(&new_parent->childrens, (window_t *) wibox);
+        stack_window_raise(L, 1);
 
-    luaA_object_emit_signal(globalconf.L, 1, "property::parent", 0);
+        luaA_object_emit_signal(globalconf.L, 1, "property::parent", 0);
+    }
 
     return 0;
 }
