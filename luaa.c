@@ -30,12 +30,9 @@
 
 #include <basedir_fs.h>
 
-#include "awesome.h"
 #include "config.h"
 #include "objects/timer.h"
 #include "awesome-version-internal.h"
-#include "ewmh.h"
-#include "luaa.h"
 #include "spawn.h"
 #include "objects/tag.h"
 #include "objects/client.h"
@@ -44,9 +41,6 @@
 #include "selection.h"
 #include "font.h"
 #include "screen.h"
-#include "common/xcursor.h"
-#include "common/xutil.h"
-#include "common/buffer.h"
 #include "common/backtrace.h"
 
 #ifdef WITH_DBUS
