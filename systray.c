@@ -25,7 +25,8 @@
 #include "awesome.h"
 #include "systray.h"
 #include "xwindow.h"
-#include "common/xutil.h"
+#include "objects/screen.h"
+#include "common/atoms.h"
 
 #define SYSTEM_TRAY_REQUEST_DOCK 0 /* Begin icon docking */
 
@@ -35,7 +36,6 @@ void
 systray_init(void)
 {
     xcb_client_message_event_t ev;
-    xcb_screen_t *xscreen = xutil_screen_get(_G_connection, _G_default_screen);
     char *atom_name;
     xcb_intern_atom_cookie_t atom_systray_q;
     xcb_intern_atom_reply_t *atom_systray_r;
@@ -54,15 +54,15 @@ systray_init(void)
     p_delete(&atom_name);
 
     _G_systray.window = xcb_generate_id(_G_connection);
-    xcb_create_window(_G_connection, xscreen->root_depth,
-                      _G_systray.window, xscreen->root,
+    xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT,
+                      _G_systray.window, _G_root->window,
                       -1, -1, 1, 1, 0,
-                      XCB_COPY_FROM_PARENT, xscreen->root_visual, 0, NULL);
+                      XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT, 0, NULL);
 
     /* Fill event */
     p_clear(&ev, 1);
     ev.response_type = XCB_CLIENT_MESSAGE;
-    ev.window = xscreen->root;
+    ev.window = _G_root->window,
     ev.format = 32;
     ev.type = MANAGER;
     ev.data.data32[0] = XCB_CURRENT_TIME;
@@ -84,7 +84,7 @@ systray_init(void)
                             atom_systray,
                             XCB_CURRENT_TIME);
 
-    xcb_send_event(_G_connection, false, xscreen->root, 0xFFFFFF, (char *) &ev);
+    xcb_send_event(_G_connection, false, _G_root->window, 0xFFFFFF, (char *) &ev);
 }
 
 /** Remove systray information in X.

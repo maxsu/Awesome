@@ -209,8 +209,7 @@ wibox_render(wibox_t *wibox)
         char *data;
         xcb_pixmap_t rootpix;
         xcb_get_property_cookie_t prop_c;
-        xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
-        prop_c = xcb_get_property_unchecked(_G_connection, false, s->root, _XROOTPMAP_ID,
+        prop_c = xcb_get_property_unchecked(_G_connection, false, _G_root->window, _XROOTPMAP_ID,
                                             PIXMAP, 0, 1);
         if((prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL)))
         {
@@ -329,14 +328,12 @@ luaA_wibox_new(lua_State *L)
 
     wibox_t *wibox = lua_touserdata(L, -1);
 
-    xcb_screen_t *s = xutil_screen_get(_G_connection, _G_default_screen);
-
     /* Create window */
     wibox->window = xcb_generate_id(_G_connection);
-    xcb_create_window(_G_connection, s->root_depth, wibox->window, wibox->parent->window,
+    xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT, wibox->window, wibox->parent->window,
                       wibox->geometry.x, wibox->geometry.y,
                       wibox->geometry.width, wibox->geometry.height,
-                      wibox->border_width, XCB_COPY_FROM_PARENT, s->root_visual,
+                      wibox->border_width, XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT,
                       XCB_CW_BACK_PIXMAP | XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
                       | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
                       (const uint32_t [])
