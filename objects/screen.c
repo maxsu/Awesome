@@ -85,6 +85,8 @@ protocol_screen_scan(void)
     _G_root = luaA_object_ref(globalconf.L, -1);
     _G_root->focusable = true;
     _G_root->window = xcb_screen->root;
+    _G_root->geometry.width = xcb_screen->width_in_pixels;
+    _G_root->geometry.height = xcb_screen->height_in_pixels;
 
     /* The default GC is just a newly created associated to the root window */
     _G_gc = xcb_generate_id(_G_connection);
