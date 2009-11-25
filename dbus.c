@@ -706,7 +706,7 @@ luaA_dbus_connect_signal(lua_State *L)
     signal_t *sig = signal_array_getbyid(&dbus_signals,
                                          a_strhash((const unsigned char *) name));
     if(sig)
-        luaA_warn(L, "cannot add signal %s on D-Bus, already existing", name);
+        luaL_error(L, "cannot add signal %s on D-Bus, already existing", name);
     else
         signal_add(&dbus_signals, name, luaA_object_ref(L, 2));
     return 0;
