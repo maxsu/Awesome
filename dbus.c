@@ -410,6 +410,8 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
             int n = lua_gettop(globalconf.L) - nargs;
 
             luaA_object_push(globalconf.L, (void *) func);
+            /* Move function before args */
+            lua_insert(globalconf.L, - nargs - 1);
             luaA_dofunction(globalconf.L, nargs, LUA_MULTRET);
 
             n -= lua_gettop(globalconf.L);
