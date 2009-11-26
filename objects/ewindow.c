@@ -510,7 +510,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_horizontal, lua_
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, maximized_vertical, lua_pushboolean)
 
 static void
-ewindow_init(ewindow_t *ewindow)
+ewindow_init(lua_State *L, ewindow_t *ewindow)
 {
     ewindow->opacity = -1;
 }
