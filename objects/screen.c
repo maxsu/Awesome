@@ -78,6 +78,13 @@ static void
 protocol_screen_scan(lua_State *L)
 {
     xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, _G_default_screen);
+
+    /* Prepare request to get root pixmap */
+    xcb_get_property_cookie_t prop_c =
+         xcb_get_property_unchecked(_G_connection, false, xcb_screen->root,
+                                    _XROOTPMAP_ID, PIXMAP, 0, 1);
+
+    /* Set global visual */
     _G_visual = screen_default_visual(xcb_screen);
 
     /* Create root window */
@@ -93,6 +100,12 @@ protocol_screen_scan(lua_State *L)
     xcb_create_gc(_G_connection, _G_gc, xcb_screen->root,
                   XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
                   (const uint32_t[]) { xcb_screen->black_pixel, xcb_screen->white_pixel });
+
+    /* Set root pixmap if any */
+    xcb_get_property_reply_t *prop_r = xcb_get_property_reply(_G_connection, prop_c, NULL);
+    if(prop_r && prop_r->value_len)
+        _G_root->pixmap = *((xcb_pixmap_t *) xcb_get_property_value(prop_r));
+    p_delete(&prop_r);
 }
 
 /** Scan screen information using XRandR protocol.
