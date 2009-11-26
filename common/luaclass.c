@@ -547,6 +547,17 @@ luaA_object_new(lua_State *L, lua_class_t *lua_class)
     /* don't use p_clear, the size it's different of sizeof(lua_object_t) */
     memset(object, 0, lua_class->object_size);
 
+    /* Set object type */
+    luaA_settype(L, lua_class);
+    /* Create a env table */
+    lua_newtable(L);
+    /* Create a metatable for the env table */
+    lua_newtable(L);
+    /* Set metatable on en table */
+    lua_setmetatable(L, -2);
+    /* Set env table on object */
+    lua_setfenv(L, -2);
+
     /* Get the top level class in the hierarchy */
     lua_class_t *top_class;
     for(top_class = lua_class; top_class->parent; top_class = top_class->parent);
@@ -559,16 +570,6 @@ luaA_object_new(lua_State *L, lua_class_t *lua_class)
     if(lua_class->initializer)
         lua_class->initializer(L, object);
 
-    /* Set object type */
-    luaA_settype(L, lua_class);
-    /* Create a env table */
-    lua_newtable(L);
-    /* Create a metatable for the env table */
-    lua_newtable(L);
-    /* Set metatable on en table */
-    lua_setmetatable(L, -2);
-    /* Set env table on object */
-    lua_setfenv(L, -2);
     /* Emit class signal */
     lua_pushvalue(L, -1);
     luaA_class_emit_signal(L, lua_class, "new", 1);
