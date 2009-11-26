@@ -32,6 +32,8 @@
     xcb_window_t window; \
     /** The frame window, might be XCB_NONE */ \
     xcb_window_t frame_window; \
+    /** The window pixmap */ \
+    xcb_window_t pixmap; \
     /** Cursor */ \
     char *cursor; \
     /** True if the window is banned from the view */ \

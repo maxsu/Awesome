@@ -41,7 +41,6 @@ typedef enum
 
 typedef struct
 {
-    xcb_pixmap_t pixmap;
     cairo_t *cr;
     cairo_surface_t *surface;
     PangoLayout *layout;
@@ -49,7 +48,7 @@ typedef struct
     xcolor_t bg;
 } draw_context_t;
 
-void draw_context_init(draw_context_t *, int, int,
+void draw_context_init(draw_context_t *, xcb_pixmap_t, int, int,
                        const xcolor_t *, const xcolor_t *);
 void draw_context_wipe(draw_context_t *);
 

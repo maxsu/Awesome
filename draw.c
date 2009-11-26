@@ -118,7 +118,7 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
 
 /** Initialize a new draw context.
  * \param d The draw context to initialize.
- * \param phys_screen Physical screen id.
+ * \param pixmap The pixmap to draw onto.
  * \param width Width.
  * \param height Height.
  * \param fg Foreground color.
@@ -127,18 +127,12 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
 #include "awesome.h"
 void
 draw_context_init(draw_context_t *d,
+                  xcb_pixmap_t pixmap,
                   int width, int height,
                   const xcolor_t *fg, const xcolor_t *bg)
 {
-    /* Create a pixmap. */
-    xcb_screen_t *xcb_screen = globalconf.screen;
-    d->pixmap = xcb_generate_id(_G_connection);
-    xcb_create_pixmap(_G_connection, xcb_screen->root_depth,
-                      d->pixmap, xcb_screen->root,
-                      width, height);
-
     d->surface = cairo_xcb_surface_create(_G_connection,
-                                          d->pixmap, globalconf.visual,
+                                          pixmap, globalconf.visual,
                                           width, height);
     d->cr = cairo_create(d->surface);
     d->layout = pango_cairo_create_layout(d->cr);
@@ -152,8 +146,6 @@ draw_context_init(draw_context_t *d,
 void
 draw_context_wipe(draw_context_t *ctx)
 {
-    if(ctx->pixmap)
-        xcb_free_pixmap(_G_connection, ctx->pixmap);
     if(ctx->layout)
         g_object_unref(ctx->layout);
     if(ctx->surface)
