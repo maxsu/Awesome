@@ -354,6 +354,11 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
 
     if(new_parent != wibox->parent)
     {
+        /* Check that new_parent is not a child! */
+        for(window_t *w = new_parent; w; w = w->parent)
+            if(w == (window_t *) wibox)
+                luaL_error(L, "impossible to reparent a wibox with one of its child");
+
         /* Remove from parent */
         window_array_find_and_remove(&wibox->parent->childrens, (window_t *) wibox);
         luaA_object_unref_item(L, 1, wibox->parent);
