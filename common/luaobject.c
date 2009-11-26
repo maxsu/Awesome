@@ -346,8 +346,9 @@ signal_object_emit(lua_State *L, const signal_array_t *arr, const char *name, in
         int nbfunc = sigfound->sigfuncs.len;
         luaL_checkstack(L, lua_gettop(L) + nbfunc + nargs + 1, "too much signal");
         /* Push all functions and then execute, because this list can change
-         * while executing funcs. */
-        foreach(func, sigfound->sigfuncs)
+         * while executing funcs.
+         * But push them backward. */
+        foreach_rev(func, sigfound->sigfuncs)
             luaA_object_push(L, (void *) *func);
 
         for(int i = 0; i < nbfunc; i++)
@@ -355,10 +356,6 @@ signal_object_emit(lua_State *L, const signal_array_t *arr, const char *name, in
             /* push all args */
             for(int j = 0; j < nargs; j++)
                 lua_pushvalue(L, - nargs - nbfunc + i);
-            /* push first function */
-            lua_pushvalue(L, - nargs - nbfunc + i);
-            /* remove this first function */
-            lua_remove(L, - nargs - nbfunc - 1 + i);
             luaA_dofunction(L, nargs, 0);
         }
     }

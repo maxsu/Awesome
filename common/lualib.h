@@ -86,7 +86,7 @@ luaA_dofunction_error(lua_State *L)
     return 0;
 }
 
-/** Execute an Lua function on top of the stack.
+/** Execute an Lua function.
  * \param L The Lua stack.
  * \param nargs The number of arguments for the Lua function.
  * \param nret The number of returned value from the Lua function.
@@ -95,8 +95,6 @@ luaA_dofunction_error(lua_State *L)
 static inline bool
 luaA_dofunction(lua_State *L, int nargs, int nret)
 {
-    /* Move function before arguments */
-    lua_insert(L, - nargs - 1);
     /* Push error handling function */
     lua_pushcfunction(L, luaA_dofunction_error);
     /* Move error handling function before args and function */
