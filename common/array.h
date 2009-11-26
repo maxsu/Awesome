@@ -42,6 +42,15 @@
             (var = &(array).tab[__foreach_index_##var]);                    \
             ++__foreach_index_##var)
 
+#define foreach_rev(var, array) \
+    for(int __foreach_index_##var = (array).len - 1; \
+        __foreach_index_##var >= 0; \
+        __foreach_index_##var = -1) \
+        for(typeof((array).tab) var = &(array).tab[__foreach_index_##var];  \
+            (__foreach_index_##var >= 0) &&                                 \
+            (var = &(array).tab[__foreach_index_##var]);                    \
+            --__foreach_index_##var)
+
 /** Common array functions */
 #define ARRAY_COMMON_FUNCS(type_t, pfx, dtor)                               \
     static inline pfx##_array_t * pfx##_array_new(void) {                   \
