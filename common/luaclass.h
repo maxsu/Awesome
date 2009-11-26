@@ -40,7 +40,7 @@ typedef struct
     LUA_OBJECT_HEADER
 } lua_object_t;
 
-typedef void (*lua_class_initializer_t)(lua_object_t *);
+typedef void (*lua_class_initializer_t)(lua_State *, lua_object_t *);
 typedef void (*lua_class_collector_t)(lua_object_t *);
 typedef bool (*lua_class_checker_t)(lua_object_t *);
 

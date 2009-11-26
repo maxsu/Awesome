@@ -852,7 +852,7 @@ luaA_window_grab_key(lua_State *L)
 }
 
 static void
-window_init(window_t *window)
+window_init(lua_State *L, window_t *window)
 {
     window->cursor = a_strdup(CURSOR_DEFAULT_NAME);
 }

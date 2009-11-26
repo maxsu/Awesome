@@ -521,7 +521,7 @@ luaA_wibox_set_shape_clip(lua_State *L, wibox_t *wibox)
  * \param wibox The wibox.
  */
 static void
-wibox_init(wibox_t *wibox)
+wibox_init(lua_State *L, wibox_t *wibox)
 {
     wibox->visible = wibox->movable = wibox->resizable = true;
     wibox->parent = _G_root;
