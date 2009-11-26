@@ -554,10 +554,10 @@ luaA_object_new(lua_State *L, lua_class_t *lua_class)
     /* Now, go backward from top_class (top level class) to our lua_class */
     for(; top_class != lua_class; top_class = lua_class_get_child(lua_class, top_class))
         if(top_class->initializer)
-            top_class->initializer(object);
+            top_class->initializer(L, object);
 
     if(lua_class->initializer)
-        lua_class->initializer(object);
+        lua_class->initializer(L, object);
 
     /* Set object type */
     luaA_settype(L, lua_class);
