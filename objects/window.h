@@ -30,6 +30,8 @@
     LUA_OBJECT_HEADER \
     /** The X window number */ \
     xcb_window_t window; \
+    /** The window pixmap */ \
+    xcb_window_t pixmap; \
     /** Cursor */ \
     char *cursor; \
     /** True if the window is banned from the view */ \
