@@ -24,6 +24,7 @@
 #include "ewmh.h"
 #include "xwindow.h"
 #include "systray.h"
+#include "objects/screen.h"
 #include "common/xutil.h"
 
 #define HANDLE_TEXT_PROPERTY(funcname, atom, setfunc) \
@@ -362,15 +363,20 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
                              xcb_atom_t name,
                              xcb_get_property_reply_t *reply)
 {
-    if(reply && reply->value_len)
-        _G_xrootpmap_id = *(xcb_pixmap_t *) xcb_get_property_value(reply);
-    else
-        _G_xrootpmap_id = XCB_NONE;
+    xcb_pixmap_t pixmap;
 
-    /* Redraw all wiboxes.
-     * \todo only do it for non-opaque wiboxes */
-    foreach(wibox, _G_wiboxes)
-        (*wibox)->need_update = true;
+    if(reply && reply->value_len)
+        pixmap = *(xcb_pixmap_t *) xcb_get_property_value(reply);
+    else
+        pixmap = XCB_NONE;
+
+    if(pixmap != _G_root->pixmap)
+    {
+        _G_root->pixmap = pixmap;
+        luaA_object_push(globalconf.L, _G_root);
+        luaA_object_emit_signal(globalconf.L, -1, "property::pixmap", 0);
+        lua_pop(globalconf.L, 1);
+    }
 
     return 0;
 }

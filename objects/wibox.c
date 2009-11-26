@@ -91,9 +91,6 @@ shape_update(xcb_window_t win, xcb_shape_kind_t kind, image_t *image, int offset
 static void
 wibox_shape_update(wibox_t *wibox)
 {
-    if(wibox->window == XCB_NONE)
-        return;
-
     if(!wibox_check_have_shape())
     {
         static bool warned = false;
@@ -111,21 +108,36 @@ wibox_shape_update(wibox_t *wibox)
 }
 
 static void
-wibox_draw_context_update(wibox_t *w)
+wibox_draw_context_update(lua_State *L, int ud)
 {
+    wibox_t *w = luaA_checkudata(L, ud, (lua_class_t *) &wibox_class);
     xcolor_t fg = w->ctx.fg, bg = w->ctx.bg;
 
     draw_context_wipe(&w->ctx);
+    if(w->pixmap)
+        xcb_free_pixmap(_G_connection, w->pixmap);
+
+    /* Create a pixmap. */
+    w->pixmap = xcb_generate_id(_G_connection);
+    xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, _G_default_screen);
+    xcb_create_pixmap(_G_connection, xcb_screen->root_depth,
+                      w->pixmap, _G_root->window,
+                      w->geometry.width, w->geometry.height);
+
     draw_context_init(&w->ctx,
+                      w->pixmap,
                       w->geometry.width,
                       w->geometry.height,
                       &fg, &bg);
+
+    w->need_update = true;
+    luaA_object_emit_signal(L, ud, "property::pixmap", 0);
 }
 
 static int
 luaA_wibox_draw_context_update(lua_State *L)
 {
-    wibox_draw_context_update(luaA_checkudata(L, 1, (lua_class_t *) &wibox_class));
+    wibox_draw_context_update(L, 1);
     return 0;
 }
 
@@ -150,10 +162,9 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
                              int16_t x, int16_t y,
                              uint16_t w, uint16_t h)
 {
-    if(wibox->ctx.pixmap && wibox->window)
-        xcb_copy_area(_G_connection, wibox->ctx.pixmap,
-                      wibox->window, _G_gc, x, y, x, y,
-                      w, h);
+    xcb_copy_area(_G_connection, wibox->pixmap,
+                  wibox->window, _G_gc, x, y, x, y,
+                  w, h);
 }
 
 static void
@@ -206,9 +217,9 @@ wibox_render(wibox_t *wibox)
 
     if(bg.alpha != 0xff)
     {
-        if(_G_xrootpmap_id)
-            xcb_copy_area(_G_connection, _G_xrootpmap_id,
-                          wibox->ctx.pixmap, _G_gc,
+        if(wibox->parent->pixmap)
+            xcb_copy_area(_G_connection, wibox->parent->pixmap,
+                          wibox->pixmap, _G_gc,
                           wibox->geometry.x + wibox->border_width,
                           wibox->geometry.y + wibox->border_width,
                           0, 0,
@@ -248,20 +259,15 @@ wibox_render(wibox_t *wibox)
         geometry.height = 0;
 
     draw_text(&wibox->ctx, &wibox->text_ctx, geometry);
-}
 
-/** Draw a wibox.
- * \param wibox The wibox to draw.
- */
-static void
-wibox_draw(wibox_t *wibox)
-{
-    if(wibox->visible)
-    {
-        wibox_render(wibox);
-        wibox_refresh_pixmap(wibox);
-        wibox->need_update = false;
-    }
+    wibox_refresh_pixmap(wibox);
+
+    wibox->need_update = false;
+
+    /* Emit pixmap signal so childs now that they may have to redraw */
+    luaA_object_push(globalconf.L, wibox);
+    luaA_object_emit_signal(globalconf.L, -1, "property::pixmap", 0);
+    lua_pop(globalconf.L, 1);
 }
 
 /** Refresh all wiboxes.
@@ -274,7 +280,7 @@ wibox_refresh(void)
         if((*w)->need_shape_update)
             wibox_shape_update(*w);
         if((*w)->need_update)
-            wibox_draw(*w);
+            wibox_render(*w);
     }
 }
 
@@ -300,11 +306,17 @@ wibox_set_visible(lua_State *L, int udx, bool v)
     }
 }
 
+/** This is a callback function called via signal. It only mark the wibox has
+ * needing update if it has a background with alpha and a parent with a pixmap.
+ */
 static int
-luaA_wibox_need_update(lua_State *L)
+luaA_wibox_need_update_alpha(lua_State *L)
 {
     wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
-    wibox->need_update = true;
+    /* If the wibox has alpha background and its parent has a pixmap, then we
+     * need to update it. Otherwise we don't care. */
+    if(wibox->ctx.bg.alpha != 0xffff && wibox->parent->pixmap)
+        wibox->need_update = true;
     return 0;
 }
 
@@ -315,43 +327,10 @@ luaA_wibox_need_update(lua_State *L)
 static int
 luaA_wibox_new(lua_State *L)
 {
+    /* Create the object */
     luaA_class_new(L, (lua_class_t *) &wibox_class);
 
     wibox_t *wibox = lua_touserdata(L, -1);
-
-    /* Create window */
-    wibox->window = xcb_generate_id(_G_connection);
-    xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT, wibox->window, wibox->parent->window,
-                      wibox->geometry.x, wibox->geometry.y,
-                      wibox->geometry.width, wibox->geometry.height,
-                      wibox->border_width, XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT,
-                      XCB_CW_BACK_PIXMAP | XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
-                      | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
-                      (const uint32_t [])
-                      {
-                          XCB_BACK_PIXMAP_PARENT_RELATIVE,
-                          wibox->ctx.bg.pixel,
-                          wibox->border_color.pixel,
-                          XCB_GRAVITY_NORTH_WEST,
-                          true,
-                          XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
-                          | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
-                          | XCB_EVENT_MASK_ENTER_WINDOW
-                          | XCB_EVENT_MASK_LEAVE_WINDOW
-                          | XCB_EVENT_MASK_BUTTON_PRESS
-                          | XCB_EVENT_MASK_BUTTON_RELEASE
-                          | XCB_EVENT_MASK_POINTER_MOTION
-                          | XCB_EVENT_MASK_KEY_PRESS
-                          | XCB_EVENT_MASK_KEY_RELEASE
-                          | XCB_EVENT_MASK_STRUCTURE_NOTIFY
-                          | XCB_EVENT_MASK_EXPOSURE
-                          | XCB_EVENT_MASK_PROPERTY_CHANGE
-                      });
-
-    luaA_object_emit_signal(globalconf.L, 1, "property::window", 0);
-
-    /* Raise window */
-    stack_window_raise(L, -1);
 
     /* Now we can insert because we have a window id */
     wibox_array_insert(&_G_wiboxes, wibox);
@@ -361,12 +340,6 @@ luaA_wibox_new(lua_State *L)
      * this is a weak ref! */
     lua_pushvalue(L, -1);
     luaA_object_store_registry(L, -1);
-
-    wibox_draw_context_update(wibox);
-
-    xwindow_set_cursor(wibox->window, xcursor_new(_G_connection, xcursor_font_fromstr(wibox->cursor)));
-
-    xwindow_set_opacity(wibox->window, wibox->opacity);
 
     if(wibox->visible)
         wibox_map(wibox);
@@ -385,18 +358,40 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
         window_array_find_and_remove(&wibox->parent->childrens, (window_t *) wibox);
         luaA_object_unref_item(L, 1, wibox->parent);
 
+        /* Reparent X window */
         xcb_reparent_window(_G_connection, wibox->window, new_parent->window,
                             wibox->geometry.x, wibox->geometry.y);
 
+        /* Set parent, ref it and insert into its children array */
         wibox->parent = luaA_object_ref_item(L, 1, 3);
-        window_array_append(&new_parent->childrens, (window_t *) wibox);
+        window_array_append(&wibox->parent->childrens, (window_t *) wibox);
         stack_window_raise(L, 1);
 
+        /* If window is transparent, it needs to be redrawn */
         if(wibox->ctx.bg.alpha != 0xffff)
             wibox->need_update = true;
 
-        luaA_object_emit_signal(globalconf.L, 1, "property::parent", 0);
+        /* Emit parent change signal */
+        luaA_object_emit_signal(L, 1, "property::parent", 0);
     }
+
+    return 0;
+}
+
+/** This should be called when a wibox has its pixmap changed.
+ * We'll check all wiboxes and if they have the wibox has parent, we tag them as
+ * needing update.
+ * \param L The Lua VM state.
+ * \return The number of element pushed on stack.
+ */
+static int
+luaA_wibox_childrens_need_update(lua_State *L)
+{
+    window_t *window = luaA_checkudata(L, 1, &window_class);
+
+    foreach(w, _G_wiboxes)
+        if((*w)->ctx.bg.alpha != 0xffff && (*w)->parent == window)
+            (*w)->need_update = true;
 
     return 0;
 }
@@ -524,12 +519,45 @@ static void
 wibox_init(lua_State *L, wibox_t *wibox)
 {
     wibox->visible = wibox->movable = wibox->resizable = true;
-    wibox->parent = _G_root;
     wibox->ctx.fg = globalconf.colors.fg;
     wibox->ctx.bg = globalconf.colors.bg;
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
-    wibox->need_update = true;
+    wibox->parent = _G_root;
+
+    /* And creates the window */
+    wibox->window = xcb_generate_id(_G_connection);
+
+    xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT, wibox->window, wibox->parent->window,
+                      wibox->geometry.x, wibox->geometry.y,
+                      wibox->geometry.width, wibox->geometry.height,
+                      wibox->border_width, XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT,
+                      XCB_CW_BACK_PIXMAP | XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_BIT_GRAVITY
+                      | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
+                      (const uint32_t [])
+                      {
+                          XCB_BACK_PIXMAP_PARENT_RELATIVE,
+                          wibox->ctx.bg.pixel,
+                          wibox->border_color.pixel,
+                          XCB_GRAVITY_NORTH_WEST,
+                          true,
+                          XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
+                          | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
+                          | XCB_EVENT_MASK_ENTER_WINDOW
+                          | XCB_EVENT_MASK_LEAVE_WINDOW
+                          | XCB_EVENT_MASK_BUTTON_PRESS
+                          | XCB_EVENT_MASK_BUTTON_RELEASE
+                          | XCB_EVENT_MASK_POINTER_MOTION
+                          | XCB_EVENT_MASK_KEY_PRESS
+                          | XCB_EVENT_MASK_KEY_RELEASE
+                          | XCB_EVENT_MASK_STRUCTURE_NOTIFY
+                          | XCB_EVENT_MASK_EXPOSURE
+                          | XCB_EVENT_MASK_PROPERTY_CHANGE
+                      });
+
+    luaA_object_emit_signal(L, 1, "property::window", 0);
+
+    wibox_draw_context_update(L, -1);
 }
 
 static int
@@ -599,7 +627,6 @@ luaA_wibox_get_ellipsize(lua_State *L, wibox_t *wibox)
 
     return 1;
 }
-
 
 static int
 luaA_wibox_set_ellipsize(lua_State *L, wibox_t *wibox)
@@ -771,10 +798,11 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_get_parent,
                             (lua_class_propfunc_t) luaA_wibox_set_parent);
 
-    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update);
-    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update_alpha);
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update_alpha);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::width", luaA_wibox_draw_context_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::height", luaA_wibox_draw_context_update);
+    luaA_class_connect_signal(L, &window_class, "property::pixmap", luaA_wibox_childrens_need_update);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
