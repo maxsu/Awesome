@@ -571,6 +571,11 @@ luaA_object_new(lua_State *L, lua_class_t *lua_class)
     /* Set env table on object */
     lua_setfenv(L, -2);
 
+    /* Store the object in the registry so it can be pushed whenever we want,
+     * unless there's no ref of it at all (neither in Lua), but in this case, we
+     * won't push it :) */
+    luaA_object_store_registry(L, -1);
+
     /* Get the top level class in the hierarchy */
     lua_class_t *top_class;
     for(top_class = lua_class; top_class->parent; top_class = top_class->parent);
