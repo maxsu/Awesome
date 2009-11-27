@@ -167,34 +167,6 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
                   w, h);
 }
 
-static void
-wibox_unmap(wibox_t *wibox)
-{
-    /* Map the wibox */
-    xcb_unmap_window(_G_connection, wibox->window);
-    if(strut_has_value(&wibox->strut))
-    {
-        lua_pushlightuserdata(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y));
-        luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
-        lua_pop(globalconf.L, 1);
-    }
-}
-
-static void
-wibox_map(wibox_t *wibox)
-{
-    /* Map the wibox */
-    xcb_map_window(_G_connection, wibox->window);
-    /* We must make sure the wibox does not display garbage */
-    wibox->need_update = true;
-    if(strut_has_value(&wibox->strut))
-    {
-        lua_pushlightuserdata(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y));
-        luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
-        lua_pop(globalconf.L, 1);
-    }
-}
-
 /** Get a wibox by its window.
  * \param win The window id.
  * \return A wibox if found, NULL otherwise.
@@ -285,28 +257,6 @@ wibox_refresh(void)
     }
 }
 
-/** Set a wibox visible or not.
- * \param L The Lua VM state.
- * \param udx The wibox.
- * \param v The visible value.
- */
-static void
-wibox_set_visible(lua_State *L, int udx, bool v)
-{
-    wibox_t *wibox = luaA_checkudata(L, udx, (lua_class_t *) &wibox_class);
-    if(v != wibox->visible)
-    {
-        wibox->visible = v;
-
-        if(wibox->visible)
-            wibox_map(wibox);
-        else
-            wibox_unmap(wibox);
-
-        luaA_object_emit_signal(L, udx, "property::visible", 0);
-    }
-}
-
 /** This is a callback function called via signal. It only mark the wibox has
  * needing update if it has a background with alpha and a parent with a pixmap.
  */
@@ -341,9 +291,6 @@ luaA_wibox_new(lua_State *L)
      * this is a weak ref! */
     lua_pushvalue(L, -1);
     luaA_object_store_registry(L, -1);
-
-    if(wibox->visible)
-        wibox_map(wibox);
 
     return 1;
 }
@@ -402,7 +349,6 @@ luaA_wibox_childrens_need_update(lua_State *L)
     return 0;
 }
 
-static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, image, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_clip, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_bounding, luaA_object_push)
@@ -484,18 +430,6 @@ luaA_wibox_set_image(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-/** Set the wibox visibility.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_set_visible(lua_State *L, wibox_t *wibox)
-{
-    wibox_set_visible(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
-
 static int
 luaA_wibox_set_shape_bounding(lua_State *L, wibox_t *wibox)
 {
@@ -525,12 +459,17 @@ static void
 wibox_init(lua_State *L, wibox_t *wibox)
 {
     wibox->visible = wibox->movable = wibox->resizable = true;
+    luaA_object_emit_signal(L, -1, "property::visible", 0);
+    luaA_object_emit_signal(L, -1, "property::movable", 0);
+    luaA_object_emit_signal(L, -1, "property::resizable", 0);
     wibox->ctx.fg = globalconf.colors.fg;
     wibox->ctx.bg = globalconf.colors.bg;
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
     wibox->image_valign = AlignTop;
+    luaA_object_emit_signal(L, -1, "property::image_valign", 0);
     wibox->parent = _G_root;
+    wibox->banned = true;
 
     /* And creates the window */
     wibox->window = xcb_generate_id(_G_connection);
@@ -776,10 +715,6 @@ wibox_class_setup(lua_State *L)
                      NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      wibox_methods, wibox_module_meta, NULL);
-    luaA_class_add_property((lua_class_t *) &wibox_class, "visible",
-                            (lua_class_propfunc_t) luaA_wibox_set_visible,
-                            (lua_class_propfunc_t) luaA_wibox_get_visible,
-                            (lua_class_propfunc_t) luaA_wibox_set_visible);
     luaA_class_add_property((lua_class_t *) &wibox_class, "fg",
                             (lua_class_propfunc_t) luaA_wibox_set_fg,
                             (lua_class_propfunc_t) luaA_wibox_get_fg,
