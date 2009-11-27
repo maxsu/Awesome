@@ -720,6 +720,7 @@ luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
         const char *buf = luaL_checklstring(L, -1, &len); \
         wibox->text_ctx.field = draw_##field##_fromstr(buf, len); \
         wibox->need_update = true; \
+        luaA_object_emit_signal(L, 1, "property::text_" #field, 0); \
         return 0; \
     } \
     static int \
@@ -740,6 +741,7 @@ DO_WIBOX_TEXT_ALIGN_FUNC(valign)
         const char *buf = luaL_checklstring(L, -1, &len); \
         wibox->image_##field = draw_##field##_fromstr(buf, len); \
         wibox->need_update = true; \
+        luaA_object_emit_signal(L, 1, "property::image_" #field, 0); \
         return 0; \
     } \
     static int \
