@@ -230,7 +230,7 @@ wibox_render(wibox_t *wibox)
     }
 
     /* draw background image */
-    draw_image(&wibox->ctx, 0, 0, 1.0, wibox->bg_image);
+    draw_image(&wibox->ctx, 0, 0, 1.0, wibox->image);
 
     /* draw background color */
     draw_rectangle(&wibox->ctx, (area_t) { .x = 0, .y = 0,
@@ -402,7 +402,7 @@ luaA_wibox_childrens_need_update(lua_State *L)
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, visible, lua_pushboolean)
-static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, bg_image, luaA_object_push)
+static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, image, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_clip, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_bounding, luaA_object_push)
 
@@ -473,13 +473,13 @@ luaA_wibox_get_bg(lua_State *L, wibox_t *wibox)
  * \return The number of elements pushed on stack.
  */
 static int
-luaA_wibox_set_bg_image(lua_State *L, wibox_t *wibox)
+luaA_wibox_set_image(lua_State *L, wibox_t *wibox)
 {
     luaA_checkudataornil(L, -1, &image_class);
-    luaA_object_unref_item(L, -3, wibox->bg_image);
-    wibox->bg_image = luaA_object_ref_item(L, -3, -1);
+    luaA_object_unref_item(L, -3, wibox->image);
+    wibox->image = luaA_object_ref_item(L, -3, -1);
     wibox->need_update = true;
-    luaA_object_emit_signal(L, -2, "property::bg_image", 0);
+    luaA_object_emit_signal(L, -2, "property::image", 0);
     return 0;
 }
 
@@ -764,10 +764,10 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_bg,
                             (lua_class_propfunc_t) luaA_wibox_get_bg,
                             (lua_class_propfunc_t) luaA_wibox_set_bg);
-    luaA_class_add_property((lua_class_t *) &wibox_class, "bg_image",
-                            (lua_class_propfunc_t) luaA_wibox_set_bg_image,
-                            (lua_class_propfunc_t) luaA_wibox_get_bg_image,
-                            (lua_class_propfunc_t) luaA_wibox_set_bg_image);
+    luaA_class_add_property((lua_class_t *) &wibox_class, "image",
+                            (lua_class_propfunc_t) luaA_wibox_set_image,
+                            (lua_class_propfunc_t) luaA_wibox_get_image,
+                            (lua_class_propfunc_t) luaA_wibox_set_image);
     luaA_class_add_property((lua_class_t *) &wibox_class, "shape_bounding",
                             (lua_class_propfunc_t) luaA_wibox_set_shape_bounding,
                             (lua_class_propfunc_t) luaA_wibox_get_shape_bounding,
