@@ -90,7 +90,7 @@ protocol_screen_scan(lua_State *L)
     /* Create root window */
     luaA_object_new(L, &window_class);
     _G_root = luaA_object_ref(L, -1);
-    _G_root->focusable = true;
+    _G_root->focusable = _G_root->visible = true;
     _G_root->window = xcb_screen->root;
     _G_root->geometry.width = xcb_screen->width_in_pixels;
     _G_root->geometry.height = xcb_screen->height_in_pixels;

@@ -54,7 +54,7 @@ window_isvisible(lua_State *L, int idx)
         interface = (lua_interface_window_t *) interface->parent)
         if(interface->isvisible)
             return interface->isvisible(window);
-    return true;
+    return window->visible;
 }
 
 /** Prepare banning a window by running all needed Lua events.
@@ -637,6 +637,7 @@ LUA_OBJECT_EXPORT_PROPERTY(window, window_t, parent, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, movable, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, resizable, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
+static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, visible, lua_pushboolean)
 
 /** Raise an window on top of others which are on the same layer.
  * \param L The Lua VM state.
@@ -932,6 +933,10 @@ window_class_setup(lua_State *L)
     luaA_class_add_property(&window_class, "resizable",
                             NULL,
                             (lua_class_propfunc_t) luaA_window_get_resizable,
+                            NULL);
+    luaA_class_add_property(&window_class, "visible",
+                            NULL,
+                            (lua_class_propfunc_t) luaA_window_get_visible,
                             NULL);
     luaA_class_add_property(&window_class, "layer",
                             (lua_class_propfunc_t) luaA_window_set_layer,

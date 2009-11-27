@@ -31,8 +31,6 @@
 typedef struct
 {
     EWINDOW_OBJECT_HEADER
-    /** Visible */
-    bool visible;
     /** Need update */
     bool need_update;
     /** Need shape update */
