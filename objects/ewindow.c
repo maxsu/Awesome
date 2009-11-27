@@ -32,7 +32,7 @@ LUA_CLASS_FUNCS(ewindow, (lua_class_t *) &ewindow_class)
 bool
 ewindow_isvisible(ewindow_t *ewindow)
 {
-    if(ewindow->minimized)
+    if(ewindow->minimized || !ewindow->visible)
         return false;
 
     if(ewindow->sticky || ewindow->type == EWINDOW_TYPE_DESKTOP)

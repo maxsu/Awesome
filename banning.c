@@ -43,11 +43,11 @@ banning_need_update(lua_State *L)
 void
 banning_init(lua_State *L)
 {
-    luaA_class_connect_signal(L, (lua_class_t *) &client_class, "property::minimized", banning_need_update);
-    luaA_class_connect_signal(L, (lua_class_t *) &client_class, "property::hidden", banning_need_update);
-    luaA_class_connect_signal(L, (lua_class_t *) &client_class, "property::sticky", banning_need_update);
-    luaA_class_connect_signal(L, (lua_class_t *) &client_class, "tagged", banning_need_update);
-    luaA_class_connect_signal(L, (lua_class_t *) &client_class, "untagged", banning_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &ewindow_class, "property::minimized", banning_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &ewindow_class, "property::visible", banning_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &ewindow_class, "property::sticky", banning_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &ewindow_class, "tagged", banning_need_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &ewindow_class, "untagged", banning_need_update);
     luaA_class_connect_signal(L, &tag_class, "property::selected", banning_need_update);
     luaA_class_connect_signal(L, &tag_class, "property::attached", banning_need_update);
 }

@@ -38,6 +38,8 @@
     char *cursor; \
     /** True if the window is banned from the view */ \
     bool banned; \
+    /** True if the window is visible */ \
+    bool visible; \
     /** True if the window can have focus */ \
     bool focusable; \
     /** True if the window is resizable and/or movable. */ \
