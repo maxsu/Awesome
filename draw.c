@@ -153,6 +153,44 @@ draw_context_wipe(draw_context_t *ctx)
         cairo_destroy(ctx->cr);
 }
 
+/** Compute coordinates of an object of width/height on an area, with alignment
+ * and vertical alignment
+ * \param area The area to place the object on.
+ * \param height The height of the object.
+ * \param width The width of the object.
+ * \param align Horizontal alignment.
+ * \param valign Vertical alignment.
+ * \return An area with x and y set to coordinates.
+ */
+static area_t
+draw_align_compute(area_t area, int width, int height, alignment_t align, alignment_t valign)
+{
+    switch(align)
+    {
+      case AlignCenter:
+        area.x += (area.width - width) / 2;
+        break;
+      case AlignRight:
+        area.x += area.width - width;
+        break;
+      default:
+        break;
+    }
+
+    switch(valign)
+    {
+      case AlignCenter:
+        area.y += (area.height - height) / 2;
+        break;
+      case AlignBottom:
+        area.y += area.height - height;
+        break;
+      default:
+        break;
+    }
+    return area;
+}
+
 /** Draw text into a draw context.
  * \param ctx Draw context  to draw to.
  * \param data Draw text context data.
@@ -173,29 +211,7 @@ draw_text(draw_context_t *ctx, draw_text_context_t *data, area_t area)
     PangoRectangle ext;
     pango_layout_get_pixel_extents(ctx->layout, NULL, &ext);
 
-    switch(data->align)
-    {
-      case AlignCenter:
-        area.x += (area.width - ext.width) / 2;
-        break;
-      case AlignRight:
-        area.x += area.width - ext.width;
-        break;
-      default:
-        break;
-    }
-
-    switch(data->valign)
-    {
-      case AlignCenter:
-        area.y += (area.height - ext.height) / 2;
-        break;
-      case AlignBottom:
-        area.y += area.height - ext.height;
-        break;
-      default:
-        break;
-    }
+    area = draw_align_compute(area, ext.width, ext.height, data->align, data->valign);
 
     cairo_move_to(ctx->cr, area.x, area.y);
 
