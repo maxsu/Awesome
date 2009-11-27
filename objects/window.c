@@ -47,7 +47,7 @@ bool
 window_isvisible(lua_State *L, int idx)
 {
     window_t *window = luaA_checkudata(L, idx, &window_class);
-    lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get(L, idx);
+    lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get_from_stack(L, idx);
     /* Go check for parent classes, but stop on window_class since higher
      * classes would not implement the isvisible method :-) */
     for(; interface && (lua_class_t *) interface != &window_class;
