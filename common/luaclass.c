@@ -104,6 +104,19 @@ luaA_class_get_from_stack(lua_State *L, int idx)
     return NULL;
 }
 
+/** Get an object Lua class.
+ * \param L The Lua VM state.
+ * \param idx The index of the object on the stack.
+ */
+lua_class_t *
+luaA_class_get(lua_State *L, lua_object_t *object)
+{
+    luaA_object_push(L, object);
+    lua_class_t *lua_class = luaA_class_get_from_stack(L, -1);
+    lua_pop(L, 1);
+    return lua_class;
+}
+
 /** Enhanced version of lua_typename that recognizes setup Lua classes.
  * \param L The Lua VM state.
  * \param idx The index of the object on the stack.
