@@ -243,18 +243,29 @@ wibox_render(wibox_t *wibox)
     lua_pop(globalconf.L, 1);
 }
 
+static void
+wibox_refresh_tree(lua_State *L, window_t *root)
+{
+    /* Render window if it is a wibox */
+    if(luaA_class_get(L, (lua_object_t *) root) == (lua_class_t *) &wibox_class)
+    {
+        wibox_t *wibox = (wibox_t *) root;
+        if(wibox->need_shape_update)
+            wibox_shape_update(wibox);
+        if(wibox->need_update)
+            wibox_render(wibox);
+    }
+
+    foreach(child, root->childrens)
+        wibox_refresh_tree(L, *child);
+}
+
 /** Refresh all wiboxes.
  */
 void
 wibox_refresh(void)
 {
-    foreach(w, _G_wiboxes)
-    {
-        if((*w)->need_shape_update)
-            wibox_shape_update(*w);
-        if((*w)->need_update)
-            wibox_render(*w);
-    }
+    wibox_refresh_tree(globalconf.L, _G_root);
 }
 
 /** This is a callback function called via signal. It only mark the wibox has
@@ -469,6 +480,8 @@ wibox_init(lua_State *L, wibox_t *wibox)
     wibox->image_valign = AlignTop;
     luaA_object_emit_signal(L, -1, "property::image_valign", 0);
     wibox->parent = _G_root;
+    window_array_append(&wibox->parent->childrens, (window_t *) wibox);
+    stack_window_raise(L, -1);
     wibox->banned = true;
 
     /* And creates the window */
