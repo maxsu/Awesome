@@ -39,6 +39,8 @@ typedef struct
     bool need_shape_update;
     /** Background image */
     image_t *image;
+    /** Image alignment */
+    alignment_t image_align, image_valign;
     /** Draw context */
     draw_context_t ctx;
     /** The wibox text stuff */

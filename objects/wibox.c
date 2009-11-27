@@ -230,7 +230,8 @@ wibox_render(wibox_t *wibox)
     }
 
     /* draw background image */
-    draw_image(&wibox->ctx, 0, 0, 1.0, wibox->image);
+    draw_image(&wibox->ctx, wibox->geometry,
+               wibox->image_align, wibox->image_valign, wibox->image);
 
     /* draw background color */
     draw_rectangle(&wibox->ctx, (area_t) { .x = 0, .y = 0,
@@ -529,6 +530,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
     wibox->ctx.bg = globalconf.colors.bg;
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
+    wibox->image_valign = AlignTop;
     wibox->parent = _G_screens.tab[0].root;
 
     /* And creates the window */
@@ -710,7 +712,7 @@ luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-#define DO_WIBOX_ALIGN_FUNC(field) \
+#define DO_WIBOX_TEXT_ALIGN_FUNC(field) \
     static int \
     luaA_wibox_set_text_##field(lua_State *L, wibox_t *wibox) \
     { \
@@ -726,8 +728,28 @@ luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
         lua_pushstring(L, draw_##field##_tostr(wibox->text_ctx.field)); \
         return 1; \
     }
-DO_WIBOX_ALIGN_FUNC(align)
-DO_WIBOX_ALIGN_FUNC(valign)
+DO_WIBOX_TEXT_ALIGN_FUNC(align)
+DO_WIBOX_TEXT_ALIGN_FUNC(valign)
+#undef DO_WIBOX_TEXT_ALIGN_FUNC
+
+#define DO_WIBOX_IMAGE_ALIGN_FUNC(field) \
+    static int \
+    luaA_wibox_set_image_##field(lua_State *L, wibox_t *wibox) \
+    { \
+        size_t len; \
+        const char *buf = luaL_checklstring(L, -1, &len); \
+        wibox->image_##field = draw_##field##_fromstr(buf, len); \
+        wibox->need_update = true; \
+        return 0; \
+    } \
+    static int \
+    luaA_wibox_get_image_##field(lua_State *L, wibox_t *wibox) \
+    { \
+        lua_pushstring(L, draw_##field##_tostr(wibox->image_##field)); \
+        return 1; \
+    }
+DO_WIBOX_IMAGE_ALIGN_FUNC(align)
+DO_WIBOX_IMAGE_ALIGN_FUNC(valign)
 #undef DO_WIBOX_ALIGN_FUNC
 
 void
@@ -797,6 +819,14 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_text_valign,
                             (lua_class_propfunc_t) luaA_wibox_get_text_valign,
                             (lua_class_propfunc_t) luaA_wibox_set_text_valign);
+    luaA_class_add_property((lua_class_t *) &wibox_class, "image_align",
+                            (lua_class_propfunc_t) luaA_wibox_set_image_align,
+                            (lua_class_propfunc_t) luaA_wibox_get_image_align,
+                            (lua_class_propfunc_t) luaA_wibox_set_image_align);
+    luaA_class_add_property((lua_class_t *) &wibox_class, "image_valign",
+                            (lua_class_propfunc_t) luaA_wibox_set_image_valign,
+                            (lua_class_propfunc_t) luaA_wibox_get_image_valign,
+                            (lua_class_propfunc_t) luaA_wibox_set_image_valign);
     /* Properties overwritten */
     /* Parent can be set on wiboxes */
     luaA_class_add_property((lua_class_t *) &wibox_class, "parent",
