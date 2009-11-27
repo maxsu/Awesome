@@ -189,7 +189,7 @@ luaA_instanceof(lua_State *L)
     luaL_checkany(L, 1);
     const char *name = luaL_checkstring(L, 2);
 
-    lua_class_t *lua_class = luaA_class_get(L, 1);
+    lua_class_t *lua_class = luaA_class_get_from_stack(L, 1);
     for(; lua_class; lua_class = lua_class->parent)
         if(!a_strcmp(lua_class->name, name))
         {
