@@ -87,7 +87,7 @@ luaA_checkudata(lua_State *L, int ud, lua_class_t *class)
  * \param idx The index of the object on the stack.
  */
 lua_class_t *
-luaA_class_get(lua_State *L, int idx)
+luaA_class_get_from_stack(lua_State *L, int idx)
 {
     int type = lua_type(L, idx);
 
@@ -115,7 +115,7 @@ luaA_classname(lua_State *L, int idx)
 
     if(type == LUA_TUSERDATA || type == LUA_TLIGHTUSERDATA)
     {
-        lua_class_t *lua_class = luaA_class_get(L, idx);
+        lua_class_t *lua_class = luaA_class_get_from_stack(L, idx);
         if(lua_class)
             return lua_class->name;
     }
@@ -158,7 +158,7 @@ luaA_class_gc(lua_State *L)
     lua_object_t *item = lua_touserdata(L, 1);
     signal_array_wipe(&item->signals);
     /* Get the object class */
-    lua_class_t *class = luaA_class_get(L, 1);
+    lua_class_t *class = luaA_class_get_from_stack(L, 1);
     /* Call the collector function of the class, and all its parent classes */
     for(; class; class = class->parent)
         if(class->collector)
@@ -169,7 +169,7 @@ luaA_class_gc(lua_State *L)
 static int
 luaA_class_tostring(lua_State *L)
 {
-    lua_class_t *lua_class = luaA_class_get(L, 1);
+    lua_class_t *lua_class = luaA_class_get_from_stack(L, 1);
     lua_object_t *object = luaA_checkudata(L, 1, lua_class);
 
     int i = 0;
@@ -341,7 +341,7 @@ luaA_class_emit_signal(lua_State *L, lua_class_t *lua_class,
 static int
 luaA_use_methods(lua_State *L, int idxobj, int idxfield)
 {
-    lua_class_t *class = luaA_class_get(L, idxobj);
+    lua_class_t *class = luaA_class_get_from_stack(L, idxobj);
 
     for(; class; class = class->parent)
     {
@@ -442,7 +442,7 @@ luaA_class_index(lua_State *L)
     if(luaA_use_methods(L, 1, 2))
         return 1;
 
-    lua_class_t *class = luaA_class_get(L, 1);
+    lua_class_t *class = luaA_class_get_from_stack(L, 1);
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
 
@@ -490,7 +490,7 @@ luaA_class_index(lua_State *L)
 int
 luaA_class_newindex(lua_State *L)
 {
-    lua_class_t *class = luaA_class_get(L, 1);
+    lua_class_t *class = luaA_class_get_from_stack(L, 1);
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
 
