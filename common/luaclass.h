@@ -77,6 +77,7 @@ struct lua_class_t
 
 const char * luaA_classname(lua_State *, int);
 lua_class_t * luaA_class_get_from_stack(lua_State *, int);
+lua_class_t * luaA_class_get(lua_State *, lua_object_t *);
 
 void luaA_class_connect_signal(lua_State *, lua_class_t *, const char *, lua_CFunction);
 void luaA_class_connect_signal_from_stack(lua_State *, lua_class_t *, const char *, int);
