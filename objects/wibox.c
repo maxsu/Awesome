@@ -711,7 +711,7 @@ luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
 
 #define DO_WIBOX_ALIGN_FUNC(field) \
     static int \
-    luaA_wibox_set_##field(lua_State *L, wibox_t *wibox) \
+    luaA_wibox_set_text_##field(lua_State *L, wibox_t *wibox) \
     { \
         size_t len; \
         const char *buf = luaL_checklstring(L, -1, &len); \
@@ -720,7 +720,7 @@ luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
         return 0; \
     } \
     static int \
-    luaA_wibox_get_##field(lua_State *L, wibox_t *wibox) \
+    luaA_wibox_get_text_##field(lua_State *L, wibox_t *wibox) \
     { \
         lua_pushstring(L, draw_##field##_tostr(wibox->text_ctx.field)); \
         return 1; \
@@ -788,14 +788,14 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_wrap,
                             (lua_class_propfunc_t) luaA_wibox_get_wrap,
                             (lua_class_propfunc_t) luaA_wibox_set_wrap);
-    luaA_class_add_property((lua_class_t *) &wibox_class, "align",
-                            (lua_class_propfunc_t) luaA_wibox_set_align,
-                            (lua_class_propfunc_t) luaA_wibox_get_align,
-                            (lua_class_propfunc_t) luaA_wibox_set_align);
-    luaA_class_add_property((lua_class_t *) &wibox_class, "valign",
-                            (lua_class_propfunc_t) luaA_wibox_set_valign,
-                            (lua_class_propfunc_t) luaA_wibox_get_valign,
-                            (lua_class_propfunc_t) luaA_wibox_set_valign);
+    luaA_class_add_property((lua_class_t *) &wibox_class, "text_align",
+                            (lua_class_propfunc_t) luaA_wibox_set_text_align,
+                            (lua_class_propfunc_t) luaA_wibox_get_text_align,
+                            (lua_class_propfunc_t) luaA_wibox_set_text_align);
+    luaA_class_add_property((lua_class_t *) &wibox_class, "text_valign",
+                            (lua_class_propfunc_t) luaA_wibox_set_text_valign,
+                            (lua_class_propfunc_t) luaA_wibox_get_text_valign,
+                            (lua_class_propfunc_t) luaA_wibox_set_text_valign);
     /* Properties overwritten */
     /* Parent can be set on wiboxes */
     luaA_class_add_property((lua_class_t *) &wibox_class, "parent",
