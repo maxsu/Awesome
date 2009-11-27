@@ -266,25 +266,19 @@ draw_rectangle(draw_context_t *ctx, area_t geometry,
  * \param y Y coordinate.
  * \param w Width.
  * \param h Height.
- * \param ratio The ratio to apply to the image.
  * \param data The image pixels array.
  */
 static void
-draw_image_from_argb_data(draw_context_t *ctx, int x, int y, int w, int h,
-                          double ratio, unsigned char *data)
+draw_image_from_argb_data(draw_context_t *ctx, int x, int y, int w, int h, unsigned char *data)
 {
-    cairo_t *cr;
-    cairo_surface_t *source;
-
-    source = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, w, h,
+    cairo_surface_t *source = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, w, h,
 #if CAIRO_VERSION_MAJOR < 1 || (CAIRO_VERSION_MAJOR == 1 && CAIRO_VERSION_MINOR < 5) || (CAIRO_VERSION_MAJOR == 1 && CAIRO_VERSION_MINOR == 5 && CAIRO_VERSION_MICRO < 8)
-                                                 sizeof(unsigned char) * 4 * w);
+                                                                  sizeof(unsigned char) * 4 * w);
 #else
-                                                 cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, w));
+                                                                  cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, w));
 #endif
-    cr = cairo_create(ctx->surface);
-    cairo_scale(cr, ratio, ratio);
-    cairo_set_source_surface(cr, source, x / ratio, y / ratio);
+    cairo_t *cr = cairo_create(ctx->surface);
+    cairo_set_source_surface(cr, source, x, y);
 
     cairo_paint(cr);
 
@@ -294,16 +288,21 @@ draw_image_from_argb_data(draw_context_t *ctx, int x, int y, int w, int h,
 
 /** Draw an image to a draw context.
  * \param ctx Draw context to draw to.
- * \param x X coordinate.
- * \param y Y coordinate.
- * \param ratio The ratio to apply to the image.
+ * \param area The area to draw on.
+ * \param align The horizonal alignment in the above area.
+ * \param valign The vertical alignment.
  * \param image The image to draw.
  */
 void
-draw_image(draw_context_t *ctx, int x, int y, double ratio, image_t *image)
+draw_image(draw_context_t *ctx, area_t area, alignment_t align, alignment_t valign, image_t *image)
 {
     if(image)
-        draw_image_from_argb_data(ctx, x, y, image_getwidth(image), image_getheight(image), ratio, image_getdata(image));
+    {
+        int width = image_getwidth(image);
+        int height = image_getheight(image);
+        area = draw_align_compute(area, width, height, align, valign);
+        draw_image_from_argb_data(ctx, area.x, area.y, width, height, image_getdata(image));
+    }
 }
 
 /** Transform a string to a alignment_t type.
