@@ -56,6 +56,18 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
 
 #define LUA_OBJECT_FUNCS(lua_class, type, prefix)                              \
     LUA_CLASS_FUNCS(prefix, lua_class)                                         \
+    static inline void                                                         \
+    prefix##_emit_signal(lua_State *L, type *obj, const char *name, int nargs) \
+    {                                                                          \
+        /* Push object */                                                      \
+        luaA_object_push(L, obj);                                              \
+        /* Insert it before args */                                            \
+        lua_insert(L, - nargs - 1);                                            \
+        /* Emit signal */                                                      \
+        luaA_object_emit_signal(L, - nargs - 1, name, nargs);                  \
+        /* Remove object */                                                    \
+        lua_pop(L, 1);                                                         \
+    }                                                                          \
     static inline type *                                                       \
     prefix##_make_light(lua_State *L, type *item)                              \
     {                                                                          \
