@@ -44,8 +44,6 @@ typedef struct
 } screen_t;
 DO_ARRAY(screen_t, screen, DO_NOTHING)
 
-void screen_emit_signal(lua_State *, screen_t *, const char *, int);
-
 void screen_class_setup(lua_State *);
 void screen_scan(lua_State *);
 screen_t *screen_getbycoord(int, int);
