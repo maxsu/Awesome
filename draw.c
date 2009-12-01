@@ -295,10 +295,10 @@ draw_image(draw_context_t *ctx, area_t area, alignment_t align, alignment_t vali
 {
     if(image)
     {
-        int width = image_getwidth(image);
-        int height = image_getheight(image);
+        int width = image_get_width(image);
+        int height = image_get_height(image);
         area = draw_align_compute(area, width, height, align, valign);
-        draw_image_from_argb_data(ctx, area.x, area.y, width, height, image_getdata(image));
+        draw_image_from_argb_data(ctx, area.x, area.y, width, height, image_get_data(image));
     }
 }
 
