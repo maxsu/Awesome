@@ -44,11 +44,9 @@ typedef struct
     cairo_t *cr;
     cairo_surface_t *surface;
     PangoLayout *layout;
-    xcolor_t fg;
 } draw_context_t;
 
-void draw_context_init(draw_context_t *, xcb_pixmap_t, int, int,
-                       const xcolor_t *);
+void draw_context_init(draw_context_t *, xcb_pixmap_t, int, int);
 void draw_context_wipe(draw_context_t *);
 
 bool draw_iso2utf8(const char *, size_t, char **, ssize_t *);
@@ -85,7 +83,7 @@ typedef struct
 } draw_text_context_t;
 
 bool draw_text_context_init(draw_text_context_t *, const char *, ssize_t);
-void draw_text(draw_context_t *, draw_text_context_t *, area_t);
+void draw_text(draw_context_t *, draw_text_context_t *, const color_t *, area_t);
 void draw_rectangle(draw_context_t *, area_t, float, bool, const color_t *);
 void draw_image(draw_context_t *, area_t, alignment_t, alignment_t, image_t *);
 alignment_t draw_align_fromstr(const char *, ssize_t);
