@@ -106,12 +106,11 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_cookie_t cookie)
                                        &trans, NULL))
             return;
 
-    luaA_object_push(globalconf.L, c);
-    ewindow_set_type(globalconf.L, -1, EWINDOW_TYPE_DIALOG);
-    ewindow_set_above(globalconf.L, -1, false);
+    ewindow_set_type(globalconf.L, (ewindow_t *) c, EWINDOW_TYPE_DIALOG);
+    ewindow_set_above(globalconf.L, (ewindow_t *) c, false);
     luaA_object_push(globalconf.L, client_getbywin(trans));
-    client_set_transient_for(globalconf.L, -2, -1);
-    lua_pop(globalconf.L, 2);
+    client_set_transient_for(globalconf.L, c, -1);
+    lua_pop(globalconf.L, 1);
 }
 
 xcb_get_property_cookie_t
@@ -191,9 +190,7 @@ property_update_wm_hints(client_t *c, xcb_get_property_cookie_t cookie)
         c->focusable = wmh.input;
 
     if(wmh.flags & XCB_WM_HINT_WINDOW_GROUP)
-        client_set_group_window(globalconf.L, -1, wmh.window_group);
-
-    lua_pop(globalconf.L, 1);
+        client_set_group_window(globalconf.L, c, wmh.window_group);
 }
 
 xcb_get_property_cookie_t
@@ -242,13 +239,8 @@ property_get_net_wm_icon(client_t *c)
 void
 property_update_net_wm_icon(client_t *c, xcb_get_property_cookie_t cookie)
 {
-    luaA_object_push(globalconf.L, c);
-
     if(ewmh_window_icon_get_reply(cookie))
-        client_set_icon(globalconf.L, -2, -1);
-
-    /* remove client */
-    lua_pop(globalconf.L, 1);
+        client_set_icon(globalconf.L, c, -1);
 }
 
 xcb_get_property_cookie_t
@@ -268,11 +260,7 @@ property_update_net_wm_pid(client_t *c, xcb_get_property_cookie_t cookie)
     {
         uint32_t *rdata = xcb_get_property_value(reply);
         if(rdata)
-        {
-            luaA_object_push(globalconf.L, c);
-            client_set_pid(globalconf.L, -1, *rdata);
-            lua_pop(globalconf.L, 1);
-        }
+            client_set_pid(globalconf.L, c, *rdata);
     }
 
     p_delete(&reply);
@@ -319,11 +307,7 @@ property_handle_net_wm_opacity(uint8_t state,
     ewindow_t *ewindow = ewindow_getbywin(window);
 
     if(ewindow)
-    {
-        luaA_object_push(globalconf.L, ewindow);
-        ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity(window));
-        lua_pop(globalconf.L, -1);
-    }
+        ewindow_set_opacity(globalconf.L, ewindow, xwindow_get_opacity(window));
 
     return 0;
 }

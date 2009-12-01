@@ -29,7 +29,8 @@ void luaA_object_store_registry(lua_State *, int);
 int luaA_object_push(lua_State *, const void *);
 void * luaA_object_ref(lua_State *, int);
 void luaA_object_unref(lua_State *, const void *);
-void * luaA_object_ref_item(lua_State *, int, int);
+void * luaA_object_ref_item_from_stack(lua_State *, int, int);
+void * luaA_object_ref_item(lua_State *, lua_object_t *, int);
 void luaA_object_unref_item(lua_State *, int, const void *);
 
 void signal_object_emit(lua_State *, const signal_array_t *, const char *, int);
@@ -88,13 +89,12 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
 
 #define LUA_OBJECT_DO_SET_PROPERTY_FUNC(pfx, lua_class, type, prop) \
     void \
-    pfx##_set_##prop(lua_State *L, int idx, fieldtypeof(type, prop) value) \
+    pfx##_set_##prop(lua_State *L, type *item, fieldtypeof(type, prop) value) \
     { \
-        type *item = luaA_checkudata(L, idx, lua_class); \
         if(item->prop != value) \
         { \
             item->prop = value; \
-            luaA_object_emit_signal(L, idx, "property::" #prop, 0); \
+            pfx##_emit_signal(L, item, "property::" #prop, 0); \
         } \
     }
 
@@ -102,20 +102,18 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
     int \
     luaA_##pfx##_set_##prop(lua_State *L, type *c) \
     { \
-        pfx##_set_##prop(L, -3, checker(L, -1)); \
+        pfx##_set_##prop(L, c, checker(L, -1)); \
         return 0; \
     }
 
-#define LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(prefix, lua_class, target_class, type, prop) \
+#define LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(prefix, target_class, type, prop) \
     void \
-    prefix##_set_##prop(lua_State *L, int idx, int vidx) \
+    prefix##_set_##prop(lua_State *L, type *item, int vidx) \
     { \
-        type *item = luaA_checkudata(L, idx, (lua_class)); \
-        idx = luaA_absindex(L, idx); \
         vidx = luaA_absindex(L, vidx); \
         luaA_checkudata(L, vidx, (target_class)); \
-        item->prop = luaA_object_ref_item(L, idx, vidx); \
-        luaA_object_emit_signal(L, idx < vidx ? idx : idx - 1, "property::" #prop, 0); \
+        item->prop = luaA_object_ref_item(L, (lua_object_t *) item, vidx); \
+        prefix##_emit_signal(L, item, "property::" #prop, 0); \
     }
 
 #endif

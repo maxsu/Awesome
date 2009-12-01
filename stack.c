@@ -50,27 +50,25 @@ stack_window_append(window_t *window)
 
 /** Put window on bottom of the stack.
  * \param L The Lua VM state.
- * \param idx The index of the window to raise.
+ * \param window The window to raise.
  */
 void
-stack_window_lower(lua_State *L, int idx)
+stack_window_lower(lua_State *L, window_t *window)
 {
-    window_t *window = luaA_checkudata(L, idx, &window_class);
     stack_window_push(window);
-    luaA_object_emit_signal(L, idx, "lower", 0);
+    window_emit_signal(L, window, "lower", 0);
 }
 
 /** Put window on top of the stack.
  * \param L The Lua VM state.
- * \param idx The index of the window to raise.
+ * \param window The window to lower.
  */
 void
-stack_window_raise(lua_State *L, int idx)
+stack_window_raise(lua_State *L, window_t *window)
 {
-    window_t *window = luaA_checkudata(L, idx, &window_class);
     /* Push window on top of the stack. */
     stack_window_append(window);
-    luaA_object_emit_signal(L, idx, "raise", 0);
+    window_emit_signal(L, window, "raise", 0);
 }
 
 /** Restack windows.

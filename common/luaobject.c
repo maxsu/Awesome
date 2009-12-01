@@ -218,7 +218,7 @@ luaA_object_unref(lua_State *L, const void *pointer)
  * \return The item reference.
  */
 void *
-luaA_object_ref_item(lua_State *L, int ud, int iud)
+luaA_object_ref_item_from_stack(lua_State *L, int ud, int iud)
 {
     iud = luaA_absindex(L, iud);
     /* Get the env table from the object */
@@ -233,6 +233,16 @@ luaA_object_ref_item(lua_State *L, int ud, int iud)
     /* Remove env table (or nil) */
     lua_pop(L, 1);
     return pointer;
+}
+
+void *
+luaA_object_ref_item(lua_State *L, lua_object_t *object, int iud)
+{
+    iud = luaA_absindex(L, iud);
+    luaA_object_push(L, object);
+    void *value = luaA_object_ref_item_from_stack(L, -1, iud);
+    lua_pop(L, 1);
+    return value;
 }
 
 /** Unref an item from the environment table of an object.
@@ -311,7 +321,7 @@ luaA_object_connect_signal_from_stack(lua_State *L, int oud,
     luaA_checkfunction(L, ud);
     lua_object_t *obj = lua_touserdata(L, oud);
     if(obj)
-        signal_add(&obj->signals, name, luaA_object_ref_item(L, oud, ud));
+        signal_add(&obj->signals, name, luaA_object_ref_item_from_stack(L, oud, ud));
 }
 
 /** Remove a signal to an object.

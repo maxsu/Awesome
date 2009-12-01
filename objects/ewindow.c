@@ -27,7 +27,7 @@
 #include "common/luaobject.h"
 #include "common/xutil.h"
 
-LUA_CLASS_FUNCS(ewindow, (lua_class_t *) &ewindow_class)
+LUA_OBJECT_FUNCS((lua_class_t *) &ewindow_class, ewindow_t, ewindow)
 
 bool
 ewindow_isvisible(ewindow_t *ewindow)
@@ -78,14 +78,12 @@ luaA_ewindow_struts(lua_State *L)
 
 /** Set a ewindow minimized, or not.
  * \param L The Lua VM state.
- * \param cidx The ewindow index.
+ * \param ewindow The ewindow.
  * \param s Set or not the ewindow minimized.
  */
 void
-ewindow_set_minimized(lua_State *L, int cidx, bool s)
+ewindow_set_minimized(lua_State *L, ewindow_t *ewindow, bool s)
 {
-    ewindow_t *ewindow = luaA_checkudata(L, cidx, (lua_class_t *) &ewindow_class);
-
     if(ewindow->minimized != s)
     {
         ewindow->minimized = s;
@@ -99,60 +97,55 @@ ewindow_set_minimized(lua_State *L, int cidx, bool s)
             luaA_object_emit_signal(L, -1, "property::workarea", 0);
             lua_pop(L, 1);
         }
-        luaA_object_emit_signal(L, cidx, "property::minimized", 0);
+        ewindow_emit_signal(L, ewindow, "property::minimized", 0);
     }
 }
 
 /** Set a ewindow fullscreen, or not.
  * \param L The Lua VM state.
- * \param cidx The ewindow index.
+ * \param ewindow The ewindow.
  * \param s Set or not the ewindow fullscreen.
  */
 void
-ewindow_set_fullscreen(lua_State *L, int cidx, bool s)
+ewindow_set_fullscreen(lua_State *L, ewindow_t *ewindow, bool s)
 {
-    ewindow_t *ewindow = luaA_checkudata(L, cidx, (lua_class_t *) &ewindow_class);
-
     if(ewindow->fullscreen != s)
     {
         /* become fullscreen! */
         if(s)
         {
             /* remove any max state */
-            ewindow_set_maximized_horizontal(L, cidx, false);
-            ewindow_set_maximized_vertical(L, cidx, false);
+            ewindow_set_maximized_horizontal(L, ewindow, false);
+            ewindow_set_maximized_vertical(L, ewindow, false);
             /* You can only be part of one of the special layers. */
-            ewindow_set_below(L, cidx, false);
-            ewindow_set_above(L, cidx, false);
-            ewindow_set_ontop(L, cidx, false);
+            ewindow_set_below(L, ewindow, false);
+            ewindow_set_above(L, ewindow, false);
+            ewindow_set_ontop(L, ewindow, false);
         }
-        int abs_cidx = luaA_absindex(L, cidx); \
         lua_pushboolean(L, s);
-        luaA_object_emit_signal(L, abs_cidx, "request::fullscreen", 1);
+        ewindow_emit_signal(L, ewindow, "request::fullscreen", 1);
         ewindow->fullscreen = s;
-        luaA_object_emit_signal(L, abs_cidx, "property::fullscreen", 0);
+        ewindow_emit_signal(L, ewindow, "property::fullscreen", 0);
     }
 }
 
 /** Set a ewindow horizontally|vertically maximized.
  * \param L The Lua VM state.
- * \param cidx The ewindow index.
+ * \param ewindow The ewindow.
  * \param s The maximized status.
  */
 #define DO_FUNCTION_CLIENT_MAXIMIZED(type) \
     void \
-    ewindow_set_maximized_##type(lua_State *L, int cidx, bool s) \
+    ewindow_set_maximized_##type(lua_State *L, ewindow_t *ewindow, bool s) \
     { \
-        ewindow_t *ewindow = luaA_checkudata(L, cidx, (lua_class_t *) &ewindow_class); \
         if(ewindow->maximized_##type != s) \
         { \
-            int abs_cidx = luaA_absindex(L, cidx); \
             if(s) \
-                ewindow_set_fullscreen(L, abs_cidx, false); \
+                ewindow_set_fullscreen(L, ewindow, false); \
             lua_pushboolean(L, s); \
-            luaA_object_emit_signal(L, abs_cidx, "request::maximized_" #type, 1); \
+            ewindow_emit_signal(L, ewindow, "request::maximized_" #type, 1); \
             ewindow->maximized_##type = s; \
-            luaA_object_emit_signal(L, abs_cidx, "property::maximized_" #type, 0); \
+            ewindow_emit_signal(L, ewindow, "property::maximized_" #type, 0); \
         } \
     }
 DO_FUNCTION_CLIENT_MAXIMIZED(vertical)
@@ -161,91 +154,83 @@ DO_FUNCTION_CLIENT_MAXIMIZED(horizontal)
 
 /** Set a ewindow above, or not.
  * \param L The Lua VM state.
- * \param cidx The ewindow index.
+ * \param ewindow The ewindow.
  * \param s Set or not the ewindow above.
  */
 void
-ewindow_set_above(lua_State *L, int cidx, bool s)
+ewindow_set_above(lua_State *L, ewindow_t *ewindow, bool s)
 {
-    ewindow_t *ewindow = luaA_checkudata(L, cidx, (lua_class_t *) &ewindow_class);
-
     if(ewindow->above != s)
     {
         /* You can only be part of one of the special layers. */
         if(s)
         {
-            ewindow_set_below(L, cidx, false);
-            ewindow_set_ontop(L, cidx, false);
-            ewindow_set_fullscreen(L, cidx, false);
+            ewindow_set_below(L, ewindow, false);
+            ewindow_set_ontop(L, ewindow, false);
+            ewindow_set_fullscreen(L, ewindow, false);
         }
         ewindow->above = s;
-        luaA_object_emit_signal(L, cidx, "property::above", 0);
+        ewindow_emit_signal(L, ewindow, "property::above", 0);
     }
 }
 
 /** Set a ewindow below, or not.
  * \param L The Lua VM state.
- * \param cidx The ewindow index.
+ * \param ewindow The ewindow.
  * \param s Set or not the ewindow below.
  */
 void
-ewindow_set_below(lua_State *L, int cidx, bool s)
+ewindow_set_below(lua_State *L, ewindow_t *ewindow, bool s)
 {
-    ewindow_t *ewindow = luaA_checkudata(L, cidx, (lua_class_t *) &ewindow_class);
-
     if(ewindow->below != s)
     {
         /* You can only be part of one of the special layers. */
         if(s)
         {
-            ewindow_set_above(L, cidx, false);
-            ewindow_set_ontop(L, cidx, false);
-            ewindow_set_fullscreen(L, cidx, false);
+            ewindow_set_above(L, ewindow, false);
+            ewindow_set_ontop(L, ewindow, false);
+            ewindow_set_fullscreen(L, ewindow, false);
         }
         ewindow->below = s;
-        luaA_object_emit_signal(L, cidx, "property::below", 0);
+        ewindow_emit_signal(L, ewindow, "property::below", 0);
     }
 }
 
 /** Set a ewindow ontop, or not.
  * \param L The Lua VM state.
- * \param cidx The ewindow index.
+ * \param ewindow The ewindow.
  * \param s Set or not the ewindow ontop attribute.
  */
 void
-ewindow_set_ontop(lua_State *L, int cidx, bool s)
+ewindow_set_ontop(lua_State *L, ewindow_t *ewindow, bool s)
 {
-    ewindow_t *ewindow = luaA_checkudata(L, cidx, (lua_class_t *) &ewindow_class);
-
     if(ewindow->ontop != s)
     {
         /* You can only be part of one of the special layers. */
         if(s)
         {
-            ewindow_set_above(L, cidx, false);
-            ewindow_set_below(L, cidx, false);
-            ewindow_set_fullscreen(L, cidx, false);
+            ewindow_set_above(L, ewindow, false);
+            ewindow_set_below(L, ewindow, false);
+            ewindow_set_fullscreen(L, ewindow, false);
         }
         ewindow->ontop = s;
-        luaA_object_emit_signal(L, cidx, "property::ontop", 0);
+        ewindow_emit_signal(L, ewindow, "property::ontop", 0);
     }
 }
 
 /** Set an ewindow opacity.
  * \param L The Lua VM state.
- * \param idx The index of the ewindow on the stack.
+ * \param ewindow The ewindow.
  * \param opacity The opacity value.
  */
 void
-ewindow_set_opacity(lua_State *L, int idx, double opacity)
+ewindow_set_opacity(lua_State *L, ewindow_t *ewindow, double opacity)
 {
-    ewindow_t *ewindow = luaA_checkudata(L, idx, (lua_class_t *) &ewindow_class);
-
     if(ewindow->opacity != opacity)
     {
         ewindow->opacity = opacity;
         xwindow_set_opacity(ewindow->window, opacity);
-        luaA_object_emit_signal(L, idx, "property::opacity", 0);
+        ewindow_emit_signal(L, ewindow, "property::opacity", 0);
     }
 }
 
@@ -309,46 +294,46 @@ luaA_ewindow_set_type(lua_State *L, ewindow_t *ewindow)
     switch(a_tokenize(value, len))
     {
       case A_TK_DESKTOP:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_DESKTOP);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_DESKTOP);
         break;
       case A_TK_DOCK:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_DOCK);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_DOCK);
         break;
       case A_TK_SPLASH:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_SPLASH);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_SPLASH);
         break;
       case A_TK_DIALOG:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_DIALOG);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_DIALOG);
         break;
       case A_TK_MENU:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_MENU);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_MENU);
         break;
       case A_TK_TOOLBAR:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_TOOLBAR);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_TOOLBAR);
         break;
       case A_TK_UTILITY:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_UTILITY);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_UTILITY);
         break;
       case A_TK_DROPDOWN_MENU:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_DROPDOWN_MENU);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_DROPDOWN_MENU);
         break;
       case A_TK_POPUP_MENU:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_POPUP_MENU);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_POPUP_MENU);
         break;
       case A_TK_TOOLTIP:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_TOOLTIP);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_TOOLTIP);
         break;
       case A_TK_NOTIFICATION:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_NOTIFICATION);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_NOTIFICATION);
         break;
       case A_TK_COMBO:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_COMBO);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_COMBO);
         break;
       case A_TK_DND:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_DND);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_DND);
         break;
       case A_TK_NORMAL:
-        ewindow_set_type(L, -3, EWINDOW_TYPE_NORMAL);
+        ewindow_set_type(L, ewindow, EWINDOW_TYPE_NORMAL);
         break;
       default:
         break;
@@ -366,12 +351,12 @@ static int
 luaA_ewindow_set_opacity(lua_State *L, ewindow_t *ewindow)
 {
     if(lua_isnil(L, -1))
-        ewindow_set_opacity(L, -3, -1);
+        ewindow_set_opacity(L, ewindow, -1);
     else
     {
         double d = luaL_checknumber(L, -1);
         if(d >= 0 && d <= 1)
-            ewindow_set_opacity(L, -3, d);
+            ewindow_set_opacity(L, ewindow, d);
     }
     return 0;
 }
@@ -415,14 +400,12 @@ luaA_ewindow_set_border_color(lua_State *L, ewindow_t *ewindow)
 
 /** Set an ewindow border width.
  * \param L The Lua VM state.
- * \param idx The ewindow index.
+ * \param ewindow The ewindow.
  * \param width The border width.
  */
 void
-ewindow_set_border_width(lua_State *L, int idx, int width)
+ewindow_set_border_width(lua_State *L, ewindow_t *ewindow, int width)
 {
-    ewindow_t *ewindow = luaA_checkudata(L, idx, (lua_class_t *) &ewindow_class);
-
     if(width == ewindow->border_width || width < 0)
         return;
 
@@ -432,7 +415,7 @@ ewindow_set_border_width(lua_State *L, int idx, int width)
 
     ewindow->border_width = width;
 
-    luaA_object_emit_signal(L, idx, "property::border_width", 0);
+    ewindow_emit_signal(L, ewindow, "property::border_width", 0);
 }
 
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, border_width, luaL_checknumber)
@@ -491,9 +474,9 @@ LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, type)
 
 static int
-luaA_ewindow_set_sticky(lua_State *L, ewindow_t *c)
+luaA_ewindow_set_sticky(lua_State *L, ewindow_t *ewindow)
 {
-    ewindow_set_sticky(L, -3, luaA_checkboolean(L, -1));
+    ewindow_set_sticky(L, ewindow, luaA_checkboolean(L, -1));
     return 0;
 }
 

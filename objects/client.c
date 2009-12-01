@@ -92,12 +92,11 @@ LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t,
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
     void \
-    client_set_##prop(lua_State *L, int cidx, char *value) \
+    client_set_##prop(lua_State *L, client_t *c, char *value) \
     { \
-        client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class); \
         p_delete(&c->prop); \
         c->prop = value; \
-        luaA_object_emit_signal(L, cidx, "property::" #prop, 0); \
+        client_emit_signal(L, c, "property::" #prop, 0); \
     }
 DO_CLIENT_SET_STRING_PROPERTY(name)
 DO_CLIENT_SET_STRING_PROPERTY(alt_name)
@@ -301,7 +300,7 @@ HANDLE_GEOM(height)
     luaA_object_emit_signal(globalconf.L, -1, "property::geometry", 0);
 
     /* Set border width */
-    ewindow_set_border_width(globalconf.L, -1, wgeom->border_width);
+    ewindow_set_border_width(globalconf.L, (ewindow_t *) c, wgeom->border_width);
 
     /* update all properties */
     client_update_properties(c);
@@ -310,7 +309,7 @@ HANDLE_GEOM(height)
     ewmh_client_check_hints(c);
 
     /* Push client in stack */
-    stack_window_raise(globalconf.L, -1);
+    stack_window_raise(globalconf.L, (window_t *) c);
 
     xwindow_set_state(c->window, XCB_WM_STATE_NORMAL);
 
@@ -443,8 +442,6 @@ luaA_client_get(lua_State *L)
     return 1;
 }
 
-LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, &image_class, client_t, icon)
-
 /** Kill a client.
  * \param L The Lua VM state.
  *
@@ -476,7 +473,7 @@ luaA_client_unmanage(lua_State *L)
 static int
 luaA_client_set_icon(lua_State *L, client_t *c)
 {
-    client_set_icon(L, -3, -1);
+    client_set_icon(L, c, -1);
     return 0;
 }
 
@@ -485,7 +482,7 @@ static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(client, client_t, urgent, luaA_checkb
 static int
 luaA_client_set_skip_taskbar(lua_State *L, client_t *c)
 {
-    client_set_skip_taskbar(L, -3, luaA_checkboolean(L, -1));
+    client_set_skip_taskbar(L, c, luaA_checkboolean(L, -1));
     return 0;
 }
 
@@ -513,7 +510,9 @@ static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, group_window, lua_pushnumber
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, pid, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, urgent, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, icon, luaA_object_push)
-LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, (lua_class_t *) &client_class, client_t, transient_for)
+static LUA_OBJECT_EXPORT_PROPERTY(client, client_t, transient_for, luaA_object_push)
+LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, (lua_class_t *) &client_class, client_t, transient_for)
+LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(client, &image_class, client_t, icon)
 
 static bool
 client_checker(client_t *c)
@@ -597,6 +596,10 @@ client_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_client_set_urgent,
                             (lua_class_propfunc_t) luaA_client_get_urgent,
                             (lua_class_propfunc_t) luaA_client_set_urgent);
+    luaA_class_add_property((lua_class_t *) &client_class, "transient_for",
+                            NULL,
+                            (lua_class_propfunc_t) luaA_client_get_transient_for,
+                            NULL);
     /* Property overrides */
     /* Cursor is not available */
     luaA_class_add_property((lua_class_t *) &client_class, "cursor", NULL, NULL, NULL);
