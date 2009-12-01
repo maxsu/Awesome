@@ -416,6 +416,7 @@ static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, border_width, lua
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, ontop, luaA_checkboolean)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, below, luaA_checkboolean)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, above, luaA_checkboolean)
+static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, sticky, luaA_checkboolean)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, minimized, luaA_checkboolean)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, maximized_vertical, luaA_checkboolean)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, maximized_horizontal, luaA_checkboolean)
@@ -466,13 +467,6 @@ luaA_ewindow_tags(lua_State *L)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, ewindow_t, sticky)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, ewindow_t, modal)
 LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, ewindow_t, type)
-
-static int
-luaA_ewindow_set_sticky(lua_State *L, ewindow_t *ewindow)
-{
-    ewindow_set_sticky(L, ewindow, luaA_checkboolean(L, -1));
-    return 0;
-}
 
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, border_color, luaA_pushxcolor)
 static LUA_OBJECT_EXPORT_PROPERTY(ewindow, ewindow_t, border_width, lua_pushnumber)
