@@ -28,9 +28,9 @@ typedef struct image image_t;
 
 void image_class_setup(lua_State *);
 int image_new_from_argb32(lua_State *L, int, int, uint32_t *);
-uint8_t * image_getdata(image_t *);
-int image_getwidth(image_t *);
-int image_getheight(image_t *);
+uint8_t * image_get_data(image_t *);
+int image_get_width(image_t *);
+int image_get_height(image_t *);
 
 xcb_pixmap_t image_to_1bit_pixmap(image_t *, xcb_drawable_t);
 

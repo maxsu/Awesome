@@ -39,8 +39,6 @@ struct image
     bool isupdated;
 };
 
-LUA_OBJECT_FUNCS(&image_class, image_t, image)
-
 static void
 image_wipe(image_t *image)
 {
@@ -94,7 +92,7 @@ image_imlib_load_strerror(Imlib_Load_Error e)
  * \return The image width in pixel.
  */
 int
-image_getwidth(image_t *image)
+image_get_width(image_t *image)
 {
     imlib_context_set_image(image->image);
     return imlib_image_get_width();
@@ -105,7 +103,7 @@ image_getwidth(image_t *image)
  * \return The image height in pixel.
  */
 int
-image_getheight(image_t *image)
+image_get_height(image_t *image)
 {
     imlib_context_set_image(image->image);
     return imlib_image_get_height();
@@ -116,7 +114,7 @@ image_getheight(image_t *image)
  * \return Data.
  */
 uint8_t *
-image_getdata(image_t *image)
+image_get_data(image_t *image)
 {
     int size, i;
     uint32_t *data;
@@ -193,8 +191,8 @@ image_to_1bit_pixmap(image_t *image, xcb_drawable_t d)
     xcb_image_t *img;
     uint16_t width, height;
 
-    width = image_getwidth(image);
-    height = image_getheight(image);
+    width = image_get_width(image);
+    height = image_get_height(image);
 
     /* Prepare the pixmap and gc */
     pixmap = xcb_generate_id(_G_connection);
@@ -295,9 +293,6 @@ image_new_from_file(lua_State *L, const char *filename)
 /** Create a new image object.
  * \param L The Lua stack.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lparam The image path.
- * \lreturn An image object.
  */
 static int
 luaA_image_new(lua_State *L)
@@ -312,12 +307,6 @@ luaA_image_new(lua_State *L)
 /** Create a new image object from ARGB32 data.
  * \param L The Lua stack.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lparam The image width.
- * \lparam The image height.
- * \lparam The image data as a string in ARGB32 format, or nil to create an
- * empty image.
- * \lreturn An image object.
  */
 static int
 luaA_image_argb32_new(lua_State *L)
@@ -349,9 +338,6 @@ luaA_image_argb32_new(lua_State *L)
  * 180 degrees, 3 rotates clockwise by 270 degrees.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue An image.
- * \lparam The rotation to perform.
  */
 static int
 luaA_image_orientate(lua_State *L)
@@ -370,10 +356,6 @@ luaA_image_orientate(lua_State *L)
 /** Rotate an image with specified angle radians and return a new image.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue An image.
- * \lparam The angle in radians.
- * \lreturn A rotated image.
  */
 static int
 luaA_image_rotate(lua_State *L)
@@ -391,13 +373,6 @@ luaA_image_rotate(lua_State *L)
 
 /** Crop an image to the given rectangle.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue An image.
- * \lparam The top left x coordinate of the rectangle.
- * \lparam The top left y coordinate of the rectangle.
- * \lparam The width of the rectangle.
- * \lparam The height of the rectangle.
- * \lreturn A cropped image.
  */
 static int
 luaA_image_crop(lua_State *L)
@@ -419,15 +394,6 @@ luaA_image_crop(lua_State *L)
 /** Crop the image to the given rectangle and scales it.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue An image.
- * \lparam The top left x coordinate of the source rectangle.
- * \lparam The top left y coordinate of the source rectangle.
- * \lparam The width of the source rectangle.
- * \lparam The height of the source rectangle.
- * \lparam The width of the destination rectangle.
- * \lparam The height of the destination rectangle.
- * \lreturn A cropped image.
  */
 static int
 luaA_image_crop_and_scale(lua_State *L)
@@ -453,11 +419,6 @@ luaA_image_crop_and_scale(lua_State *L)
 
 /** Draw a pixel in an image
  * \param L The Lua VM state
- * \luastack
- * \lvalue An image.
- * \lparam The x coordinate of the pixel to draw
- * \lparam The y coordinate of the pixel to draw
- * \lparam The color to draw the pixel in
  */
 static int
 luaA_image_draw_pixel(lua_State *L)
@@ -485,13 +446,6 @@ luaA_image_draw_pixel(lua_State *L)
 
 /** Draw a line in an image
  * \param L The Lua VM state
- * \luastack
- * \lvalue An image.
- * \lparam The x1 coordinate of the line to draw
- * \lparam The y1 coordinate of the line to draw
- * \lparam The x2 coordinate of the line to draw
- * \lparam The y2 coordinate of the line to draw
- * \lparam The color to draw the line in
  */
 static int
 luaA_image_draw_line(lua_State *L)
@@ -518,14 +472,6 @@ luaA_image_draw_line(lua_State *L)
 
 /** Draw a rectangle in an image
  * \param L The Lua VM state
- * \luastack
- * \lvalue An image.
- * \lparam The x coordinate of the rectangles top left corner
- * \lparam The y coordinate of the rectangles top left corner
- * \lparam The width of the rectangle
- * \lparam The height of the rectangle
- * \lparam True if the rectangle should be filled, False otherwise
- * \lparam The color to draw the rectangle in
  */
 static int
 luaA_image_draw_rectangle(lua_State *L)
@@ -607,15 +553,6 @@ luaA_table_to_color_range(lua_State *L, int ud)
 /** Draw a rectangle in an image with gradient color.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue An image.
- * \lparam The x coordinate of the rectangles top left corner.
- * \lparam The y coordinate of the rectangles top left corner.
- * \lparam The width of the rectangle.
- * \lparam The height of the rectangle.
- * \lparam A table with the color to draw the rectangle. You can specified the
- * color distance from the previous one by setting t[color] = distance.
- * \lparam The angle of gradient.
  */
 static int
 luaA_image_draw_rectangle_gradient(lua_State *L)
@@ -643,14 +580,6 @@ luaA_image_draw_rectangle_gradient(lua_State *L)
 
 /** Draw a circle in an image
  * \param L The Lua VM state
- * \luastack
- * \lvalue An image.
- * \lparam The x coordinate of the center of the circle
- * \lparam The y coordinate of the center of the circle
- * \lparam The horizontal amplitude (width)
- * \lparam The vertical amplitude (height)
- * \lparam True if the circle should be filled, False otherwise
- * \lparam The color to draw the circle in
  */
 static int
 luaA_image_draw_circle(lua_State *L)
@@ -683,9 +612,6 @@ luaA_image_draw_circle(lua_State *L)
  * will affect the output format.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue An image.
- * \lparam The image path.
  */
 static int
 luaA_image_save(lua_State *L)
@@ -706,19 +632,6 @@ luaA_image_save(lua_State *L)
 /** Insert one image into another.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue An image.
- * \lparam The image to insert.
- * \lparam The X offset of the image to insert (optional).
- * \lparam The Y offset of the image to insert (optional).
- * \lparam The horizontal offset of the upper right image corner (optional).
- * \lparam The vertical offset of the upper right image corner (optional).
- * \lparam The horizontal offset of the lower left image corner (optional).
- * \lparam The vertical offset of the lower left image corner (optional).
- * \lparam The X coordinate of the source rectangle (optional).
- * \lparam The Y coordinate of the source rectangle (optional).
- * \lparam The width of the source rectangle (optional).
- * \lparam The height of the source rectangle (optional).
  */
 static int
 luaA_image_insert(lua_State *L)
@@ -730,14 +643,14 @@ luaA_image_insert(lua_State *L)
 
     int xsrc = luaL_optnumber(L, 5, 0);
     int ysrc = luaL_optnumber(L, 6, 0);
-    int wsrc = luaL_optnumber(L, 7, image_getwidth(image_source));
-    int hsrc = luaL_optnumber(L, 8, image_getheight(image_source));
+    int wsrc = luaL_optnumber(L, 7, image_get_width(image_source));
+    int hsrc = luaL_optnumber(L, 8, image_get_height(image_source));
 
-    int hxoff = luaL_optnumber(L, 9, image_getwidth(image_source));
+    int hxoff = luaL_optnumber(L, 9, image_get_width(image_source));
     int hyoff = luaL_optnumber(L, 10, 0);
 
     int vxoff = luaL_optnumber(L, 11, 0);
-    int vyoff = luaL_optnumber(L, 12, image_getheight(image_source));
+    int vyoff = luaL_optnumber(L, 12, image_get_height(image_source));
 
     imlib_context_set_image(image_target->image);
 
@@ -758,14 +671,14 @@ luaA_image_insert(lua_State *L)
 static int
 luaA_image_get_width(lua_State *L, image_t *image)
 {
-    lua_pushnumber(L, image_getwidth(image));
+    lua_pushnumber(L, image_get_width(image));
     return 1;
 }
 
 static int
 luaA_image_get_height(lua_State *L, image_t *image)
 {
-    lua_pushnumber(L, image_getheight(image));
+    lua_pushnumber(L, image_get_height(image));
     return 1;
 }
 
