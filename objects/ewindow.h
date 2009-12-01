@@ -24,6 +24,7 @@
 #include "strut.h"
 #include "objects/window.h"
 #include "globalconf.h"
+#include "color.h"
 #include "common/luaclass.h"
 
 /** ewindows type */

@@ -447,8 +447,8 @@ wibox_init(lua_State *L, wibox_t *wibox)
     luaA_object_emit_signal(L, -1, "property::visible", 0);
     luaA_object_emit_signal(L, -1, "property::movable", 0);
     luaA_object_emit_signal(L, -1, "property::resizable", 0);
-    xcolor_to_color(&globalconf.colors.fg, &wibox->fg);
-    wibox->bg = globalconf.colors.bg;
+    xcolor_to_color(&_G_fg, &wibox->fg);
+    wibox->bg = _G_bg;
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
     wibox->image_valign = AlignTop;

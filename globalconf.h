@@ -21,25 +21,11 @@
 #ifndef AWESOME_GLOBALCONF_H
 #define AWESOME_GLOBALCONF_H
 
-#include "color.h"
 #include "common/array.h"
 
 typedef struct tag tag_t;
 
 ARRAY_TYPE(tag_t *, tag)
-
-/** Main configuration structure */
-typedef struct
-{
-    /** Default colors */
-    struct
-    {
-        xcolor_t fg, bg;
-    } colors;
-    /** Wiboxes */
-} awesome_t;
-
-extern awesome_t globalconf;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
