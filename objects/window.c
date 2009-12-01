@@ -104,9 +104,7 @@ void
 window_focus_update(window_t *window)
 {
     window_focused = window;
-    luaA_object_push(_G_L, window);
-    luaA_object_emit_signal(_G_L, -1, "focus", 0);
-    lua_pop(_G_L, 1);
+    window_emit_signal(_G_L, window, "focus", 0);
 }
 
 /** Record that a window lost focus.
@@ -116,9 +114,7 @@ void
 window_unfocus_update(window_t *window)
 {
     window_focused = NULL;
-    luaA_object_push(_G_L, window);
-    luaA_object_emit_signal(_G_L, -1, "unfocus", 0);
-    lua_pop(_G_L, 1);
+    window_emit_signal(_G_L, window, "unfocus", 0);
 }
 
 /** Give focus to window.
