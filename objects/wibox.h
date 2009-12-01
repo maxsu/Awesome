@@ -35,6 +35,8 @@ typedef struct
     bool need_update;
     /** Need shape update */
     bool need_shape_update;
+    /** Text */
+    char *text;
     /** Background image */
     image_t *image;
     /** Image alignment */
