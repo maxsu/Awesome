@@ -31,8 +31,6 @@
 #include "common/xcursor.h"
 #include "common/xutil.h"
 
-LUA_OBJECT_FUNCS((lua_class_t *) &wibox_class, wibox_t, wibox)
-
 /** Destroy all X resources of a wibox and any record of it.
  * \param w The wibox to wipe.
  */
@@ -47,12 +45,10 @@ wibox_wipe(wibox_t *wibox)
     ewindow_binary_array_lookup_and_remove(&_G_ewindows, &(ewindow_t) { .window = wibox->window });
     window_array_find_and_remove(&wibox->parent->childrens, (window_t *) wibox);
 
+    /* \todo make this common for all ewindows? */
     if(strut_has_value(&wibox->strut))
-    {
-        lua_pushlightuserdata(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y));
-        luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
-        lua_pop(globalconf.L, 1);
-    }
+        screen_emit_signal(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y),
+                           "property::workarea", 0);
 }
 
 static bool
@@ -704,6 +700,8 @@ DO_WIBOX_TEXT_ALIGN_FUNC(valign)
 DO_WIBOX_IMAGE_ALIGN_FUNC(align)
 DO_WIBOX_IMAGE_ALIGN_FUNC(valign)
 #undef DO_WIBOX_ALIGN_FUNC
+
+LUA_CLASS_FUNCS(wibox, (lua_class_t *) &wibox_class)
 
 void
 wibox_class_setup(lua_State *L)

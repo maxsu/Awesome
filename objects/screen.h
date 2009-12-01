@@ -44,6 +44,8 @@ typedef struct
 } screen_t;
 DO_ARRAY(screen_t, screen, DO_NOTHING)
 
+LUA_OBJECT_SIGNAL_FUNCS(screen, screen_t)
+
 /** The graphic context. */
 xcb_gcontext_t _G_gc;
 /** The default visual, used to draw */
