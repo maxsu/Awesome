@@ -31,6 +31,8 @@
 #include "common/xcursor.h"
 #include "common/xutil.h"
 
+LUA_OBJECT_SIGNAL_FUNCS(wibox, wibox_t)
+
 /** Destroy all X resources of a wibox and any record of it.
  * \param w The wibox to wipe.
  */
@@ -107,7 +109,7 @@ static void
 wibox_draw_context_update(lua_State *L, int ud)
 {
     wibox_t *w = luaA_checkudata(L, ud, (lua_class_t *) &wibox_class);
-    xcolor_t fg = w->ctx.fg, bg = w->ctx.bg;
+    xcolor_t fg = w->ctx.fg;
 
     draw_context_wipe(&w->ctx);
     if(w->pixmap)
@@ -124,7 +126,7 @@ wibox_draw_context_update(lua_State *L, int ud)
                       w->pixmap,
                       w->geometry.width,
                       w->geometry.height,
-                      &fg, &bg);
+                      &fg);
 
     w->need_update = true;
     luaA_object_emit_signal(L, ud, "property::pixmap", 0);
@@ -181,7 +183,7 @@ static void
 wibox_render(wibox_t *wibox)
 {
     color_t bg;
-    xcolor_to_color(&wibox->ctx.bg, &bg);
+    xcolor_to_color(&wibox->bg, &bg);
 
     if(bg.alpha != 0xff)
     {
@@ -234,9 +236,7 @@ wibox_render(wibox_t *wibox)
     wibox->need_update = false;
 
     /* Emit pixmap signal so childs now that they may have to redraw */
-    luaA_object_push(globalconf.L, wibox);
-    luaA_object_emit_signal(globalconf.L, -1, "property::pixmap", 0);
-    lua_pop(globalconf.L, 1);
+    wibox_emit_signal(globalconf.L, wibox, "property::pixmap", 0);
 }
 
 static void
@@ -273,7 +273,7 @@ luaA_wibox_need_update_alpha(lua_State *L)
     wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
     /* If the wibox has alpha background and its parent has a pixmap, then we
      * need to update it. Otherwise we don't care. */
-    if(wibox->ctx.bg.alpha != 0xffff && wibox->parent->pixmap)
+    if(wibox->bg.alpha != 0xffff && wibox->parent->pixmap)
         wibox->need_update = true;
     return 0;
 }
@@ -328,7 +328,7 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
         stack_window_raise(L, (window_t *) wibox);
 
         /* If window is transparent, it needs to be redrawn */
-        if(wibox->ctx.bg.alpha != 0xffff)
+        if(wibox->bg.alpha != 0xffff)
             wibox->need_update = true;
 
         /* Emit parent change signal */
@@ -350,7 +350,7 @@ luaA_wibox_childrens_need_update(lua_State *L)
     window_t *window = luaA_checkudata(L, 1, &window_class);
 
     foreach(w, _G_wiboxes)
-        if((*w)->ctx.bg.alpha != 0xffff && (*w)->parent == window)
+        if((*w)->bg.alpha != 0xffff && (*w)->parent == window)
             (*w)->need_update = true;
 
     return 0;
@@ -359,6 +359,7 @@ luaA_wibox_childrens_need_update(lua_State *L)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, image, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_clip, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_bounding, luaA_object_push)
+static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, bg, luaA_pushxcolor)
 
 /** Set the wibox foreground color.
  * \param L The Lua VM state.
@@ -397,28 +398,17 @@ luaA_wibox_set_bg(lua_State *L, wibox_t *wibox)
 {
     size_t len;
     const char *buf = luaL_checklstring(L, -1, &len);
-    if(xcolor_init_reply(xcolor_init_unchecked(&wibox->ctx.bg, buf, len)))
+    if(xcolor_init_reply(xcolor_init_unchecked(&wibox->bg, buf, len)))
     {
         if(wibox->window)
             xcb_change_window_attributes(_G_connection,
                                          wibox->window,
                                          XCB_CW_BACK_PIXEL,
-                                         (uint32_t[]) { wibox->ctx.bg.pixel });
+                                         (uint32_t[]) { wibox->bg.pixel });
         wibox->need_update = true;
     }
     luaA_object_emit_signal(L, -3, "property::bg", 0);
     return 0;
-}
-
-/** Get the wibox background color.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_get_bg(lua_State *L, wibox_t *wibox)
-{
-    return luaA_pushxcolor(L, wibox->ctx.bg);
 }
 
 /** Set the wibox background image.
@@ -470,7 +460,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
     luaA_object_emit_signal(L, -1, "property::movable", 0);
     luaA_object_emit_signal(L, -1, "property::resizable", 0);
     wibox->ctx.fg = globalconf.colors.fg;
-    wibox->ctx.bg = globalconf.colors.bg;
+    wibox->bg = globalconf.colors.bg;
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
     wibox->image_valign = AlignTop;
@@ -492,7 +482,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
                       (const uint32_t [])
                       {
                           XCB_BACK_PIXMAP_PARENT_RELATIVE,
-                          wibox->ctx.bg.pixel,
+                          wibox->bg.pixel,
                           wibox->border_color.pixel,
                           XCB_GRAVITY_NORTH_WEST,
                           true,

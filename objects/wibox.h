@@ -41,6 +41,8 @@ typedef struct
     alignment_t image_align, image_valign;
     /** Draw context */
     draw_context_t ctx;
+    /** Background color */
+    xcolor_t bg;
     /** The wibox text stuff */
     draw_text_context_t text_ctx;
     /** Text padding */
