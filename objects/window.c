@@ -365,65 +365,63 @@ luaA_window_get_size_hints(lua_State *L, window_t *window)
 
 /** Move and/or resize a window.
  * \param L The Lua VM state.
- * \param udx The index of the window on the stack.
+ * \param window The window.
  * \param geometry The new geometry.
  * \param Return true if the window has been resized or moved, false otherwise.
  */
 bool
-window_set_geometry(lua_State *L, int udx, area_t geometry)
+window_set_geometry(lua_State *L, window_t *window, area_t geometry)
 {
-    window_t *w = luaA_checkudata(L, udx, &window_class);
-
-    geometry = window_geometry_hints(w, geometry);
+    geometry = window_geometry_hints(window, geometry);
 
     int number_of_vals = 0;
     uint32_t set_geometry_win_vals[4], mask_vals = 0;
 
-    if(w->movable)
+    if(window->movable)
     {
-        if(w->geometry.x != geometry.x)
+        if(window->geometry.x != geometry.x)
         {
-            w->geometry.x = set_geometry_win_vals[number_of_vals++] = geometry.x;
+            window->geometry.x = set_geometry_win_vals[number_of_vals++] = geometry.x;
             mask_vals |= XCB_CONFIG_WINDOW_X;
         }
 
-        if(w->geometry.y != geometry.y)
+        if(window->geometry.y != geometry.y)
         {
-            w->geometry.y = set_geometry_win_vals[number_of_vals++] = geometry.y;
+            window->geometry.y = set_geometry_win_vals[number_of_vals++] = geometry.y;
             mask_vals |= XCB_CONFIG_WINDOW_Y;
         }
     }
 
-    if(w->resizable)
+    if(window->resizable)
     {
-        if(geometry.width > 0 && w->geometry.width != geometry.width)
+        if(geometry.width > 0 && window->geometry.width != geometry.width)
         {
-            w->geometry.width = set_geometry_win_vals[number_of_vals++] = geometry.width;
+            window->geometry.width = set_geometry_win_vals[number_of_vals++] = geometry.width;
             mask_vals |= XCB_CONFIG_WINDOW_WIDTH;
         }
 
-        if(geometry.height > 0 && w->geometry.height != geometry.height)
+        if(geometry.height > 0 && window->geometry.height != geometry.height)
         {
-            w->geometry.height = set_geometry_win_vals[number_of_vals++] = geometry.height;
+            window->geometry.height = set_geometry_win_vals[number_of_vals++] = geometry.height;
             mask_vals |= XCB_CONFIG_WINDOW_HEIGHT;
         }
     }
 
     if(mask_vals)
     {
-        if(w->window)
-            xcb_configure_window(_G_connection, w->window, mask_vals, set_geometry_win_vals);
+        if(window->window)
+            xcb_configure_window(_G_connection, window->window, mask_vals, set_geometry_win_vals);
 
         if(mask_vals & XCB_CONFIG_WINDOW_X)
-            luaA_object_emit_signal(L, udx, "property::x", 0);
+            window_emit_signal(L, window, "property::x", 0);
         if(mask_vals & XCB_CONFIG_WINDOW_Y)
-            luaA_object_emit_signal(L, udx, "property::y", 0);
+            window_emit_signal(L, window, "property::y", 0);
         if(mask_vals & XCB_CONFIG_WINDOW_WIDTH)
-            luaA_object_emit_signal(L, udx, "property::width", 0);
+            window_emit_signal(L, window, "property::width", 0);
         if(mask_vals & XCB_CONFIG_WINDOW_HEIGHT)
-            luaA_object_emit_signal(L, udx, "property::height", 0);
+            window_emit_signal(L, window, "property::height", 0);
 
-        luaA_object_emit_signal(L, udx, "property::geometry", 0);
+        window_emit_signal(L, window, "property::geometry", 0);
 
         return true;
     }
@@ -453,7 +451,7 @@ luaA_window_geometry(lua_State *L)
         geometry.width = luaA_getopt_number(L, 2, "width", window->geometry.width);
         geometry.height = luaA_getopt_number(L, 2, "height", window->geometry.height);
 
-        window_set_geometry(L, 1, geometry);
+        window_set_geometry(L, window, geometry);
     }
 
     return luaA_pusharea(L, window->geometry);
@@ -462,10 +460,10 @@ luaA_window_geometry(lua_State *L)
 static int
 luaA_window_set_x(lua_State *L, window_t *window)
 {
-    window_set_geometry(L, -3, (area_t) { .x = luaL_checknumber(L, -1),
-                                          .y = window->geometry.y,
-                                          .width = window->geometry.width,
-                                          .height = window->geometry.height });
+    window_set_geometry(L, window, (area_t) { .x = luaL_checknumber(L, -1),
+                                              .y = window->geometry.y,
+                                              .width = window->geometry.width,
+                                              .height = window->geometry.height });
     return 0;
 }
 
@@ -479,10 +477,10 @@ luaA_window_get_x(lua_State *L, window_t *window)
 static int
 luaA_window_set_y(lua_State *L, window_t *window)
 {
-    window_set_geometry(L, -3, (area_t) { .x = window->geometry.x,
-                                          .y = luaL_checknumber(L, -1),
-                                          .width = window->geometry.width,
-                                          .height = window->geometry.height });
+    window_set_geometry(L, window, (area_t) { .x = window->geometry.x,
+                                              .y = luaL_checknumber(L, -1),
+                                              .width = window->geometry.width,
+                                              .height = window->geometry.height });
     return 0;
 }
 
@@ -499,10 +497,10 @@ luaA_window_set_width(lua_State *L, window_t *window)
     int width = luaL_checknumber(L, -1);
     if(width <= 0)
         luaL_error(L, "invalid width");
-    window_set_geometry(L, -3, (area_t) { .x = window->geometry.x,
-                                          .y = window->geometry.y,
-                                          .width = width,
-                                          .height = window->geometry.height });
+    window_set_geometry(L, window, (area_t) { .x = window->geometry.x,
+                                              .y = window->geometry.y,
+                                              .width = width,
+                                              .height = window->geometry.height });
     return 0;
 }
 
@@ -519,10 +517,10 @@ luaA_window_set_height(lua_State *L, window_t *window)
     int height = luaL_checknumber(L, -1);
     if(height <= 0)
         luaL_error(L, "invalid height");
-    window_set_geometry(L, -3, (area_t) { .x = window->geometry.x,
-                                          .y = window->geometry.y,
-                                          .width = window->geometry.width,
-                                          .height = height });
+    window_set_geometry(L, window, (area_t) { .x = window->geometry.x,
+                                              .y = window->geometry.y,
+                                              .width = window->geometry.width,
+                                              .height = height });
     return 0;
 }
 
@@ -581,13 +579,14 @@ luaA_window_isvisible(lua_State *L)
 
 static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, focusable)
 static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, layer)
+LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(window, window_t, focusable, luaA_checkboolean)
 
 static int
 luaA_window_set_layer(lua_State *L, window_t *window)
 {
     int layer = luaL_checknumber(L, 3);
     if(layer >= INT8_MIN && layer <= INT8_MAX)
-        window_set_layer(L, 1, layer);
+        window_set_layer(L, window, layer);
     else
         luaL_error(L, "invalid layer, must be between %d and %d", INT8_MIN, INT8_MAX);
     return 0;
@@ -609,13 +608,6 @@ luaA_window_set_cursor(lua_State *L, window_t *window)
             luaA_object_emit_signal(L, -3, "property::cursor", 0);
         }
     }
-    return 0;
-}
-
-static int
-luaA_window_set_focusable(lua_State *L, window_t *c)
-{
-    window_set_focusable(L, -3, luaA_checkboolean(L, -1));
     return 0;
 }
 
@@ -646,7 +638,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, visible, lua_pushboolean)
 static int
 luaA_window_raise(lua_State *L)
 {
-    stack_window_raise(L, 1);
+    stack_window_raise(L, luaA_checkudata(L, 1, &window_class));
     return 0;
 }
 
@@ -657,7 +649,7 @@ luaA_window_raise(lua_State *L)
 static int
 luaA_window_lower(lua_State *L)
 {
-    stack_window_lower(L, 1);
+    stack_window_lower(L, luaA_checkudata(L, 1, &window_class));
     return 0;
 }
 
@@ -891,9 +883,9 @@ window_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_get_window,
                             NULL);
     luaA_class_add_property(&window_class, "focusable",
-                            (lua_class_propfunc_t) luaA_window_set_focusable,
+                            NULL,
                             (lua_class_propfunc_t) luaA_window_get_focusable,
-                            (lua_class_propfunc_t) luaA_window_set_focusable);
+                            NULL);
     luaA_class_add_property(&window_class, "cursor",
                             (lua_class_propfunc_t) luaA_window_set_cursor,
                             (lua_class_propfunc_t) luaA_window_get_cursor,

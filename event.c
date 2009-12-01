@@ -168,17 +168,11 @@ event_handle_configurerequest(void *data __attribute__ ((unused)),
         if(ev->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
             geometry.height = ev->height;
 
-        /* Push client */
-        luaA_object_push(globalconf.L, c);
-
         if(ev->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH)
-            ewindow_set_border_width(globalconf.L, -1, ev->border_width);
+            ewindow_set_border_width(globalconf.L, (ewindow_t *) c, ev->border_width);
 
-        if(!window_set_geometry(globalconf.L, -1, geometry))
+        if(!window_set_geometry(globalconf.L, (window_t *) c, geometry))
             xwindow_configure(c->window, geometry, c->border_width);
-
-        /* Remove client */
-        lua_pop(globalconf.L, 1);
     }
     else
         event_handle_configurerequest_configure_window(ev);
@@ -489,11 +483,9 @@ event_handle_maprequest(void *data __attribute__ ((unused)),
         /* Check that it may be visible, but not asked to be hidden */
         if(ewindow_isvisible((ewindow_t *) c))
         {
-            luaA_object_push(globalconf.L, c);
-            ewindow_set_minimized(globalconf.L, -1, false);
+            ewindow_set_minimized(globalconf.L, (ewindow_t *) c, false);
             /* it will be raised, so just update ourself */
-            stack_window_raise(globalconf.L, -1);
-            lua_pop(globalconf.L, 1);
+            stack_window_raise(globalconf.L, (window_t *) c);
         }
     }
     else
@@ -603,11 +595,7 @@ event_handle_clientmessage(void *data __attribute__ ((unused)),
         if((c = client_getbywin(ev->window))
            && ev->format == 32
            && ev->data.data32[0] == XCB_WM_STATE_ICONIC)
-        {
-            luaA_object_push(globalconf.L, c);
-            ewindow_set_minimized(globalconf.L, -1, true);
-            lua_pop(globalconf.L, 1);
-        }
+            ewindow_set_minimized(globalconf.L, (ewindow_t *) c, true);
     }
     else if(ev->type == _XEMBED)
         return xembed_process_client_message(ev);

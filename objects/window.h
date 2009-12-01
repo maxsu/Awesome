@@ -90,14 +90,15 @@ void window_unfocus_update(window_t *);
 void window_focus(lua_State *, int);
 area_t window_geometry_hints(window_t *, area_t);
 
-void window_set_opacity(lua_State *, int, double);
-void window_set_border_width(lua_State *, int, int);
-void window_set_sticky(lua_State *, int, bool);
-bool window_set_geometry(lua_State *, int, area_t);
+void window_set_opacity(lua_State *, window_t *, double);
+void window_set_border_width(lua_State *, window_t *, int);
+void window_set_sticky(lua_State *, window_t *, bool);
+bool window_set_geometry(lua_State *, window_t *, area_t);
 
 bool window_isvisible(lua_State *, int);
 
 int luaA_window_get_focusable(lua_State *, window_t *);
+int luaA_window_set_focusable(lua_State *, window_t *);
 int luaA_window_get_parent(lua_State *, window_t *);
 
 #endif

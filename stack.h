@@ -21,11 +21,11 @@
 #ifndef AWESOME_STACK_H
 #define AWESOME_STACK_H
 
-#include <lua.h>
+#include "objects/window.h"
 
 void stack_init(lua_State *L);
-void stack_window_raise(lua_State *L, int);
-void stack_window_lower(lua_State *L, int);
+void stack_window_raise(lua_State *L, window_t *);
+void stack_window_lower(lua_State *L, window_t *);
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

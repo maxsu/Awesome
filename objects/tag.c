@@ -105,10 +105,10 @@ tag_ewindow(lua_State *L, int widx, int tidx)
 
     /* Reference the ewindow in the tag */
     lua_pushvalue(L, widx);
-    ewindow_array_append(&tag->windows, luaA_object_ref_item(L, tidx, -1));
+    ewindow_array_append(&tag->windows, luaA_object_ref_item_from_stack(L, tidx, -1));
     /* Reference the tag in the window */
     lua_pushvalue(L, tidx);
-    tag_array_append(&ewindow->tags, luaA_object_ref_item(L, widx, -1));
+    tag_array_append(&ewindow->tags, luaA_object_ref_item_from_stack(L, widx, -1));
 
     tag_ewindow_emit_signal(L, tidx, widx, "tagged");
 }
@@ -169,11 +169,7 @@ tag_view_only(lua_State *L, tag_t *target)
 {
     if(target)
         foreach(tag, _G_tags)
-        {
-            luaA_object_push(L, *tag);
-            tag_set_selected(L, -1, *tag == target);
-            lua_pop(L, 1);
-        }
+            tag_set_selected(L, *tag, *tag == target);
 }
 
 /** View only a tag, selected by its index.

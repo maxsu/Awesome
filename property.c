@@ -39,9 +39,7 @@
                                                                 c->window, \
                                                                 atom, \
                                                                 UINT_MAX), NULL); \
-        luaA_object_push(globalconf.L, c); \
-        setfunc(globalconf.L, -1, xutil_get_text_property_from_reply(reply)); \
-        lua_pop(globalconf.L, 1); \
+        setfunc(globalconf.L, c, xutil_get_text_property_from_reply(reply)); \
         if(no_reply) \
             p_delete(&reply); \
     } \
@@ -114,12 +112,11 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_reply_t *reply)
             return;
     }
 
-    luaA_object_push(globalconf.L, c);
-    ewindow_set_type(globalconf.L, -1, EWINDOW_TYPE_DIALOG);
-    ewindow_set_above(globalconf.L, -1, false);
+    ewindow_set_type(globalconf.L, (ewindow_t *) c, EWINDOW_TYPE_DIALOG);
+    ewindow_set_above(globalconf.L, (ewindow_t *) c, false);
     luaA_object_push(globalconf.L, client_getbywin(trans));
-    client_set_transient_for(globalconf.L, -2, -1);
-    lua_pop(globalconf.L, 2);
+    client_set_transient_for(globalconf.L, c, -1);
+    lua_pop(globalconf.L, 1);
 }
 
 /** Update leader hint of a client.
@@ -206,7 +203,7 @@ property_update_wm_hints(client_t *c, xcb_get_property_reply_t *reply)
         c->focusable = wmh.input;
 
     if(wmh.flags & XCB_WM_HINT_WINDOW_GROUP)
-        client_set_group_window(globalconf.L, -1, wmh.window_group);
+        client_set_group_window(globalconf.L, c, wmh.window_group);
 }
 
 /** Update WM_CLASS of a client.
@@ -258,18 +255,13 @@ void
 property_update_net_wm_icon(client_t *c,
                             xcb_get_property_reply_t *reply)
 {
-    luaA_object_push(globalconf.L, c);
-
     if(reply)
     {
         if(ewmh_window_icon_from_reply(reply))
-            client_set_icon(globalconf.L, -2, -1);
+            client_set_icon(globalconf.L, c, -1);
     }
     else if(ewmh_window_icon_get_reply(ewmh_window_icon_get_unchecked(c->window)))
-        client_set_icon(globalconf.L, -2, -1);
-
-    /* remove client */
-    lua_pop(globalconf.L, 1);
+        client_set_icon(globalconf.L, c, -1);
 }
 
 void
@@ -289,11 +281,7 @@ property_update_net_wm_pid(client_t *c,
     {
         uint32_t *rdata = xcb_get_property_value(reply);
         if(rdata)
-        {
-            luaA_object_push(globalconf.L, c);
-            client_set_pid(globalconf.L, -1, *rdata);
-            lua_pop(globalconf.L, 1);
-        }
+            client_set_pid(globalconf.L, c, *rdata);
     }
 
     if(no_reply)
@@ -389,11 +377,7 @@ property_handle_net_wm_opacity(void *data __attribute__ ((unused)),
     ewindow_t *ewindow = ewindow_getbywin(window);
 
     if(ewindow)
-    {
-        luaA_object_push(globalconf.L, ewindow);
-        ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_reply(reply));
-        lua_pop(globalconf.L, -1);
-    }
+        ewindow_set_opacity(globalconf.L, ewindow, xwindow_get_opacity_from_reply(reply));
 
     return 0;
 }

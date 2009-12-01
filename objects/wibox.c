@@ -327,9 +327,9 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
                             wibox->geometry.x, wibox->geometry.y);
 
         /* Set parent, ref it and insert into its children array */
-        wibox->parent = luaA_object_ref_item(L, 1, 3);
+        wibox->parent = luaA_object_ref_item_from_stack(L, 1, 3);
         window_array_append(&wibox->parent->childrens, (window_t *) wibox);
-        stack_window_raise(L, 1);
+        stack_window_raise(L, (window_t *) wibox);
 
         /* If window is transparent, it needs to be redrawn */
         if(wibox->ctx.bg.alpha != 0xffff)
@@ -435,7 +435,7 @@ luaA_wibox_set_image(lua_State *L, wibox_t *wibox)
 {
     luaA_checkudataornil(L, -1, &image_class);
     luaA_object_unref_item(L, -3, wibox->image);
-    wibox->image = luaA_object_ref_item(L, -3, -1);
+    wibox->image = luaA_object_ref_item_from_stack(L, -3, -1);
     wibox->need_update = true;
     luaA_object_emit_signal(L, -2, "property::image", 0);
     return 0;
@@ -446,7 +446,7 @@ luaA_wibox_set_shape_bounding(lua_State *L, wibox_t *wibox)
 {
     luaA_checkudata(L, -1, &image_class);
     luaA_object_unref_item(L, -3, wibox->shape_bounding);
-    wibox->shape_bounding = luaA_object_ref_item(L, -3, -1);
+    wibox->shape_bounding = luaA_object_ref_item_from_stack(L, -3, -1);
     wibox->need_shape_update = true;
     luaA_object_emit_signal(L, -2, "property::shape_bounding", 0);
     return 0;
@@ -457,7 +457,7 @@ luaA_wibox_set_shape_clip(lua_State *L, wibox_t *wibox)
 {
     luaA_checkudata(L, -1, &image_class);
     luaA_object_unref_item(L, -3, wibox->shape_clip);
-    wibox->shape_clip = luaA_object_ref_item(L, -3, -1);
+    wibox->shape_clip = luaA_object_ref_item_from_stack(L, -3, -1);
     wibox->need_shape_update = true;
     luaA_object_emit_signal(L, -2, "property::shape_clip", 0);
     return 0;
@@ -481,7 +481,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
     luaA_object_emit_signal(L, -1, "property::image_valign", 0);
     wibox->parent = _G_root;
     window_array_append(&wibox->parent->childrens, (window_t *) wibox);
-    stack_window_raise(L, -1);
+    stack_window_raise(L, (window_t *) wibox);
     wibox->banned = true;
 
     /* And creates the window */
@@ -782,6 +782,10 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_wibox_set_parent,
                             (lua_class_propfunc_t) luaA_window_get_parent,
                             (lua_class_propfunc_t) luaA_wibox_set_parent);
+    luaA_class_add_property((lua_class_t *) &wibox_class, "focusable",
+                            (lua_class_propfunc_t) luaA_window_set_focusable,
+                            (lua_class_propfunc_t) luaA_window_get_focusable,
+                            (lua_class_propfunc_t) luaA_window_set_focusable);
 
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update_alpha);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update_alpha);
