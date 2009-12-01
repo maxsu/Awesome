@@ -93,8 +93,6 @@ void luaA_class_setup(lua_State *, lua_class_t *, const char *, lua_class_t *, s
 void luaA_class_add_property(lua_class_t *, const char *,
                              lua_class_propfunc_t, lua_class_propfunc_t, lua_class_propfunc_t);
 
-int luaA_class_index(lua_State *);
-int luaA_class_newindex(lua_State *);
 lua_object_t * luaA_object_new(lua_State *, lua_class_t *);
 int luaA_class_new(lua_State *, lua_class_t *);
 
