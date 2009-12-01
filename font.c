@@ -57,13 +57,4 @@ font_init(font_t *font, const char *fontname)
     cairo_surface_destroy(surface);
 }
 
-/** Delete a font.
- * \param font Font to delete.
- */
-void
-font_wipe(font_t *font)
-{
-    pango_font_description_free(font->desc);
-}
-
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
