@@ -49,7 +49,7 @@ wibox_wipe(wibox_t *wibox)
 
     /* \todo make this common for all ewindows? */
     if(strut_has_value(&wibox->strut))
-        screen_emit_signal(globalconf.L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y),
+        screen_emit_signal(_G_L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y),
                            "property::workarea", 0);
 }
 
@@ -234,7 +234,7 @@ wibox_render(wibox_t *wibox)
     wibox->need_update = false;
 
     /* Emit pixmap signal so childs now that they may have to redraw */
-    wibox_emit_signal(globalconf.L, wibox, "property::pixmap", 0);
+    wibox_emit_signal(_G_L, wibox, "property::pixmap", 0);
 }
 
 static void
@@ -259,7 +259,7 @@ wibox_refresh_tree(lua_State *L, window_t *root)
 void
 wibox_refresh(void)
 {
-    wibox_refresh_tree(globalconf.L, _G_screens.tab[0].root);
+    wibox_refresh_tree(_G_L, _G_screens.tab[0].root);
 }
 
 /** This is a callback function called via signal. It only mark the wibox has

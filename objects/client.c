@@ -194,7 +194,7 @@ client_update_properties(client_t *c)
     property_update_net_wm_icon_name(c, net_wm_icon_name);
     property_update_wm_class(c, wm_class);
     property_update_wm_protocols(c, wm_protocols);
-    ewindow_set_opacity(globalconf.L, -1, xwindow_get_opacity_from_cookie(opacity));
+    ewindow_set_opacity(_G_L, -1, xwindow_get_opacity_from_cookie(opacity));
 }
 
 /** Manage a new client.
@@ -225,12 +225,12 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     /* Add window to save set */
     xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, w);
 
-    client_t *c = (client_t *) luaA_object_new(globalconf.L, (lua_class_t *) &client_class);
+    client_t *c = (client_t *) luaA_object_new(_G_L, (lua_class_t *) &client_class);
     xcb_screen_t *s = globalconf.screen;
 
     /* Store window */
     c->window = w;
-    luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
+    luaA_object_emit_signal(_G_L, -1, "property::window", 0);
     /* Store parent */
     c->parent = _G_screens.tab[0].root;
 
@@ -261,8 +261,8 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
                                                 | XCB_EVENT_MASK_LEAVE_WINDOW
                                                 | XCB_EVENT_MASK_FOCUS_CHANGE });
 
-    luaA_object_emit_signal(globalconf.L, -1, "property::window", 0);
-    luaA_object_emit_signal(globalconf.L, -1, "property::parent", 0);
+    luaA_object_emit_signal(_G_L, -1, "property::window", 0);
+    luaA_object_emit_signal(_G_L, -1, "property::parent", 0);
     /* Consider window is focusable by default */
     c->focusable = true;
     /* Consider the window banned */
@@ -284,25 +284,25 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
                          (uint32_t[]) { XCB_STACK_MODE_BELOW});
 
     /* Duplicate client and push it in client list */
-    lua_pushvalue(globalconf.L, -1);
-    client_array_insert(&_G_clients, luaA_object_ref(globalconf.L, -1));
+    lua_pushvalue(_G_L, -1);
+    client_array_insert(&_G_clients, luaA_object_ref(_G_L, -1));
     ewindow_binary_array_insert(&_G_ewindows, (ewindow_t *) c);
 
     /* Store initial geometry and emits signals so we inform that geometry have
      * been set. */
 #define HANDLE_GEOM(attr) \
     c->geometry.attr = wgeom->attr; \
-    luaA_object_emit_signal(globalconf.L, -1, "property::" #attr, 0);
+    luaA_object_emit_signal(_G_L, -1, "property::" #attr, 0);
 HANDLE_GEOM(x)
 HANDLE_GEOM(y)
 HANDLE_GEOM(width)
 HANDLE_GEOM(height)
 #undef HANDLE_GEOM
 
-    luaA_object_emit_signal(globalconf.L, -1, "property::geometry", 0);
+    luaA_object_emit_signal(_G_L, -1, "property::geometry", 0);
 
     /* Set border width */
-    ewindow_set_border_width(globalconf.L, (ewindow_t *) c, wgeom->border_width);
+    ewindow_set_border_width(_G_L, (ewindow_t *) c, wgeom->border_width);
 
     /* update all properties */
     client_update_properties(c);
@@ -311,7 +311,7 @@ HANDLE_GEOM(height)
     ewmh_client_check_hints(c);
 
     /* Push client in stack */
-    stack_window_raise(globalconf.L, (window_t *) c);
+    stack_window_raise(_G_L, (window_t *) c);
 
     xwindow_set_state(c->window, XCB_WM_STATE_NORMAL);
 
@@ -329,10 +329,10 @@ HANDLE_GEOM(height)
 
     /* client is still on top of the stack; push startup value,
      * and emit signals with one arg */
-    lua_pushboolean(globalconf.L, startup);
-    luaA_object_emit_signal(globalconf.L, -2, "manage", 1);
+    lua_pushboolean(_G_L, startup);
+    luaA_object_emit_signal(_G_L, -2, "manage", 1);
     /* pop client */
-    lua_pop(globalconf.L, 1);
+    lua_pop(_G_L, 1);
 }
 
 /** Unmanage a client.
@@ -348,19 +348,19 @@ client_unmanage(client_t *c)
     /* Tag and window reference each other so there are tight forever.
      * We don't want the tag the unmanaged client to be referenced forever in a
      * tag so we untag it. */
-    luaA_object_push(globalconf.L, c);
+    luaA_object_push(_G_L, c);
     foreach(tag, c->tags)
     {
-        luaA_object_push(globalconf.L, *tag);
-        untag_ewindow(globalconf.L, -2, -1);
-        lua_pop(globalconf.L, 1);
+        luaA_object_push(_G_L, *tag);
+        untag_ewindow(_G_L, -2, -1);
+        lua_pop(_G_L, 1);
     }
 
-    luaA_object_emit_signal(globalconf.L, -1, "unmanage", 0);
-    lua_pop(globalconf.L, 1);
+    luaA_object_emit_signal(_G_L, -1, "unmanage", 0);
+    lua_pop(_G_L, 1);
 
     if(strut_has_value(&c->strut))
-        screen_emit_signal(globalconf.L,
+        screen_emit_signal(_G_L,
                            screen_getbycoord(c->geometry.x, c->geometry.y),
                            "property::workarea", 0);
 
@@ -391,7 +391,7 @@ client_unmanage(client_t *c)
     /* set client as invalid */
     c->window = XCB_NONE;
 
-    luaA_object_unref(globalconf.L, c);
+    luaA_object_unref(_G_L, c);
 }
 
 /** Kill a client via a WM_DELETE_WINDOW request or KillClient if not

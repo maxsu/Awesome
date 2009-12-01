@@ -36,8 +36,6 @@ ARRAY_TYPE(tag_t *, tag)
 /** Main configuration structure */
 typedef struct
 {
-    /** Lua VM state */
-    lua_State *L;
     /** Default colors */
     struct
     {

@@ -88,7 +88,7 @@ screen_scan_randr(void)
             /* A quick XRandR recall:
              * You have CRTC that manages a part of a SCREEN.
              * Each CRTC can draw stuff on one or more OUTPUT. */
-            luaA_object_ref(globalconf.L, -1);
+            luaA_object_ref(_G_L, -1);
 
             xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, globalconf.screen->root);
             xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(_G_connection, screen_res_c, NULL);

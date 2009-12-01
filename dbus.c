@@ -76,7 +76,7 @@ a_dbus_message_iter(DBusMessageIter *iter)
         switch(dbus_message_iter_get_arg_type(iter))
         {
           default:
-            lua_pushnil(globalconf.L);
+            lua_pushnil(_G_L);
             nargs++;
             break;
           case DBUS_TYPE_INVALID:
@@ -109,12 +109,12 @@ a_dbus_message_iter(DBusMessageIter *iter)
                 int n = a_dbus_message_iter(&subiter);
 
                 /* create a new table to store all the value */
-                lua_createtable(globalconf.L, n, 0);
+                lua_createtable(_G_L, n, 0);
                 /* move the table before array elements */
-                lua_insert(globalconf.L, - n - 1);
+                lua_insert(_G_L, - n - 1);
 
                 for(int i = n; i > 0; i--)
-                    lua_rawseti(globalconf.L, - i - 1, i);
+                    lua_rawseti(_G_L, - i - 1, i);
             }
             nargs++;
             break;
@@ -135,11 +135,11 @@ a_dbus_message_iter(DBusMessageIter *iter)
                         { \
                             const type *data; \
                             dbus_message_iter_get_fixed_array(&sub, &data, &datalen); \
-                            lua_createtable(globalconf.L, datalen, 0); \
+                            lua_createtable(_G_L, datalen, 0); \
                             for(int i = 0; i < datalen; i++) \
                             { \
-                                lua_pushnumber(globalconf.L, data[i]); \
-                                lua_rawseti(globalconf.L, -2, i + 1); \
+                                lua_pushnumber(_G_L, data[i]); \
+                                lua_rawseti(_G_L, -2, i + 1); \
                             } \
                         } \
                         break;
@@ -155,18 +155,18 @@ a_dbus_message_iter(DBusMessageIter *iter)
                         {
                             const char *c;
                             dbus_message_iter_get_fixed_array(&sub, &c, &datalen);
-                            lua_pushlstring(globalconf.L, c, datalen);
+                            lua_pushlstring(_G_L, c, datalen);
                         }
                         break;
                       case DBUS_TYPE_BOOLEAN:
                         {
                             const dbus_bool_t *b;
                             dbus_message_iter_get_fixed_array(&sub, &b, &datalen);
-                            lua_createtable(globalconf.L, datalen, 0);
+                            lua_createtable(_G_L, datalen, 0);
                             for(int i = 0; i < datalen; i++)
                             {
-                                lua_pushboolean(globalconf.L, b[i]);
-                                lua_rawseti(globalconf.L, -2, i + 1);
+                                lua_pushboolean(_G_L, b[i]);
+                                lua_rawseti(_G_L, -2, i + 1);
                             }
                         }
                         break;
@@ -183,12 +183,12 @@ a_dbus_message_iter(DBusMessageIter *iter)
                     int n = a_dbus_message_iter(&subiter);
 
                     /* create a new table to store all the value */
-                    lua_createtable(globalconf.L, n, 0);
+                    lua_createtable(_G_L, n, 0);
                     /* move the table before array elements */
-                    lua_insert(globalconf.L, - (n * 2) - 1);
+                    lua_insert(_G_L, - (n * 2) - 1);
 
                     for(int i = 0; i < n; i ++)
-                        lua_rawset(globalconf.L, - (n * 2) - 1 + i * 2);
+                        lua_rawset(_G_L, - (n * 2) - 1 + i * 2);
                 }
                 else
                 {
@@ -200,12 +200,12 @@ a_dbus_message_iter(DBusMessageIter *iter)
                     int n = a_dbus_message_iter(&subiter);
 
                     /* create a new table to store all the value */
-                    lua_createtable(globalconf.L, n, 0);
+                    lua_createtable(_G_L, n, 0);
                     /* move the table before array elements */
-                    lua_insert(globalconf.L, - n - 1);
+                    lua_insert(_G_L, - n - 1);
 
                     for(int i = n; i > 0; i--)
-                        lua_rawseti(globalconf.L, - i - 1, i);
+                        lua_rawseti(_G_L, - i - 1, i);
                 }
             }
             nargs++;
@@ -214,7 +214,7 @@ a_dbus_message_iter(DBusMessageIter *iter)
             {
                 dbus_bool_t b;
                 dbus_message_iter_get_basic(iter, &b);
-                lua_pushboolean(globalconf.L, b);
+                lua_pushboolean(_G_L, b);
             }
             nargs++;
             break;
@@ -222,7 +222,7 @@ a_dbus_message_iter(DBusMessageIter *iter)
             {
                 char c;
                 dbus_message_iter_get_basic(iter, &c);
-                lua_pushlstring(globalconf.L, &c, 1);
+                lua_pushlstring(_G_L, &c, 1);
             }
             nargs++;
             break;
@@ -231,7 +231,7 @@ a_dbus_message_iter(DBusMessageIter *iter)
             { \
                 type ui; \
                 dbus_message_iter_get_basic(iter, &ui); \
-                lua_pushnumber(globalconf.L, ui); \
+                lua_pushnumber(_G_L, ui); \
             } \
             nargs++; \
             break;
@@ -246,7 +246,7 @@ a_dbus_message_iter(DBusMessageIter *iter)
             {
                 char *s;
                 dbus_message_iter_get_basic(iter, &s);
-                lua_pushstring(globalconf.L, s);
+                lua_pushstring(_G_L, s);
             }
             nargs++;
             break;
@@ -261,7 +261,7 @@ a_dbus_convert_value(lua_State *L, int idx, DBusMessageIter *iter)
 {
     /* i is the type name, i+1 the value */
     size_t len;
-    const char *type = lua_tolstring(globalconf.L, idx, &len);
+    const char *type = lua_tolstring(_G_L, idx, &len);
 
     if(!type || len < 1)
         return false;
@@ -279,7 +279,7 @@ a_dbus_convert_value(lua_State *L, int idx, DBusMessageIter *iter)
 
             if(arraylen % 2 != 0)
             {
-                luaA_warn(globalconf.L,
+                luaA_warn(_G_L,
                           "your D-Bus signal handling method returned wrong number of arguments");
                 return false;
             }
@@ -304,14 +304,14 @@ a_dbus_convert_value(lua_State *L, int idx, DBusMessageIter *iter)
         break;
       case DBUS_TYPE_BOOLEAN:
         {
-            dbus_bool_t b = lua_toboolean(globalconf.L, idx + 1);
+            dbus_bool_t b = lua_toboolean(_G_L, idx + 1);
             dbus_message_iter_append_basic(iter, DBUS_TYPE_BOOLEAN, &b);
         }
         break;
 #define DBUS_MSG_RETURN_HANDLE_TYPE_STRING(dbustype) \
       case dbustype: \
         { \
-            const char *s = lua_tostring(globalconf.L, idx + 1); \
+            const char *s = lua_tostring(_G_L, idx + 1); \
             if(s) \
                 dbus_message_iter_append_basic(iter, dbustype, &s); \
         } \
@@ -322,7 +322,7 @@ a_dbus_convert_value(lua_State *L, int idx, DBusMessageIter *iter)
 #define DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(type, dbustype) \
       case dbustype: \
         { \
-           type num = lua_tonumber(globalconf.L, idx + 1); \
+           type num = lua_tonumber(_G_L, idx + 1); \
            dbus_message_iter_append_basic(iter, dbustype, &num); \
         } \
         break;
@@ -348,45 +348,45 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
 {
     const char *interface = dbus_message_get_interface(msg);
 
-    lua_createtable(globalconf.L, 0, 5);
+    lua_createtable(_G_L, 0, 5);
 
     switch(dbus_message_get_type(msg))
     {
       case DBUS_MESSAGE_TYPE_SIGNAL:
-        lua_pushliteral(globalconf.L, "signal");
+        lua_pushliteral(_G_L, "signal");
         break;
       case DBUS_MESSAGE_TYPE_METHOD_CALL:
-        lua_pushliteral(globalconf.L, "method_call");
+        lua_pushliteral(_G_L, "method_call");
         break;
       case DBUS_MESSAGE_TYPE_METHOD_RETURN:
-        lua_pushliteral(globalconf.L, "method_return");
+        lua_pushliteral(_G_L, "method_return");
         break;
       case DBUS_MESSAGE_TYPE_ERROR:
-        lua_pushliteral(globalconf.L, "error");
+        lua_pushliteral(_G_L, "error");
         break;
       default:
-        lua_pushliteral(globalconf.L, "unknown");
+        lua_pushliteral(_G_L, "unknown");
         break;
     }
 
-    lua_setfield(globalconf.L, -2, "type");
+    lua_setfield(_G_L, -2, "type");
 
-    lua_pushstring(globalconf.L, interface);
-    lua_setfield(globalconf.L, -2, "interface");
+    lua_pushstring(_G_L, interface);
+    lua_setfield(_G_L, -2, "interface");
 
     const char *s = dbus_message_get_path(msg);
-    lua_pushstring(globalconf.L, s);
-    lua_setfield(globalconf.L, -2, "path");
+    lua_pushstring(_G_L, s);
+    lua_setfield(_G_L, -2, "path");
 
     s = dbus_message_get_member(msg);
-    lua_pushstring(globalconf.L, s);
-    lua_setfield(globalconf.L, -2, "member");
+    lua_pushstring(_G_L, s);
+    lua_setfield(_G_L, -2, "member");
 
     if(dbus_connection == dbus_connection_system)
-        lua_pushliteral(globalconf.L, "system");
+        lua_pushliteral(_G_L, "system");
     else
-        lua_pushliteral(globalconf.L, "session");
-    lua_setfield(globalconf.L, -2, "bus");
+        lua_pushliteral(_G_L, "session");
+    lua_setfield(_G_L, -2, "bus");
 
     /* + 1 for the table above */
     DBusMessageIter iter;
@@ -397,7 +397,7 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
 
     if(dbus_message_get_no_reply(msg))
         /* emit signals */
-        signal_object_emit(globalconf.L, &dbus_signals, NONULL(interface), nargs);
+        signal_object_emit(_G_L, &dbus_signals, NONULL(interface), nargs);
     else
     {
         signal_t *sig = signal_array_getbyid(&dbus_signals,
@@ -407,14 +407,14 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
             /* there can be only ONE handler to send reply */
             void *func = (void *) sig->sigfuncs.tab[0];
 
-            int n = lua_gettop(globalconf.L) - nargs;
+            int n = lua_gettop(_G_L) - nargs;
 
-            luaA_object_push(globalconf.L, (void *) func);
+            luaA_object_push(_G_L, (void *) func);
             /* Move function before args */
-            lua_insert(globalconf.L, - nargs - 1);
-            luaA_dofunction(globalconf.L, nargs, LUA_MULTRET);
+            lua_insert(_G_L, - nargs - 1);
+            luaA_dofunction(_G_L, nargs, LUA_MULTRET);
 
-            n -= lua_gettop(globalconf.L);
+            n -= lua_gettop(_G_L);
 
             DBusMessage *reply = dbus_message_new_method_return(msg);
 
@@ -422,24 +422,62 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
 
             if(n % 2 != 0)
             {
-                luaA_warn(globalconf.L,
+                luaA_warn(_G_L,
                           "your D-Bus signal handling method returned wrong number of arguments");
                 /* Remove returned values from the stack */
-                lua_pop(globalconf.L, - n);
+                lua_pop(_G_L, - n);
                 return;
             }
 
             /* i is negative */
             for(int i = n; i < 0; i += 2)
             {
-                if(!a_dbus_convert_value(globalconf.L, i, &iter))
+                /* i is the type name, i+1 the value */
+                size_t len;
+                const char *type = lua_tolstring(_G_L, i, &len);
+
+                if(!type || len != 1)
                 {
-                    luaA_warn(globalconf.L, "your D-Bus signal handling method returned bad data");
-                    return;
+                    luaL_error(_G_L,
+                               "your D-Bus signal handling method returned bad data");
+                    break;
                 }
 
-                lua_remove(globalconf.L, i);
-                lua_remove(globalconf.L, i + 1);
+                switch(*type)
+                {
+                  case DBUS_TYPE_BOOLEAN:
+                    {
+                        dbus_bool_t  b = lua_toboolean(_G_L, i + 1);
+                        dbus_message_iter_append_basic(&iter, DBUS_TYPE_BOOLEAN, &b);
+                    }
+                    break;
+#define DBUS_MSG_RETURN_HANDLE_TYPE_STRING(dbustype) \
+                  case dbustype: \
+                                 if((s = lua_tostring(_G_L, i + 1))) \
+                    dbus_message_iter_append_basic(&iter, dbustype, &s); \
+                    break;
+                    DBUS_MSG_RETURN_HANDLE_TYPE_STRING(DBUS_TYPE_STRING)
+                        DBUS_MSG_RETURN_HANDLE_TYPE_STRING(DBUS_TYPE_BYTE)
+#undef DBUS_MSG_RETURN_HANDLE_TYPE_STRING
+#define DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(type, dbustype) \
+                  case dbustype: \
+                                 { \
+                                     type num = lua_tonumber(_G_L, i + 1); \
+                                     dbus_message_iter_append_basic(&iter, dbustype, &num); \
+                                 } \
+                        break;
+                        DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(int16_t, DBUS_TYPE_INT16)
+                        DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(uint16_t, DBUS_TYPE_UINT16)
+                        DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(int32_t, DBUS_TYPE_INT32)
+                        DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(uint32_t, DBUS_TYPE_UINT32)
+                        DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(int64_t, DBUS_TYPE_INT64)
+                        DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(uint64_t, DBUS_TYPE_UINT64)
+                        DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER(double, DBUS_TYPE_DOUBLE)
+#undef DBUS_MSG_RETURN_HANDLE_TYPE_NUMBER
+                }
+
+                lua_remove(_G_L, i);
+                lua_remove(_G_L, i + 1);
             }
 
             dbus_connection_send(dbus_connection, reply, NULL);

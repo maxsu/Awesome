@@ -23,6 +23,7 @@
 
 #include <xcb/xcb.h>
 
+#include "luaa.h"
 #include "awesome.h"
 #include "ewmh.h"
 #include "objects/tag.h"
@@ -256,92 +257,92 @@ ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
     if(state == _NET_WM_STATE_STICKY)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_sticky(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_sticky(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_sticky(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_sticky(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_sticky(globalconf.L, (ewindow_t *) c, !c->sticky);
+            ewindow_set_sticky(_G_L, (ewindow_t *) c, !c->sticky);
     }
     else if(state == _NET_WM_STATE_SKIP_TASKBAR)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_skip_taskbar(globalconf.L, c, false);
+            client_set_skip_taskbar(_G_L, c, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_skip_taskbar(globalconf.L, c, true);
+            client_set_skip_taskbar(_G_L, c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_skip_taskbar(globalconf.L, c, !c->skip_taskbar);
+            client_set_skip_taskbar(_G_L, c, !c->skip_taskbar);
     }
     else if(state == _NET_WM_STATE_FULLSCREEN)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_fullscreen(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_fullscreen(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_fullscreen(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_fullscreen(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_fullscreen(globalconf.L, (ewindow_t *) c, !c->fullscreen);
+            ewindow_set_fullscreen(_G_L, (ewindow_t *) c, !c->fullscreen);
     }
     else if(state == _NET_WM_STATE_MAXIMIZED_HORZ)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_maximized_horizontal(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_maximized_horizontal(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_maximized_horizontal(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_maximized_horizontal(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_maximized_horizontal(globalconf.L, (ewindow_t *) c, !c->maximized_horizontal);
+            ewindow_set_maximized_horizontal(_G_L, (ewindow_t *) c, !c->maximized_horizontal);
     }
     else if(state == _NET_WM_STATE_MAXIMIZED_VERT)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_maximized_vertical(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_maximized_vertical(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_maximized_vertical(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_maximized_vertical(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_maximized_vertical(globalconf.L, (ewindow_t *) c, !c->maximized_vertical);
+            ewindow_set_maximized_vertical(_G_L, (ewindow_t *) c, !c->maximized_vertical);
     }
     else if(state == _NET_WM_STATE_ABOVE)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_above(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_above(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_above(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_above(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_above(globalconf.L, (ewindow_t *) c, !c->above);
+            ewindow_set_above(_G_L, (ewindow_t *) c, !c->above);
     }
     else if(state == _NET_WM_STATE_BELOW)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_below(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_below(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_below(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_below(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_below(globalconf.L, (ewindow_t *) c, !c->below);
+            ewindow_set_below(_G_L, (ewindow_t *) c, !c->below);
     }
     else if(state == _NET_WM_STATE_MODAL)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_modal(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_modal(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_modal(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_modal(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_modal(globalconf.L, (ewindow_t *) c, !c->modal);
+            ewindow_set_modal(_G_L, (ewindow_t *) c, !c->modal);
     }
     else if(state == _NET_WM_STATE_HIDDEN)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            ewindow_set_minimized(globalconf.L, (ewindow_t *) c, false);
+            ewindow_set_minimized(_G_L, (ewindow_t *) c, false);
         else if(set == _NET_WM_STATE_ADD)
-            ewindow_set_minimized(globalconf.L, (ewindow_t *) c, true);
+            ewindow_set_minimized(_G_L, (ewindow_t *) c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            ewindow_set_minimized(globalconf.L, (ewindow_t *) c, !c->minimized);
+            ewindow_set_minimized(_G_L, (ewindow_t *) c, !c->minimized);
     }
     else if(state == _NET_WM_STATE_DEMANDS_ATTENTION)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_urgent(globalconf.L, c, false);
+            client_set_urgent(_G_L, c, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_urgent(globalconf.L, c, true);
+            client_set_urgent(_G_L, c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_urgent(globalconf.L, c, !c->urgent);
+            client_set_urgent(_G_L, c, !c->urgent);
     }
 }
 
@@ -351,7 +352,7 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
     client_t *c;
 
     if(ev->type == _NET_CURRENT_DESKTOP)
-        tag_view_only_byindex(globalconf.L, ev->data.data32[0]);
+        tag_view_only_byindex(_G_L, ev->data.data32[0]);
     else if(ev->type == _NET_CLOSE_WINDOW)
     {
         if((c = client_getbywin(ev->window)))
@@ -366,13 +367,13 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
             else
                 for(int i = 0; i < _G_tags.len; i++)
                 {
-                    luaA_object_push(globalconf.L, c);
-                    luaA_object_push(globalconf.L, _G_tags.tab[i]);
+                    luaA_object_push(_G_L, c);
+                    luaA_object_push(_G_L, _G_tags.tab[i]);
                     if((int) ev->data.data32[0] == i)
-                        tag_ewindow(globalconf.L, -2, -1);
+                        tag_ewindow(_G_L, -2, -1);
                     else
-                        untag_ewindow(globalconf.L, -2, -1);
-                    lua_pop(globalconf.L, 2);
+                        untag_ewindow(_G_L, -2, -1);
+                    lua_pop(_G_L, 2);
                 }
         }
     }
@@ -390,9 +391,9 @@ ewmh_process_client_message(xcb_client_message_event_t *ev)
     {
         if((c = client_getbywin(ev->window)))
         {
-            luaA_object_push(globalconf.L, c);
-            window_focus(globalconf.L, -1);
-            lua_pop(globalconf.L, 1);
+            luaA_object_push(_G_L, c);
+            window_focus(_G_L, -1);
+            lua_pop(_G_L, 1);
         }
     }
 
@@ -426,26 +427,26 @@ ewmh_client_check_hints(client_t *c)
             c->sticky = true;
         else if (desktop >= 0 && desktop < _G_tags.len)
         {
-            luaA_object_push(globalconf.L, c);
+            luaA_object_push(_G_L, c);
             for(int i = 0; i < _G_tags.len; i++)
             {
-                luaA_object_push(globalconf.L, _G_tags.tab[i]);
+                luaA_object_push(_G_L, _G_tags.tab[i]);
                 if(desktop == i)
-                    tag_ewindow(globalconf.L, -2, -1);
+                    tag_ewindow(_G_L, -2, -1);
                 else
-                    untag_ewindow(globalconf.L, -2, -1);
-                lua_pop(globalconf.L, 1);
+                    untag_ewindow(_G_L, -2, -1);
+                lua_pop(_G_L, 1);
             }
-            lua_pop(globalconf.L, 1);
+            lua_pop(_G_L, 1);
         }
         else
             /* Value out of bounds, just give it the first tag */
             if (_G_tags.len > 0)
             {
-                luaA_object_push(globalconf.L, c);
-                luaA_object_push(globalconf.L, _G_tags.tab[0]);
-                tag_ewindow(globalconf.L, -2, -1);
-                lua_pop(globalconf.L, 1);
+                luaA_object_push(_G_L, c);
+                luaA_object_push(_G_L, _G_tags.tab[0]);
+                tag_ewindow(_G_L, -2, -1);
+                lua_pop(_G_L, 1);
             }
     }
 
@@ -486,7 +487,7 @@ HANDLE(TYPE_COMBO)
 HANDLE(TYPE_DND)
 #undef HANDLE
 
-        ewindow_set_type(globalconf.L, (ewindow_t *) c, type);
+        ewindow_set_type(_G_L, (ewindow_t *) c, type);
     }
 
     p_delete(&reply);
@@ -538,9 +539,9 @@ ewmh_process_client_strut(client_t *c)
             c->strut.bottom_start_x = strut[10];
             c->strut.bottom_end_x = strut[11];
 
-            luaA_object_push(globalconf.L, c);
-            luaA_object_emit_signal(globalconf.L, -1, "property::struts", 0);
-            lua_pop(globalconf.L, 1);
+            luaA_object_push(_G_L, c);
+            luaA_object_emit_signal(_G_L, -1, "property::struts", 0);
+            lua_pop(_G_L, 1);
         }
     }
 
@@ -579,7 +580,7 @@ ewmh_window_icon_from_reply(xcb_get_property_reply_t *r)
     if (!data[0] || !data[1] || len > r->length - 2)
         return 0;
 
-    return image_new_from_argb32(globalconf.L, data[0], data[1], data + 2);
+    return image_new_from_argb32(_G_L, data[0], data[1], data + 2);
 }
 
 /** Get NET_WM_ICON.

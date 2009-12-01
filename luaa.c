@@ -421,7 +421,7 @@ luaA_init(xdgHandle* xdg)
         { NULL, NULL }
     };
 
-    L = globalconf.L = luaL_newstate();
+    L = _G_L = luaL_newstate();
 
     /* Set panic function */
     lua_atpanic(L, luaA_panic);
@@ -520,12 +520,12 @@ luaA_init(xdgHandle* xdg)
 static bool
 luaA_loadrc(const char *confpath, bool run)
 {
-    if(!luaL_loadfile(globalconf.L, confpath))
+    if(!luaL_loadfile(_G_L, confpath))
     {
         if(run)
         {
-            if(lua_pcall(globalconf.L, 0, LUA_MULTRET, 0))
-                fprintf(stderr, "%s\n", lua_tostring(globalconf.L, -1));
+            if(lua_pcall(_G_L, 0, LUA_MULTRET, 0))
+                fprintf(stderr, "%s\n", lua_tostring(_G_L, -1));
             else
             {
                 conffile = a_strdup(confpath);
@@ -534,12 +534,12 @@ luaA_loadrc(const char *confpath, bool run)
         }
         else
         {
-            lua_pop(globalconf.L, 1);
+            lua_pop(_G_L, 1);
             return true;
         }
     }
     else
-        fprintf(stderr, "%s\n", lua_tostring(globalconf.L, -1));
+        fprintf(stderr, "%s\n", lua_tostring(_G_L, -1));
 
     return false;
 }

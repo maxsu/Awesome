@@ -43,9 +43,9 @@
     { \
         xcb_get_property_reply_t * reply = \
                     xcb_get_property_reply(_G_connection, cookie, NULL); \
-        luaA_object_push(globalconf.L, c); \
-        setfunc(globalconf.L, -1, xutil_get_text_property_from_reply(reply)); \
-        lua_pop(globalconf.L, 1); \
+        luaA_object_push(_G_L, c); \
+        setfunc(_G_L, c, xutil_get_text_property_from_reply(reply)); \
+        lua_pop(_G_L, 1); \
         p_delete(&reply); \
     } \
     static int \
@@ -106,11 +106,11 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_cookie_t cookie)
                                        &trans, NULL))
             return;
 
-    ewindow_set_type(globalconf.L, (ewindow_t *) c, EWINDOW_TYPE_DIALOG);
-    ewindow_set_above(globalconf.L, (ewindow_t *) c, false);
-    luaA_object_push(globalconf.L, client_getbywin(trans));
-    client_set_transient_for(globalconf.L, c, -1);
-    lua_pop(globalconf.L, 1);
+    ewindow_set_type(_G_L, (ewindow_t *) c, EWINDOW_TYPE_DIALOG);
+    ewindow_set_above(_G_L, (ewindow_t *) c, false);
+    luaA_object_push(_G_L, client_getbywin(trans));
+    client_set_transient_for(_G_L, c, -1);
+    lua_pop(_G_L, 1);
 }
 
 xcb_get_property_cookie_t
@@ -184,13 +184,13 @@ property_update_wm_hints(client_t *c, xcb_get_property_cookie_t cookie)
                                &wmh, NULL))
         return;
 
-    client_set_urgent(globalconf.L, c, xcb_wm_hints_get_urgency(&wmh));
+    client_set_urgent(_G_L, c, xcb_wm_hints_get_urgency(&wmh));
 
     if(wmh.flags & XCB_WM_HINT_INPUT)
         c->focusable = wmh.input;
 
     if(wmh.flags & XCB_WM_HINT_WINDOW_GROUP)
-        client_set_group_window(globalconf.L, c, wmh.window_group);
+        client_set_group_window(_G_L, c, wmh.window_group);
 }
 
 xcb_get_property_cookie_t
@@ -213,7 +213,7 @@ property_update_wm_class(client_t *c, xcb_get_property_cookie_t cookie)
                                &hint, NULL))
         return;
 
-    client_set_class_instance(globalconf.L, c, hint.class_name, hint.instance_name);
+    client_set_class_instance(_G_L, c, hint.class_name, hint.instance_name);
 
     xcb_get_wm_class_reply_wipe(&hint);
 }
@@ -240,7 +240,7 @@ void
 property_update_net_wm_icon(client_t *c, xcb_get_property_cookie_t cookie)
 {
     if(ewmh_window_icon_get_reply(cookie))
-        client_set_icon(globalconf.L, c, -1);
+        client_set_icon(_G_L, c, -1);
 }
 
 xcb_get_property_cookie_t
@@ -260,7 +260,7 @@ property_update_net_wm_pid(client_t *c, xcb_get_property_cookie_t cookie)
     {
         uint32_t *rdata = xcb_get_property_value(reply);
         if(rdata)
-            client_set_pid(globalconf.L, c, *rdata);
+            client_set_pid(_G_L, c, *rdata);
     }
 
     p_delete(&reply);
@@ -307,7 +307,7 @@ property_handle_net_wm_opacity(uint8_t state,
     ewindow_t *ewindow = ewindow_getbywin(window);
 
     if(ewindow)
-        ewindow_set_opacity(globalconf.L, ewindow, xwindow_get_opacity(window));
+        ewindow_set_opacity(_G_L, ewindow, xwindow_get_opacity(window));
 
     return 0;
 }
