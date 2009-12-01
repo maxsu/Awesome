@@ -38,7 +38,7 @@ OBJECT_EXPORT_PROPERTY(tag, tag_t, selected)
 OBJECT_EXPORT_PROPERTY(tag, tag_t, name)
 static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, name, lua_pushstring)
 static LUA_OBJECT_EXPORT_PROPERTY(tag, tag_t, selected, lua_pushboolean)
-static LUA_OBJECT_DO_SET_PROPERTY_FUNC(tag, &tag_class, tag_t, selected)
+static LUA_OBJECT_DO_SET_PROPERTY_FUNC(tag, tag_t, selected)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(tag, tag_t, selected, luaA_checkboolean)
 
 static int

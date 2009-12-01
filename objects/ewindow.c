@@ -463,9 +463,9 @@ luaA_ewindow_tags(lua_State *L)
     return 1;
 }
 
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, sticky)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, modal)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, (lua_class_t *) &ewindow_class, ewindow_t, type)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, ewindow_t, sticky)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, ewindow_t, modal)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(ewindow, ewindow_t, type)
 
 static int
 luaA_ewindow_set_sticky(lua_State *L, ewindow_t *ewindow)
