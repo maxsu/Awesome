@@ -316,12 +316,12 @@ luaA_pushxcolor(lua_State *L, const xcolor_t c)
  * \return The number of elements pushed on stack.
  */
 int
-luaA_pushcolor(lua_State *L, const color_t *c)
+luaA_pushcolor(lua_State *L, const color_t c)
 {
-    uint8_t r = c->red;
-    uint8_t g = c->green;
-    uint8_t b = c->blue;
-    uint8_t a = c->alpha;
+    uint8_t r = c.red;
+    uint8_t g = c.green;
+    uint8_t b = c.blue;
+    uint8_t a = c.alpha;
     char s[10];
     int len;
     /* do not print alpha if it's full */

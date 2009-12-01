@@ -121,21 +121,18 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
  * \param pixmap The pixmap to draw onto.
  * \param width Width.
  * \param height Height.
- * \param fg Foreground color.
  */
 #include "awesome.h"
 void
 draw_context_init(draw_context_t *d,
                   xcb_pixmap_t pixmap,
-                  int width, int height,
-                  const xcolor_t *fg)
+                  int width, int height)
 {
     d->surface = cairo_xcb_surface_create(_G_connection,
                                           pixmap, globalconf.visual,
                                           width, height);
     d->cr = cairo_create(d->surface);
     d->layout = pango_cairo_create_layout(d->cr);
-    d->fg = *fg;
 };
 
 /** Wipe a draw context.
@@ -193,10 +190,11 @@ draw_align_compute(area_t area, int width, int height, alignment_t align, alignm
 /** Draw text into a draw context.
  * \param ctx Draw context  to draw to.
  * \param data Draw text context data.
+ * \param fg The foreground color used to draw the text.
  * \param area Area to draw to.
  */
 void
-draw_text(draw_context_t *ctx, draw_text_context_t *data, area_t area)
+draw_text(draw_context_t *ctx, draw_text_context_t *data, const color_t *fg, area_t area)
 {
     pango_layout_set_text(ctx->layout, data->text, data->len);
     pango_layout_set_width(ctx->layout,
@@ -215,10 +213,10 @@ draw_text(draw_context_t *ctx, draw_text_context_t *data, area_t area)
     cairo_move_to(ctx->cr, area.x, area.y);
 
     cairo_set_source_rgba(ctx->cr,
-                          ctx->fg.red / 65535.0,
-                          ctx->fg.green / 65535.0,
-                          ctx->fg.blue / 65535.0,
-                          ctx->fg.alpha / 65535.0);
+                          fg->red / 255.0,
+                          fg->green / 255.0,
+                          fg->blue / 255.0,
+                          fg->alpha / 255.0);
     pango_cairo_update_layout(ctx->cr, ctx->layout);
     pango_cairo_show_layout(ctx->cr, ctx->layout);
 }

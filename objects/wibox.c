@@ -109,7 +109,6 @@ static void
 wibox_draw_context_update(lua_State *L, int ud)
 {
     wibox_t *w = luaA_checkudata(L, ud, (lua_class_t *) &wibox_class);
-    xcolor_t fg = w->ctx.fg;
 
     draw_context_wipe(&w->ctx);
     if(w->pixmap)
@@ -125,8 +124,7 @@ wibox_draw_context_update(lua_State *L, int ud)
     draw_context_init(&w->ctx,
                       w->pixmap,
                       w->geometry.width,
-                      w->geometry.height,
-                      &fg);
+                      w->geometry.height);
 
     w->need_update = true;
     luaA_object_emit_signal(L, ud, "property::pixmap", 0);
@@ -229,7 +227,7 @@ wibox_render(wibox_t *wibox)
     else
         geometry.height = 0;
 
-    draw_text(&wibox->ctx, &wibox->text_ctx, geometry);
+    draw_text(&wibox->ctx, &wibox->text_ctx, &wibox->fg, geometry);
 
     wibox_refresh_pixmap(wibox);
 
@@ -360,6 +358,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, image, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_clip, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_bounding, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, bg, luaA_pushxcolor)
+static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, fg, luaA_pushcolor)
 
 /** Set the wibox foreground color.
  * \param L The Lua VM state.
@@ -371,21 +370,10 @@ luaA_wibox_set_fg(lua_State *L, wibox_t *wibox)
 {
     size_t len;
     const char *buf = luaL_checklstring(L, -1, &len);
-    if(xcolor_init_reply(xcolor_init_unchecked(&wibox->ctx.fg, buf, len)))
+    if(color_init_reply(color_init_unchecked(&wibox->fg, buf, len)))
         wibox->need_update = true;
     luaA_object_emit_signal(L, -3, "property::fg", 0);
     return 0;
-}
-
-/** Get the wibox foreground color.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_get_fg(lua_State *L, wibox_t *wibox)
-{
-    return luaA_pushxcolor(L, wibox->ctx.fg);
 }
 
 /** Set the wibox background color.
@@ -459,7 +447,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
     luaA_object_emit_signal(L, -1, "property::visible", 0);
     luaA_object_emit_signal(L, -1, "property::movable", 0);
     luaA_object_emit_signal(L, -1, "property::resizable", 0);
-    wibox->ctx.fg = globalconf.colors.fg;
+    xcolor_to_color(&globalconf.colors.fg, &wibox->fg);
     wibox->bg = globalconf.colors.bg;
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
