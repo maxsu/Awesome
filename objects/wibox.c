@@ -129,12 +129,7 @@ wibox_draw_context_update(lua_State *L, wibox_t *wibox)
     wibox_emit_signal(L, wibox, "property::pixmap", 0);
 }
 
-static int
-luaA_wibox_draw_context_update(lua_State *L)
-{
-    wibox_draw_context_update(L, luaA_checkudata(L, 1, (lua_class_t *) &wibox_class));
-    return 0;
-}
+static LUA_CLASS_METHOD_BRIDGE(wibox, draw_context_update, (lua_class_t *) &wibox_class, wibox_draw_context_update)
 
 /** Refresh the window content by copying its pixmap data to its window.
  * \param w The wibox to refresh.
@@ -276,6 +271,14 @@ luaA_wibox_need_update_alpha(lua_State *L)
 }
 
 static int
+luaA_wibox_need_update(lua_State *L)
+{
+    wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
+    wibox->need_update = true;
+    return 0;
+}
+
+static int
 luaA_wibox_need_shape_update(lua_State *L)
 {
     wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
@@ -407,22 +410,8 @@ luaA_wibox_set_bg(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-/** Set the wibox background image.
- * \param L The Lua VM state.
- * \param wibox The wibox object.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_wibox_set_image(lua_State *L, wibox_t *wibox)
-{
-    luaA_checkudataornil(L, -1, &image_class);
-    luaA_object_unref_item(L, -3, wibox->image);
-    wibox->image = luaA_object_ref_item_from_stack(L, -3, -1);
-    wibox->need_update = true;
-    luaA_object_emit_signal(L, -2, "property::image", 0);
-    return 0;
-}
-
+static LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(wibox, &image_class, wibox_t, image)
+static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(wibox, wibox_t, image, LUA_OBJECT_FAKE_CHECKER)
 static LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(wibox, &image_class, wibox_t, shape_bounding)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(wibox, wibox_t, shape_bounding, LUA_OBJECT_FAKE_CHECKER)
 static LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(wibox, &image_class, wibox_t, shape_clip)
@@ -747,6 +736,7 @@ wibox_class_setup(lua_State *L)
                             (lua_class_propfunc_t) luaA_window_get_focusable,
                             (lua_class_propfunc_t) luaA_window_set_focusable);
 
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::image", luaA_wibox_need_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update_alpha);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update_alpha);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::shape_clip", luaA_wibox_need_shape_update);
