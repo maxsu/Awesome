@@ -107,34 +107,32 @@ wibox_shape_update(wibox_t *wibox)
 }
 
 static void
-wibox_draw_context_update(lua_State *L, int ud)
+wibox_draw_context_update(lua_State *L, wibox_t *wibox)
 {
-    wibox_t *w = luaA_checkudata(L, ud, (lua_class_t *) &wibox_class);
-
-    draw_context_wipe(&w->ctx);
-    if(w->pixmap)
-        xcb_free_pixmap(_G_connection, w->pixmap);
+    draw_context_wipe(&wibox->ctx);
+    if(wibox->pixmap)
+        xcb_free_pixmap(_G_connection, wibox->pixmap);
 
     /* Create a pixmap. */
-    w->pixmap = xcb_generate_id(_G_connection);
+    wibox->pixmap = xcb_generate_id(_G_connection);
     xcb_screen_t *xcb_screen = xutil_screen_get(_G_connection, _G_default_screen);
     xcb_create_pixmap(_G_connection, xcb_screen->root_depth,
-                      w->pixmap, _G_root->window,
-                      w->geometry.width, w->geometry.height);
+                      wibox->pixmap, _G_root->window,
+                      wibox->geometry.width, wibox->geometry.height);
 
-    draw_context_init(&w->ctx,
-                      w->pixmap,
-                      w->geometry.width,
-                      w->geometry.height);
+    draw_context_init(&wibox->ctx,
+                      wibox->pixmap,
+                      wibox->geometry.width,
+                      wibox->geometry.height);
 
-    w->need_update = true;
-    luaA_object_emit_signal(L, ud, "property::pixmap", 0);
+    wibox->need_update = true;
+    wibox_emit_signal(L, wibox, "property::pixmap", 0);
 }
 
 static int
 luaA_wibox_draw_context_update(lua_State *L)
 {
-    wibox_draw_context_update(L, 1);
+    wibox_draw_context_update(L, luaA_checkudata(L, 1, (lua_class_t *) &wibox_class));
     return 0;
 }
 
@@ -483,7 +481,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
 
     luaA_object_emit_signal(L, 1, "property::window", 0);
 
-    wibox_draw_context_update(L, -1);
+    wibox_draw_context_update(L, wibox);
 }
 
 static int
