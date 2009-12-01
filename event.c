@@ -81,22 +81,20 @@ luaA_pushmodifiers(lua_State *L, uint16_t modifiers)
 static void
 event_handle_button(xcb_button_press_event_t *ev)
 {
-    luaA_object_push(_G_L, window_getbywin(ev->event));
     luaA_pushmodifiers(_G_L, ev->state);
     lua_pushinteger(_G_L, ev->detail);
     switch(ev->response_type)
     {
       case XCB_BUTTON_PRESS:
-        luaA_object_emit_signal(_G_L, -3, "button::press", 2);
+        window_emit_signal(_G_L, window_getbywin(ev->event), "button::press", 2);
         break;
       case XCB_BUTTON_RELEASE:
-        luaA_object_emit_signal(_G_L, -3, "button::release", 2);
+        window_emit_signal(_G_L, window_getbywin(ev->event), "button::release", 2);
         break;
       default: /* wtf? */
         lua_pop(_G_L, 2);
         break;
     }
-    lua_pop(_G_L, 1);
 }
 
 static void
@@ -187,26 +185,22 @@ event_handle_configurenotify(xcb_configure_notify_event_t *ev)
     {
         bool geometry_has_changed = false;
 
-        luaA_object_push(_G_L, _G_root);
-
         if(_G_root->geometry.width != ev->width)
         {
             _G_root->geometry.width = ev->width;
-            luaA_object_emit_signal(_G_L, -1, "property::width", 0);
+            window_emit_signal(_G_L, _G_root, "property::width", 0);
             geometry_has_changed = true;
         }
 
         if(_G_root->geometry.height != ev->height)
         {
             _G_root->geometry.height = ev->height;
-            luaA_object_emit_signal(_G_L, -1, "property:height", 0);
+            window_emit_signal(_G_L, _G_root, "property:height", 0);
             geometry_has_changed = true;
         }
 
         if(geometry_has_changed)
-            luaA_object_emit_signal(_G_L, -1, "property::geometry", 0);
-
-        lua_pop(_G_L, 1);
+            window_emit_signal(_G_L, _G_root, "property::geometry", 0);
     }
 }
 
@@ -233,14 +227,12 @@ event_handle_motionnotify(xcb_motion_notify_event_t *ev)
         window = window_getbywin(ev->child);
     else
         window = window_getbywin(ev->event);
-    luaA_object_push(_G_L, window);
     luaA_pushmodifiers(_G_L, ev->state);
     lua_pushinteger(_G_L, ev->event_x);
     lua_pushinteger(_G_L, ev->event_y);
     lua_pushinteger(_G_L, ev->root_x);
     lua_pushinteger(_G_L, ev->root_y);
-    luaA_object_emit_signal(_G_L, -6, "mouse::move", 5);
-    lua_pop(_G_L, 1);
+    window_emit_signal(_G_L, window, "mouse::move", 5);
 }
 
 /** The enter and leave notify event handler.
@@ -254,7 +246,6 @@ event_handle_enterleavenotify(xcb_enter_notify_event_t *ev)
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return;
 
-    luaA_object_push(_G_L, window_getbywin(ev->event));
     luaA_pushmodifiers(_G_L, ev->state);
     lua_pushinteger(_G_L, ev->event_x);
     lua_pushinteger(_G_L, ev->event_y);
@@ -263,16 +254,15 @@ event_handle_enterleavenotify(xcb_enter_notify_event_t *ev)
     switch(ev->response_type)
     {
       case XCB_ENTER_NOTIFY:
-        luaA_object_emit_signal(_G_L, -6, "mouse::enter", 5);
+        window_emit_signal(_G_L, window_getbywin(ev->event), "mouse::enter", 5);
         break;
       case XCB_LEAVE_NOTIFY:
-        luaA_object_emit_signal(_G_L, -6, "mouse::leave", 5);
+        window_emit_signal(_G_L, window_getbywin(ev->event), "mouse::leave", 5);
         break;
       default: /* wtf */
         lua_pop(_G_L, 3);
         break;
     }
-    lua_pop(_G_L, 1);
 }
 
 /** The focus in event handler.
@@ -366,7 +356,6 @@ event_handle_key(xcb_key_press_event_t *ev)
     /* get keysym ignoring all modifiers */
     xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, ev->state);
 
-    luaA_object_push(_G_L, window_getbywin(ev->event));
     /* Push modifiers */
     luaA_pushmodifiers(_G_L, ev->state);
     /* Push keycode */
@@ -385,17 +374,15 @@ event_handle_key(xcb_key_press_event_t *ev)
     switch(ev->response_type)
     {
       case XCB_KEY_PRESS:
-        luaA_object_emit_signal(_G_L, -8, "key::press", 7);
+        window_emit_signal(_G_L, window_getbywin(ev->event), "key::press", 7);
         break;
       case XCB_KEY_RELEASE:
-        luaA_object_emit_signal(_G_L, -8, "key::release", 7);
+        window_emit_signal(_G_L, window_getbywin(ev->event), "key::release", 7);
         break;
       default: /* wtf? */
         lua_pop(_G_L, 7);
         break;
     }
-
-    lua_pop(_G_L, 1);
 }
 
 /** The map request event handler.
