@@ -24,6 +24,7 @@
 #include "color.h"
 #include "awesome.h"
 #include "common/xutil.h"
+#include "screen.h"
 
 #define RGB_8TO16(i)   (0xffff * ((i) & 0xff) / 0xff)
 #define RGB_16TO8(i)   (0xff * ((i) & 0xffff) / 0xffff)
@@ -83,7 +84,6 @@ color_parse(const char *colstr, ssize_t len,
  * \param len The length of colstr (which still MUST be NULL terminated).
  * \return request informations.
  */
-#include "screen.h"
 color_init_cookie_t
 color_init_unchecked(color_t *color, const char *colstr, ssize_t len)
 {

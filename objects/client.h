@@ -103,7 +103,7 @@ client_t * client_getbywin(xcb_window_t);
 client_t * client_getbyframewin(xcb_window_t);
 
 void client_manage(xcb_window_t, xcb_get_geometry_reply_t *, bool);
-void client_unmanage(client_t *);
+void client_unmanage(lua_State *, client_t *);
 void client_kill(client_t *);
 void client_set_urgent(lua_State *, client_t *, bool);
 void client_set_pid(lua_State *, client_t *, uint32_t);

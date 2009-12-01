@@ -337,7 +337,7 @@ HANDLE_GEOM(height)
  * \param c The client.
  */
 void
-client_unmanage(client_t *c)
+client_unmanage(lua_State *L, client_t *c)
 {
     /* remove client from global list and everywhere else */
     client_array_lookup_and_remove(&_G_clients, &(client_t) { .window = c->window });
@@ -346,19 +346,19 @@ client_unmanage(client_t *c)
     /* Tag and window reference each other so there are tight forever.
      * We don't want the tag the unmanaged client to be referenced forever in a
      * tag so we untag it. */
-    luaA_object_push(_G_L, c);
+    luaA_object_push(L, c);
     foreach(tag, c->tags)
     {
-        luaA_object_push(_G_L, *tag);
-        untag_ewindow(_G_L, -2, -1);
-        lua_pop(_G_L, 1);
+        luaA_object_push(L, *tag);
+        untag_ewindow(L, -2, -1);
+        lua_pop(L, 1);
     }
 
-    luaA_object_emit_signal(_G_L, -1, "unmanage", 0);
-    lua_pop(_G_L, 1);
+    luaA_object_emit_signal(L, -1, "unmanage", 0);
+    lua_pop(L, 1);
 
     if(strut_has_value(&c->strut))
-        screen_emit_signal(_G_L,
+        screen_emit_signal(L,
                            screen_getbycoord(c->geometry.x, c->geometry.y),
                            "property::workarea", 0);
 
@@ -389,7 +389,7 @@ client_unmanage(client_t *c)
     /* set client as invalid */
     c->window = XCB_NONE;
 
-    luaA_object_unref(_G_L, c);
+    luaA_object_unref(L, c);
 }
 
 /** Kill a client via a WM_DELETE_WINDOW request or KillClient if not
@@ -434,19 +434,7 @@ luaA_client_kill(lua_State *L)
     return 0;
 }
 
-/** Stop managing a client.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- * \luastack
- * \lvalue A client.
- */
-static int
-luaA_client_unmanage(lua_State *L)
-{
-    client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
-    client_unmanage(c);
-    return 0;
-}
+static LUA_CLASS_METHOD_BRIDGE(client, unmanage, (lua_class_t *) &client_class, client_unmanage)
 
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(client, client_t, urgent, luaA_checkboolean)
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(client, client_t, skip_taskbar, luaA_checkboolean)
