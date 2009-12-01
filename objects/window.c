@@ -44,10 +44,10 @@ window_wipe(window_t *window)
 }
 
 bool
-window_isvisible(lua_State *L, int idx)
+window_isvisible(lua_State *L, window_t *window)
 {
-    window_t *window = luaA_checkudata(L, idx, &window_class);
-    lua_interface_window_t *interface = (lua_interface_window_t *) luaA_class_get_from_stack(L, idx);
+    lua_interface_window_t *interface =
+        (lua_interface_window_t *) luaA_class_get(L, (lua_object_t *) window);
     /* Go check for parent classes, but stop on window_class since higher
      * classes would not implement the isvisible method :-) */
     for(; interface && (lua_class_t *) interface != &window_class;
@@ -126,23 +126,20 @@ window_unfocus_update(window_t *window)
  * \param idx The window index on the stack.
  */
 void
-window_focus(lua_State *L, int idx)
+window_focus(lua_State *L, window_t *window)
 {
-    window_t *window = luaA_checkudata(L, idx, &window_class);
-
-    if(window->window)
+    if(window->window && window->focusable)
     {
         /* If the window is banned but isvisible, unban it right now because you
          * can't set focus on unmapped window */
-        if(window_isvisible(L, idx))
+        if(window_isvisible(L, window))
             window_unban(window);
         else
             return;
 
-        /* Sets focus on window - using xcb_set_input_focus or WM_TAKE_FOCUS */
-        if(window->focusable)
-            xcb_set_input_focus(_G_connection, XCB_INPUT_FOCUS_PARENT,
-                                window->window, XCB_CURRENT_TIME);
+        /* Sets focus on window */
+        xcb_set_input_focus(_G_connection, XCB_INPUT_FOCUS_PARENT,
+                            window->window, XCB_CURRENT_TIME);
     }
 }
 
@@ -573,7 +570,7 @@ luaA_window_get_content(lua_State *L, window_t *window)
 static int
 luaA_window_isvisible(lua_State *L)
 {
-    lua_pushboolean(L, window_isvisible(L, 1));
+    lua_pushboolean(L, window_isvisible(L, luaA_checkudata(L, 1, &window_class)));
     return 1;
 }
 
@@ -618,7 +615,7 @@ luaA_window_set_cursor(lua_State *L, window_t *window)
 static int
 luaA_window_focus(lua_State *L)
 {
-    window_focus(L, 1);
+    window_focus(L, luaA_checkudata(L, 1, &window_class));
     return 0;
 }
 
