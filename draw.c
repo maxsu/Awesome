@@ -122,13 +122,12 @@ draw_text_context_init(draw_text_context_t *data, const char *str, ssize_t slen)
  * \param width Width.
  * \param height Height.
  * \param fg Foreground color.
- * \param bg Background color.
  */
 void
 draw_context_init(draw_context_t *d,
                   xcb_pixmap_t pixmap,
                   int width, int height,
-                  const xcolor_t *fg, const xcolor_t *bg)
+                  const xcolor_t *fg)
 {
     d->surface = cairo_xcb_surface_create(_G_connection,
                                           pixmap, _G_visual,
@@ -136,7 +135,6 @@ draw_context_init(draw_context_t *d,
     d->cr = cairo_create(d->surface);
     d->layout = pango_cairo_create_layout(d->cr);
     d->fg = *fg;
-    d->bg = *bg;
 };
 
 /** Wipe a draw context.

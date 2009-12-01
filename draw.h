@@ -45,11 +45,10 @@ typedef struct
     cairo_surface_t *surface;
     PangoLayout *layout;
     xcolor_t fg;
-    xcolor_t bg;
 } draw_context_t;
 
 void draw_context_init(draw_context_t *, xcb_pixmap_t, int, int,
-                       const xcolor_t *, const xcolor_t *);
+                       const xcolor_t *);
 void draw_context_wipe(draw_context_t *);
 
 bool draw_iso2utf8(const char *, size_t, char **, ssize_t *);
