@@ -459,38 +459,27 @@ luaA_class_index(lua_State *L)
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
 
+    lua_class_propfunc_t func = NULL;
+
     /* Property does exist and has an index callback */
     if(prop)
-    {
-        if(prop->index)
-        {
-            /* Push wrapper function */
-            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-            /* Push property function */
-            lua_pushlightuserdata(L, prop->index);
-            /* Push object */
-            lua_pushvalue(L, 1);
-            /* Duplicate key */
-            lua_pushvalue(L, 2);
-            luaA_dofunction(L, 3, 1);
+        func = prop->index;
+    else
+        func = class->index_miss_property;
 
-            return 1;
-        }
-    }
-    else if(class)
+    if(func)
     {
-        if(class->index_miss_property)
-        {
-            /* Push wrapper function */
-            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-            /* Push property function */
-            lua_pushlightuserdata(L, class->index_miss_property);
-            /* Push object */
-            lua_pushvalue(L, 1);
-            /* Duplicate key */
-            lua_pushvalue(L, 2);
-            luaA_dofunction(L, 3, 0);
-        }
+        /* Push wrapper function */
+        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+        /* Push property function */
+        lua_pushlightuserdata(L, prop->index);
+        /* Push object */
+        lua_pushvalue(L, 1);
+        /* Duplicate key */
+        lua_pushvalue(L, 2);
+        luaA_dofunction(L, 3, 1);
+
+        return 1;
     }
 
     return 0;
@@ -507,40 +496,27 @@ luaA_class_newindex(lua_State *L)
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
 
+    lua_class_propfunc_t func = NULL;
+
     /* Property does exist and has a newindex callback */
     if(prop)
-    {
-        if(prop->newindex)
-        {
-            /* Push wrapper function */
-            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-            /* Push property function */
-            lua_pushlightuserdata(L, prop->newindex);
-            /* Push object */
-            lua_pushvalue(L, 1);
-            /* Duplicate key */
-            lua_pushvalue(L, 2);
-            /* Duplicate value */
-            lua_pushvalue(L, 3);
-            luaA_dofunction(L, 4, 0);
-        }
-    }
+        func = prop->newindex;
     else
+        func = class->newindex_miss_property;
+    
+    if(func)
     {
-        if(class->newindex_miss_property)
-        {
-            /* Push wrapper function */
-            lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-            /* Push property function */
-            lua_pushlightuserdata(L, class->index_miss_property);
-            /* Push object */
-            lua_pushvalue(L, 1);
-            /* Duplicate key */
-            lua_pushvalue(L, 2);
-            /* Duplicate value */
-            lua_pushvalue(L, 3);
-            luaA_dofunction(L, 4, 0);
-        }
+        /* Push wrapper function */
+        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+        /* Push property function */
+        lua_pushlightuserdata(L, func);
+        /* Push object */
+        lua_pushvalue(L, 1);
+        /* Duplicate key */
+        lua_pushvalue(L, 2);
+        /* Duplicate value */
+        lua_pushvalue(L, 3);
+        luaA_dofunction(L, 4, 0);
     }
 
     return 0;
@@ -618,12 +594,19 @@ luaA_class_new(lua_State *L, lua_class_t *lua_class)
         {
             lua_class_property_t *prop = luaA_class_property_get(L, lua_class, -2);
 
-            if(prop && prop->new)
+            lua_class_propfunc_t func = NULL;
+
+            if(prop)
+                func = prop->new;
+            else
+                func = lua_class->newindex_miss_property;
+
+            if(func)
             {
                 /* Push wrapper function */
                 lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
                 /* Push property function */
-                lua_pushlightuserdata(L, prop->new);
+                lua_pushlightuserdata(L, func);
                 /* Push object */
                 lua_pushvalue(L, 3);
                 /* Duplicate key */
