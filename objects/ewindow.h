@@ -23,9 +23,13 @@
 
 #include "strut.h"
 #include "objects/window.h"
-#include "globalconf.h"
 #include "color.h"
 #include "common/luaclass.h"
+
+/* Needed to avoid loop between ewindow and tag :-( */
+typedef struct tag tag_t;
+
+ARRAY_TYPE(tag_t *, tag)
 
 /** ewindows type */
 typedef enum
