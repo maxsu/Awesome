@@ -112,7 +112,7 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
     prefix##_set_##prop(lua_State *L, type *item, int vidx) \
     { \
         vidx = luaA_absindex(L, vidx); \
-        luaA_checkudata(L, vidx, (target_class)); \
+        luaA_checkudataornil(L, vidx, (target_class)); \
         item->prop = luaA_object_ref_item(L, (lua_object_t *) item, vidx); \
         prefix##_emit_signal(L, item, "property::" #prop, 0); \
     }
