@@ -99,11 +99,13 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
         } \
     }
 
+#define LUA_OBJECT_FAKE_CHECKER(L, idx) idx
+
 #define LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(pfx, type, prop, checker) \
     int \
     luaA_##pfx##_set_##prop(lua_State *L, type *c) \
     { \
-        pfx##_set_##prop(L, c, checker(L, -1)); \
+        pfx##_set_##prop(L, c, checker(L, 3)); \
         return 0; \
     }
 
