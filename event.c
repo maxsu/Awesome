@@ -225,7 +225,7 @@ event_handle_destroynotify(void *data __attribute__ ((unused)),
     client_t *c;
 
     if((c = client_getbywin(ev->window)))
-        client_unmanage(c);
+        client_unmanage(_G_L, c);
     else
         foreach(em, _G_embedded)
             if(em->window == ev->window)
@@ -517,7 +517,7 @@ event_handle_unmapnotify(void *data __attribute__ ((unused)),
         if(ev->event == _G_root->window
            && XCB_EVENT_SENT(ev)
            && xwindow_get_state_reply(xwindow_get_state_unchecked(c->window)) == XCB_WM_STATE_NORMAL)
-            client_unmanage(c);
+            client_unmanage(_G_L, c);
     }
     else
         foreach(em, _G_embedded)
@@ -625,7 +625,7 @@ event_handle_reparentnotify(void *data,
     client_t *c;
 
     if((c = client_getbywin(ev->window)))
-        client_unmanage(c);
+        client_unmanage(_G_L, c);
 
     return 0;
 }
