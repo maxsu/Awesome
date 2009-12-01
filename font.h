@@ -30,7 +30,15 @@ typedef struct
 } font_t;
 
 void font_init(font_t *, const char *);
-void font_wipe(font_t *);
+
+/** Delete a font.
+ * \param font Font to delete.
+ */
+static inline void
+font_wipe(font_t *font)
+{
+    pango_font_description_free(font->desc);
+}
 
 font_t _G_font;
 
