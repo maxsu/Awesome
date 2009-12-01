@@ -150,6 +150,14 @@ luaA_checkudataornil(lua_State *L, int udx, lua_class_t *class)
     { "disconnect_signal", luaA_##class##_class_disconnect_signal }, \
     { "emit_signal", luaA_##class##_class_emit_signal },
 
+#define LUA_CLASS_METHOD_BRIDGE(prefix, method, class, func) \
+    int \
+    luaA_##prefix##_##method(lua_State *L) \
+    { \
+        func(L, luaA_checkudata(L, 1, class)); \
+        return 0; \
+    }
+
 #endif
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
