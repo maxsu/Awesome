@@ -374,13 +374,7 @@ luaA_client_set_icon(lua_State *L, client_t *c)
 }
 
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(client, client_t, urgent, luaA_checkboolean)
-
-static int
-luaA_client_set_skip_taskbar(lua_State *L, client_t *c)
-{
-    client_set_skip_taskbar(L, c, luaA_checkboolean(L, -1));
-    return 0;
-}
+static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(client, client_t, skip_taskbar, luaA_checkboolean)
 
 static int
 luaA_client_get_name(lua_State *L, client_t *c)
