@@ -420,26 +420,6 @@ client_kill(client_t *c)
         xcb_kill_client(_G_connection, c->window);
 }
 
-/** Get all clients into a table.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_client_get(lua_State *L)
-{
-    int i = 1;
-
-    lua_createtable(L, _G_clients.len, 0);
-
-    foreach(c, _G_clients)
-    {
-        luaA_object_push(L, *c);
-        lua_rawseti(L, -2, i++);
-    }
-
-    return 1;
-}
-
 /** Kill a client.
  * \param L The Lua VM state.
  *
@@ -529,7 +509,6 @@ client_class_setup(lua_State *L)
     static const struct luaL_reg client_methods[] =
     {
         LUA_CLASS_METHODS(client)
-        { "get", luaA_client_get },
         { "kill", luaA_client_kill },
         { "unmanage", luaA_client_unmanage },
         { NULL, NULL }
