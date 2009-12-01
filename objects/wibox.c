@@ -39,6 +39,7 @@ LUA_OBJECT_SIGNAL_FUNCS(wibox, wibox_t)
 static void
 wibox_wipe(wibox_t *wibox)
 {
+    p_delete(&wibox->text);
     draw_context_wipe(&wibox->ctx);
     xcb_destroy_window(_G_connection, wibox->window);
 
@@ -367,6 +368,7 @@ static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_clip, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, shape_bounding, luaA_object_push)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, bg, luaA_pushxcolor)
 static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, fg, luaA_pushcolor)
+static LUA_OBJECT_EXPORT_PROPERTY(wibox, wibox_t, text, lua_pushstring)
 
 /** Set the wibox foreground color.
  * \param L The Lua VM state.
@@ -495,28 +497,21 @@ luaA_wibox_set_text(lua_State *L, wibox_t *wibox)
         /* delete */
         draw_text_context_wipe(&wibox->text_ctx);
         p_clear(&wibox->text_ctx, 1);
+        p_delete(&wibox->text);
     }
     else if((buf = luaL_checklstring(L, -1, &len)))
     {
-        char *text;
         ssize_t tlen;
         /* if text has been converted to UTF-8 */
-        if(draw_iso2utf8(buf, len, &text, &tlen))
-        {
-            draw_text_context_init(&wibox->text_ctx, text, tlen);
-            p_delete(&text);
-        }
+        if(draw_iso2utf8(buf, len, &wibox->text, &tlen))
+            draw_text_context_init(&wibox->text_ctx, wibox->text, tlen);
         else
+        {
+            wibox->text = a_strndup(buf, len);
             draw_text_context_init(&wibox->text_ctx, buf, len);
+        }
     }
     return 0;
-}
-
-static int
-luaA_wibox_get_text(lua_State *L, wibox_t *wibox)
-{
-    lua_pushlstring(L, wibox->text_ctx.text, wibox->text_ctx.len);
-    return 1;
 }
 
 static int
