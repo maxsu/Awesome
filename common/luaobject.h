@@ -88,7 +88,7 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
         return 1; \
     }
 
-#define LUA_OBJECT_DO_SET_PROPERTY_FUNC(pfx, lua_class, type, prop) \
+#define LUA_OBJECT_DO_SET_PROPERTY_FUNC(pfx, type, prop) \
     void \
     pfx##_set_##prop(lua_State *L, type *item, fieldtypeof(type, prop) value) \
     { \

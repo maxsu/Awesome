@@ -577,8 +577,8 @@ luaA_window_isvisible(lua_State *L)
     return 1;
 }
 
-static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, focusable)
-static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, &window_class, window_t, layer)
+static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, window_t, focusable)
+static LUA_OBJECT_DO_SET_PROPERTY_FUNC(window, window_t, layer)
 LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(window, window_t, focusable, luaA_checkboolean)
 
 static int

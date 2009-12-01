@@ -88,9 +88,9 @@ client_set_urgent(lua_State *L, client_t *c, bool urgent)
     }
 }
 
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, group_window)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, pid)
-LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, (lua_class_t *) &client_class, client_t, skip_taskbar)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, group_window)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, pid)
+LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, skip_taskbar)
 
 #define DO_CLIENT_SET_STRING_PROPERTY(prop) \
     void \
