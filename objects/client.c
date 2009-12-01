@@ -108,15 +108,14 @@ DO_CLIENT_SET_STRING_PROPERTY(machine)
 #undef DO_CLIENT_SET_STRING_PROPERTY
 
 void
-client_set_class_instance(lua_State *L, int cidx, const char *class, const char *instance)
+client_set_class_instance(lua_State *L, client_t *c, const char *class, const char *instance)
 {
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
     p_delete(&c->class);
     p_delete(&c->instance);
     c->class = a_strdup(class);
-    luaA_object_emit_signal(L, cidx, "property::class", 0);
+    client_emit_signal(L, c, "property::class", 0);
     c->instance = a_strdup(instance);
-    luaA_object_emit_signal(L, cidx, "property::instance", 0);
+    client_emit_signal(L, c, "property::instance", 0);
 }
 
 /** Get a client by its window.

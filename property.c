@@ -216,9 +216,7 @@ property_update_wm_class(client_t *c, xcb_get_property_cookie_t cookie)
                                &hint, NULL))
         return;
 
-    luaA_object_push(globalconf.L, c);
-    client_set_class_instance(globalconf.L, -1, hint.class_name, hint.instance_name);
-    lua_pop(globalconf.L, 1);
+    client_set_class_instance(globalconf.L, c, hint.class_name, hint.instance_name);
 
     xcb_get_wm_class_reply_wipe(&hint);
 }
