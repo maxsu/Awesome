@@ -204,6 +204,183 @@ luaA_class_tostring(lua_State *L)
     return 1;
 }
 
+/** Try to use the methods of a module.
+ * \param L The Lua VM state.
+ * \param idxobj The index of the object.
+ * \param idxfield The index of the field (attribute) to get.
+ * \return The number of element pushed on stack.
+ */
+static int
+luaA_use_methods(lua_State *L, int idxobj, int idxfield)
+{
+    lua_class_t *class = luaA_class_get_from_stack(L, idxobj);
+
+    for(; class; class = class->parent)
+    {
+        /* Push the class */
+        lua_pushlightuserdata(L, class);
+        /* Get its metatable from registry */
+        lua_rawget(L, LUA_REGISTRYINDEX);
+        /* Get the __methods table */
+        lua_getfield(L, -1, "__methods");
+        /* Check we have a __methods table */
+        if(lua_isnil(L, -1))
+            /* No, then remove nil */
+            lua_pop(L, 1);
+        else
+        {
+            /* Remove the metatable */
+            lua_remove(L, -2);
+            /* Push the field */
+            lua_pushvalue(L, idxfield);
+            /* Get the field in the methods table */
+            lua_rawget(L, -2);
+            /* Do we have a field like that? */
+            if(!lua_isnil(L, -1))
+            {
+                /* Yes, so remove the method table and return it! */
+                lua_remove(L, -2);
+                return 1;
+            }
+            /* No, so remove the metatable and the field value (nil) */
+            lua_pop(L, 2);
+        }
+    }
+
+    return 0;
+}
+
+static lua_class_property_t *
+lua_class_property_array_getbyid(lua_class_property_array_t *arr,
+                                 unsigned long id)
+{
+    return lua_class_property_array_lookup(arr, (lua_class_property_t) { .id = id });
+}
+
+/** Get a property of a object.
+ * \param L The Lua VM state.
+ * \param lua_class The Lua class.
+ * \param fieldidx The index of the field name.
+ * \return The object property if found, NULL otherwise.
+ */
+static lua_class_property_t *
+luaA_class_property_get(lua_State *L, lua_class_t *lua_class, int fieldidx)
+{
+    /* Lookup the property using id */
+    unsigned long id = a_strhash((const unsigned char*) luaL_checkstring(L, fieldidx));
+
+    /* Look for the property in the class; if not found, go in the parent class. */
+    for(; lua_class; lua_class = lua_class->parent)
+    {
+        lua_class_property_t *prop =
+            lua_class_property_array_getbyid(&lua_class->properties, id);
+
+        if(prop)
+            return prop;
+    }
+
+    return NULL;
+}
+
+/** This is a wrapper for calling property function in a clean env.
+ * On the stack it gets:
+ * 1. function to call
+ * 2. object
+ * (3. key
+ *  4. value,
+ *  etc, we don't care)
+ *  It then pop 1. function to call, and calls it with L and 2. object has
+ *  argument.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_class_property_call_function_wrapper(lua_State *L)
+{
+    lua_class_propfunc_t func = lua_topointer(L, 1);
+    lua_remove(L, 1);
+    lua_object_t *object = lua_touserdata(L, 1);
+    return func(L, object);
+}
+
+/** Generic index meta function for objects.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_class_index(lua_State *L)
+{
+    /* Try to use metatable first. */
+    if(luaA_use_methods(L, 1, 2))
+        return 1;
+
+    lua_class_t *class = luaA_class_get_from_stack(L, 1);
+
+    lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
+
+    lua_class_propfunc_t func = NULL;
+
+    /* Property does exist and has an index callback */
+    if(prop)
+        func = prop->index;
+    else
+        func = class->index_miss_property;
+
+    if(func)
+    {
+        /* Push wrapper function */
+        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+        /* Push property function */
+        lua_pushlightuserdata(L, prop->index);
+        /* Push object */
+        lua_pushvalue(L, 1);
+        /* Duplicate key */
+        lua_pushvalue(L, 2);
+        luaA_dofunction(L, 3, 1);
+
+        return 1;
+    }
+
+    return 0;
+}
+
+/** Generic newindex meta function for objects.
+ * \param L The Lua VM state.
+ * \return The number of elements pushed on stack.
+ */
+static int
+luaA_class_newindex(lua_State *L)
+{
+    lua_class_t *class = luaA_class_get_from_stack(L, 1);
+
+    lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
+
+    lua_class_propfunc_t func = NULL;
+
+    /* Property does exist and has a newindex callback */
+    if(prop)
+        func = prop->newindex;
+    else
+        func = class->newindex_miss_property;
+    
+    if(func)
+    {
+        /* Push wrapper function */
+        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
+        /* Push property function */
+        lua_pushlightuserdata(L, func);
+        /* Push object */
+        lua_pushvalue(L, 1);
+        /* Duplicate key */
+        lua_pushvalue(L, 2);
+        /* Duplicate value */
+        lua_pushvalue(L, 3);
+        luaA_dofunction(L, 4, 0);
+    }
+
+    return 0;
+}
+
 /** Setup a new Lua class.
  * \param L The Lua VM state.
  * \param name The class name.
@@ -343,183 +520,6 @@ luaA_class_emit_signal(lua_State *L, lua_class_t *lua_class,
     }
 
     lua_pop(L, nargs);
-}
-
-/** Try to use the methods of a module.
- * \param L The Lua VM state.
- * \param idxobj The index of the object.
- * \param idxfield The index of the field (attribute) to get.
- * \return The number of element pushed on stack.
- */
-static int
-luaA_use_methods(lua_State *L, int idxobj, int idxfield)
-{
-    lua_class_t *class = luaA_class_get_from_stack(L, idxobj);
-
-    for(; class; class = class->parent)
-    {
-        /* Push the class */
-        lua_pushlightuserdata(L, class);
-        /* Get its metatable from registry */
-        lua_rawget(L, LUA_REGISTRYINDEX);
-        /* Get the __methods table */
-        lua_getfield(L, -1, "__methods");
-        /* Check we have a __methods table */
-        if(lua_isnil(L, -1))
-            /* No, then remove nil */
-            lua_pop(L, 1);
-        else
-        {
-            /* Remove the metatable */
-            lua_remove(L, -2);
-            /* Push the field */
-            lua_pushvalue(L, idxfield);
-            /* Get the field in the methods table */
-            lua_rawget(L, -2);
-            /* Do we have a field like that? */
-            if(!lua_isnil(L, -1))
-            {
-                /* Yes, so remove the method table and return it! */
-                lua_remove(L, -2);
-                return 1;
-            }
-            /* No, so remove the metatable and the field value (nil) */
-            lua_pop(L, 2);
-        }
-    }
-
-    return 0;
-}
-
-static lua_class_property_t *
-lua_class_property_array_getbyid(lua_class_property_array_t *arr,
-                                 unsigned long id)
-{
-    return lua_class_property_array_lookup(arr, (lua_class_property_t) { .id = id });
-}
-
-/** Get a property of a object.
- * \param L The Lua VM state.
- * \param lua_class The Lua class.
- * \param fieldidx The index of the field name.
- * \return The object property if found, NULL otherwise.
- */
-static lua_class_property_t *
-luaA_class_property_get(lua_State *L, lua_class_t *lua_class, int fieldidx)
-{
-    /* Lookup the property using id */
-    unsigned long id = a_strhash((const unsigned char*) luaL_checkstring(L, fieldidx));
-
-    /* Look for the property in the class; if not found, go in the parent class. */
-    for(; lua_class; lua_class = lua_class->parent)
-    {
-        lua_class_property_t *prop =
-            lua_class_property_array_getbyid(&lua_class->properties, id);
-
-        if(prop)
-            return prop;
-    }
-
-    return NULL;
-}
-
-/** This is a wrapper for calling property function in a clean env.
- * On the stack it gets:
- * 1. function to call
- * 2. object
- * (3. key
- *  4. value,
- *  etc, we don't care)
- *  It then pop 1. function to call, and calls it with L and 2. object has
- *  argument.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_class_property_call_function_wrapper(lua_State *L)
-{
-    lua_class_propfunc_t func = lua_topointer(L, 1);
-    lua_remove(L, 1);
-    lua_object_t *object = lua_touserdata(L, 1);
-    return func(L, object);
-}
-
-/** Generic index meta function for objects.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-int
-luaA_class_index(lua_State *L)
-{
-    /* Try to use metatable first. */
-    if(luaA_use_methods(L, 1, 2))
-        return 1;
-
-    lua_class_t *class = luaA_class_get_from_stack(L, 1);
-
-    lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
-
-    lua_class_propfunc_t func = NULL;
-
-    /* Property does exist and has an index callback */
-    if(prop)
-        func = prop->index;
-    else
-        func = class->index_miss_property;
-
-    if(func)
-    {
-        /* Push wrapper function */
-        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-        /* Push property function */
-        lua_pushlightuserdata(L, prop->index);
-        /* Push object */
-        lua_pushvalue(L, 1);
-        /* Duplicate key */
-        lua_pushvalue(L, 2);
-        luaA_dofunction(L, 3, 1);
-
-        return 1;
-    }
-
-    return 0;
-}
-
-/** Generic newindex meta function for objects.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-int
-luaA_class_newindex(lua_State *L)
-{
-    lua_class_t *class = luaA_class_get_from_stack(L, 1);
-
-    lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
-
-    lua_class_propfunc_t func = NULL;
-
-    /* Property does exist and has a newindex callback */
-    if(prop)
-        func = prop->newindex;
-    else
-        func = class->newindex_miss_property;
-    
-    if(func)
-    {
-        /* Push wrapper function */
-        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-        /* Push property function */
-        lua_pushlightuserdata(L, func);
-        /* Push object */
-        lua_pushvalue(L, 1);
-        /* Duplicate key */
-        lua_pushvalue(L, 2);
-        /* Duplicate value */
-        lua_pushvalue(L, 3);
-        luaA_dofunction(L, 4, 0);
-    }
-
-    return 0;
 }
 
 static lua_class_t *
