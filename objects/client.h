@@ -78,7 +78,7 @@ void client_set_role(lua_State *, int, char *);
 void client_set_machine(lua_State *, int, char *);
 void client_set_icon_name(lua_State *, int, char *);
 void client_set_alt_icon_name(lua_State *, int, char *);
-void client_set_class_instance(lua_State *, int, const char *, const char *);
+void client_set_class_instance(lua_State *, client_t *c, const char *, const char *);
 void client_set_name(lua_State *L, int, char *);
 void client_set_alt_name(lua_State *L, int, char *);
 void client_set_group_window(lua_State *, int, xcb_window_t);
