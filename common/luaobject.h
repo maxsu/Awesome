@@ -32,20 +32,6 @@ void luaA_object_unref(lua_State *, const void *);
 void * luaA_object_ref_item(lua_State *, int, int);
 void luaA_object_unref_item(lua_State *, int, const void *);
 
-/** Reference an object and return a pointer to it checking its type.
- * That only works with userdata.
- * \param L The Lua VM state.
- * \param oud The object index on the stack.
- * \param class The class of object expected
- * \return The object reference, or NULL if not referenceable.
- */
-static inline void *
-luaA_object_ref_class(lua_State *L, int oud, lua_class_t *class)
-{
-    luaA_checkudata(L, oud, class);
-    return luaA_object_ref(L, oud);
-}
-
 void signal_object_emit(lua_State *, const signal_array_t *, const char *, int);
 
 void luaA_object_connect_signal(lua_State *, int, const char *, lua_CFunction);
