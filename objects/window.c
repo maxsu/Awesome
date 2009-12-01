@@ -608,17 +608,6 @@ luaA_window_set_cursor(lua_State *L, window_t *window)
     return 0;
 }
 
-/** Give the focus to a window.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_window_focus(lua_State *L)
-{
-    window_focus(L, luaA_checkudata(L, 1, &window_class));
-    return 0;
-}
-
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, window, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, layer, lua_pushnumber)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, cursor, lua_pushstring)
@@ -628,27 +617,10 @@ static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, resizable, lua_pushboolean)
 LUA_OBJECT_EXPORT_PROPERTY(window, window_t, focusable, lua_pushboolean)
 static LUA_OBJECT_EXPORT_PROPERTY(window, window_t, visible, lua_pushboolean)
 
-/** Raise an window on top of others which are on the same layer.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_window_raise(lua_State *L)
-{
-    stack_window_raise(L, luaA_checkudata(L, 1, &window_class));
-    return 0;
-}
-
-/** Lower an window on top of others which are on the same layer.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_window_lower(lua_State *L)
-{
-    stack_window_lower(L, luaA_checkudata(L, 1, &window_class));
-    return 0;
-}
+/* Bridged function: Lua call blindly C */
+static LUA_CLASS_METHOD_BRIDGE(window, raise, &window_class, stack_window_raise)
+static LUA_CLASS_METHOD_BRIDGE(window, lower, &window_class, stack_window_lower)
+static LUA_CLASS_METHOD_BRIDGE(window, focus, &window_class, window_focus)
 
 /** Grab keyboard on window.
  * \param L The Lua VM state.
