@@ -276,6 +276,14 @@ luaA_wibox_need_update_alpha(lua_State *L)
     return 0;
 }
 
+static int
+luaA_wibox_need_shape_update(lua_State *L)
+{
+    wibox_t *wibox = luaA_checkudata(L, 1, (lua_class_t *) &wibox_class);
+    wibox->need_shape_update = true;
+    return 0;
+}
+
 /** Create a new wibox.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -415,27 +423,10 @@ luaA_wibox_set_image(lua_State *L, wibox_t *wibox)
     return 0;
 }
 
-static int
-luaA_wibox_set_shape_bounding(lua_State *L, wibox_t *wibox)
-{
-    luaA_checkudata(L, -1, &image_class);
-    luaA_object_unref_item(L, -3, wibox->shape_bounding);
-    wibox->shape_bounding = luaA_object_ref_item_from_stack(L, -3, -1);
-    wibox->need_shape_update = true;
-    luaA_object_emit_signal(L, -2, "property::shape_bounding", 0);
-    return 0;
-}
-
-static int
-luaA_wibox_set_shape_clip(lua_State *L, wibox_t *wibox)
-{
-    luaA_checkudata(L, -1, &image_class);
-    luaA_object_unref_item(L, -3, wibox->shape_clip);
-    wibox->shape_clip = luaA_object_ref_item_from_stack(L, -3, -1);
-    wibox->need_shape_update = true;
-    luaA_object_emit_signal(L, -2, "property::shape_clip", 0);
-    return 0;
-}
+static LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(wibox, &image_class, wibox_t, shape_bounding)
+static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(wibox, wibox_t, shape_bounding, LUA_OBJECT_FAKE_CHECKER)
+static LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(wibox, &image_class, wibox_t, shape_clip)
+static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(wibox, wibox_t, shape_clip, LUA_OBJECT_FAKE_CHECKER)
 
 /** Initialize a new wibox with its default values.
  * \param wibox The wibox.
@@ -765,6 +756,8 @@ wibox_class_setup(lua_State *L)
 
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::border_width", luaA_wibox_need_update_alpha);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::geometry", luaA_wibox_need_update_alpha);
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::shape_clip", luaA_wibox_need_shape_update);
+    luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::shape_bounding", luaA_wibox_need_shape_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::width", luaA_wibox_draw_context_update);
     luaA_class_connect_signal(L, (lua_class_t *) &wibox_class, "property::height", luaA_wibox_draw_context_update);
     luaA_class_connect_signal(L, &window_class, "property::pixmap", luaA_wibox_childrens_need_update);
