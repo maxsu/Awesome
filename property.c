@@ -348,6 +348,9 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
                              xcb_atom_t name,
                              xcb_get_property_reply_t *reply)
 {
+    if(window != _G_root->window)
+        return 0;
+
     xcb_pixmap_t pixmap;
 
     if(reply && reply->value_len)
