@@ -358,9 +358,7 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
     if(pixmap != _G_root->pixmap)
     {
         _G_root->pixmap = pixmap;
-        luaA_object_push(_G_L, _G_root);
-        luaA_object_emit_signal(_G_L, -1, "property::pixmap", 0);
-        lua_pop(_G_L, 1);
+        window_emit_signal(_G_L, _G_root, "property::pixmap", 0);
     }
 
     return 0;
