@@ -51,7 +51,7 @@ static char *awesome_argv;
 void
 awesome_atexit(void)
 {
-    signal_object_emit(globalconf.L, &global_signals, "exit", 0);
+    signal_object_emit(_G_L, &global_signals, "exit", 0);
 
     a_dbus_cleanup();
 
@@ -66,7 +66,7 @@ awesome_atexit(void)
         window_unban((window_t *) *c);
 
     /* Close Lua */
-    lua_close(globalconf.L);
+    lua_close(_G_L);
 
     xcb_flush(_G_connection);
 
@@ -448,7 +448,7 @@ main(int argc, char **argv)
     atoms_init(_G_connection);
 
     /* init screens information */
-    screen_scan(globalconf.L);
+    screen_scan(_G_L);
 
     /* init default font and colors */
     colors_reqs[0] = xcolor_init_unchecked(&globalconf.colors.fg,
@@ -481,10 +481,10 @@ main(int argc, char **argv)
                                  | XCB_EVENT_MASK_KEY_RELEASE
                                  });
     systray_init();
-    ewmh_init(globalconf.L);
+    ewmh_init(_G_L);
     spawn_init();
-    banning_init(globalconf.L);
-    stack_init(globalconf.L);
+    banning_init(_G_L);
+    stack_init(_G_L);
 
     /* Parse and run configuration file */
     if (!luaA_parserc(&xdg, confpath, true))

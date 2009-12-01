@@ -68,11 +68,11 @@ spawn_monitor_timeout(struct ev_loop *loop, ev_timer *w, int revents)
     if(spawn_sequence_remove(w->data))
     {
         /* build argument */
-        lua_createtable(globalconf.L, 0, 2);
-        lua_pushstring(globalconf.L, sn_startup_sequence_get_id(w->data));
-        lua_setfield(globalconf.L, -2, "id");
+        lua_createtable(_G_L, 0, 2);
+        lua_pushstring(_G_L, sn_startup_sequence_get_id(w->data));
+        lua_setfield(_G_L, -2, "id");
         /* send a timeout signal */
-        signal_object_emit(globalconf.L, &global_signals, "spawn::timeout", 1);
+        signal_object_emit(_G_L, &global_signals, "spawn::timeout", 1);
     }
     sn_startup_sequence_unref(w->data);
     p_delete(&w);
@@ -84,9 +84,9 @@ spawn_monitor_event(SnMonitorEvent *event, void *data)
     SnStartupSequence *sequence = sn_monitor_event_get_startup_sequence(event);
     SnMonitorEventType event_type = sn_monitor_event_get_type(event);
 
-    lua_createtable(globalconf.L, 0, 2);
-    lua_pushstring(globalconf.L, sn_startup_sequence_get_id(sequence));
-    lua_setfield(globalconf.L, -2, "id");
+    lua_createtable(_G_L, 0, 2);
+    lua_pushstring(_G_L, sn_startup_sequence_get_id(sequence));
+    lua_setfield(_G_L, -2, "id");
 
     const char *event_type_str = NULL;
 
@@ -127,35 +127,35 @@ spawn_monitor_event(SnMonitorEvent *event, void *data)
             const char *s = sn_startup_sequence_get_name(sequence);
             if(s)
             {
-                lua_pushstring(globalconf.L, s);
-                lua_setfield(globalconf.L, -2, "name");
+                lua_pushstring(_G_L, s);
+                lua_setfield(_G_L, -2, "name");
             }
 
             if((s = sn_startup_sequence_get_description(sequence)))
             {
-                lua_pushstring(globalconf.L, s);
-                lua_setfield(globalconf.L, -2, "description");
+                lua_pushstring(_G_L, s);
+                lua_setfield(_G_L, -2, "description");
             }
 
-            lua_pushnumber(globalconf.L, sn_startup_sequence_get_workspace(sequence));
-            lua_setfield(globalconf.L, -2, "workspace");
+            lua_pushnumber(_G_L, sn_startup_sequence_get_workspace(sequence));
+            lua_setfield(_G_L, -2, "workspace");
 
             if((s = sn_startup_sequence_get_binary_name(sequence)))
             {
-                lua_pushstring(globalconf.L, s);
-                lua_setfield(globalconf.L, -2, "binary_name");
+                lua_pushstring(_G_L, s);
+                lua_setfield(_G_L, -2, "binary_name");
             }
 
             if((s = sn_startup_sequence_get_icon_name(sequence)))
             {
-                lua_pushstring(globalconf.L, s);
-                lua_setfield(globalconf.L, -2, "icon_name");
+                lua_pushstring(_G_L, s);
+                lua_setfield(_G_L, -2, "icon_name");
             }
 
             if((s = sn_startup_sequence_get_wmclass(sequence)))
             {
-                lua_pushstring(globalconf.L, s);
-                lua_setfield(globalconf.L, -2, "wmclass");
+                lua_pushstring(_G_L, s);
+                lua_setfield(_G_L, -2, "wmclass");
             }
         }
         break;
@@ -165,7 +165,7 @@ spawn_monitor_event(SnMonitorEvent *event, void *data)
         break;
     }
 
-    signal_object_emit(globalconf.L, &global_signals, event_type_str, 1);
+    signal_object_emit(_G_L, &global_signals, event_type_str, 1);
 }
 
 /** Tell the spawn module that an app has been started.

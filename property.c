@@ -39,7 +39,7 @@
                                                                 c->window, \
                                                                 atom, \
                                                                 UINT_MAX), NULL); \
-        setfunc(globalconf.L, c, xutil_get_text_property_from_reply(reply)); \
+        setfunc(_G_L, c, xutil_get_text_property_from_reply(reply)); \
         if(no_reply) \
             p_delete(&reply); \
     } \
@@ -112,11 +112,11 @@ property_update_wm_transient_for(client_t *c, xcb_get_property_reply_t *reply)
             return;
     }
 
-    ewindow_set_type(globalconf.L, (ewindow_t *) c, EWINDOW_TYPE_DIALOG);
-    ewindow_set_above(globalconf.L, (ewindow_t *) c, false);
-    luaA_object_push(globalconf.L, client_getbywin(trans));
-    client_set_transient_for(globalconf.L, c, -1);
-    lua_pop(globalconf.L, 1);
+    ewindow_set_type(_G_L, (ewindow_t *) c, EWINDOW_TYPE_DIALOG);
+    ewindow_set_above(_G_L, (ewindow_t *) c, false);
+    luaA_object_push(_G_L, client_getbywin(trans));
+    client_set_transient_for(_G_L, c, -1);
+    lua_pop(_G_L, 1);
 }
 
 /** Update leader hint of a client.
@@ -197,13 +197,13 @@ property_update_wm_hints(client_t *c, xcb_get_property_reply_t *reply)
             return;
     }
 
-    client_set_urgent(globalconf.L, c, xcb_wm_hints_get_urgency(&wmh));
+    client_set_urgent(_G_L, c, xcb_wm_hints_get_urgency(&wmh));
 
     if(wmh.flags & XCB_WM_HINT_INPUT)
         c->focusable = wmh.input;
 
     if(wmh.flags & XCB_WM_HINT_WINDOW_GROUP)
-        client_set_group_window(globalconf.L, c, wmh.window_group);
+        client_set_group_window(_G_L, c, wmh.window_group);
 }
 
 /** Update WM_CLASS of a client.
@@ -228,7 +228,7 @@ property_update_wm_class(client_t *c, xcb_get_property_reply_t *reply)
             return;
     }
 
-    client_set_class_instance(globalconf.L, c, hint.class_name, hint.instance_name);
+    client_set_class_instance(_G_L, c, hint.class_name, hint.instance_name);
 
     /* only delete reply if we get it ourselves */
     if(!reply)
@@ -258,10 +258,10 @@ property_update_net_wm_icon(client_t *c,
     if(reply)
     {
         if(ewmh_window_icon_from_reply(reply))
-            client_set_icon(globalconf.L, c, -1);
+            client_set_icon(_G_L, c, -1);
     }
     else if(ewmh_window_icon_get_reply(ewmh_window_icon_get_unchecked(c->window)))
-        client_set_icon(globalconf.L, c, -1);
+        client_set_icon(_G_L, c, -1);
 }
 
 void
@@ -281,7 +281,7 @@ property_update_net_wm_pid(client_t *c,
     {
         uint32_t *rdata = xcb_get_property_value(reply);
         if(rdata)
-            client_set_pid(globalconf.L, c, *rdata);
+            client_set_pid(_G_L, c, *rdata);
     }
 
     if(no_reply)
@@ -358,9 +358,9 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
     if(pixmap != _G_root->pixmap)
     {
         _G_root->pixmap = pixmap;
-        luaA_object_push(globalconf.L, _G_root);
-        luaA_object_emit_signal(globalconf.L, -1, "property::pixmap", 0);
-        lua_pop(globalconf.L, 1);
+        luaA_object_push(_G_L, _G_root);
+        luaA_object_emit_signal(_G_L, -1, "property::pixmap", 0);
+        lua_pop(_G_L, 1);
     }
 
     return 0;
@@ -377,7 +377,7 @@ property_handle_net_wm_opacity(void *data __attribute__ ((unused)),
     ewindow_t *ewindow = ewindow_getbywin(window);
 
     if(ewindow)
-        ewindow_set_opacity(globalconf.L, ewindow, xwindow_get_opacity_from_reply(reply));
+        ewindow_set_opacity(_G_L, ewindow, xwindow_get_opacity_from_reply(reply));
 
     return 0;
 }
