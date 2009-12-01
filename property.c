@@ -185,8 +185,7 @@ property_update_wm_hints(client_t *c, xcb_get_property_cookie_t cookie)
                                &wmh, NULL))
         return;
 
-    luaA_object_push(globalconf.L, c);
-    client_set_urgent(globalconf.L, -1, xcb_wm_hints_get_urgency(&wmh));
+    client_set_urgent(globalconf.L, c, xcb_wm_hints_get_urgency(&wmh));
 
     if(wmh.flags & XCB_WM_HINT_INPUT)
         c->focusable = wmh.input;

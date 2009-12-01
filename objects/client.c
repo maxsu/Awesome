@@ -53,16 +53,17 @@ client_wipe(client_t *c)
 
 /** Change the clients urgency flag.
  * \param L The Lua VM state.
- * \param cidx The client index on the stack.
+ * \param c The client.
  * \param urgent The new flag state.
  */
 void
-client_set_urgent(lua_State *L, int cidx, bool urgent)
+client_set_urgent(lua_State *L, client_t *c, bool urgent)
 {
-    client_t *c = luaA_checkudata(L, cidx, (lua_class_t *) &client_class);
-
     if(c->urgent != urgent)
     {
+        /* Need to grab server to avoid race condition */
+        xcb_grab_server(_G_connection);
+
         xcb_get_property_cookie_t hints =
             xcb_get_wm_hints_unchecked(_G_connection, c->window);
 
@@ -79,7 +80,9 @@ client_set_urgent(lua_State *L, int cidx, bool urgent)
 
         xcb_set_wm_hints(_G_connection, c->window, &wmh);
 
-        luaA_object_emit_signal(L, cidx, "property::urgent", 0);
+        xcb_ungrab_server(_G_connection);
+
+        client_emit_signal(L, c, "property::urgent", 0);
     }
 }
 
@@ -478,12 +481,7 @@ luaA_client_set_icon(lua_State *L, client_t *c)
     return 0;
 }
 
-static int
-luaA_client_set_urgent(lua_State *L, client_t *c)
-{
-    client_set_urgent(L, -3, luaA_checkboolean(L, -1));
-    return 0;
-}
+static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(client, client_t, urgent, luaA_checkboolean)
 
 static int
 luaA_client_set_skip_taskbar(lua_State *L, client_t *c)
