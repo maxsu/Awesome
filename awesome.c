@@ -276,9 +276,6 @@ main(int argc, char **argv)
     ev_signal sigterm;
     ev_signal sighup;
 
-    /* clear the globalconf structure */
-    p_clear(&globalconf, 1);
-
     /* save argv */
     for(i = 0; i < argc; i++)
         cmdlen += a_strlen(argv[i]) + 1;
@@ -417,10 +414,10 @@ main(int argc, char **argv)
     screen_scan(_G_L);
 
     /* init default font and colors */
-    colors_reqs[0] = xcolor_init_unchecked(&globalconf.colors.fg,
+    colors_reqs[0] = xcolor_init_unchecked(&_G_fg,
                                            "black", sizeof("black") - 1);
 
-    colors_reqs[1] = xcolor_init_unchecked(&globalconf.colors.bg,
+    colors_reqs[1] = xcolor_init_unchecked(&_G_bg,
                                            "white", sizeof("white") - 1);
 
     font_init(&_G_font, "sans 8");

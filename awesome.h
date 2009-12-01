@@ -21,8 +21,7 @@
 #ifndef AWESOME_AWESOME_H
 #define AWESOME_AWESOME_H
 
-#include <xcb/xcb.h>
-#include <stdbool.h>
+#include "color.h"
 
 void awesome_restart(void);
 void awesome_atexit(void);
@@ -33,6 +32,8 @@ xcb_connection_t *_G_connection;
 int _G_default_screen;
 /** The event loop */
 struct ev_loop *_G_loop;
+/** Default foreground and background colors */
+xcolor_t _G_fg, _G_bg;
 
 #endif
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

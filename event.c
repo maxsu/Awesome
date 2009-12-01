@@ -252,8 +252,6 @@ event_handle_motionnotify(xcb_motion_notify_event_t *ev)
 static void
 event_handle_enterleavenotify(xcb_enter_notify_event_t *ev)
 {
-    globalconf.timestamp = ev->time;
-
     if(ev->mode != XCB_NOTIFY_MODE_NORMAL)
         return;
 
@@ -366,8 +364,6 @@ event_handle_expose(xcb_expose_event_t *ev)
 static void
 event_handle_key(xcb_key_press_event_t *ev)
 {
-    globalconf.timestamp = ev->time;
-
     /* get keysym ignoring all modifiers */
     xcb_keysym_t keysym = keyresolv_get_keysym(ev->detail, ev->state);
 

@@ -258,10 +258,10 @@ luaA_awesome_index(lua_State *L)
         lua_pushstring(L, conffile);
         break;
       case A_TK_FG:
-        luaA_pushxcolor(L, globalconf.colors.fg);
+        luaA_pushxcolor(L, _G_fg);
         break;
       case A_TK_BG:
-        luaA_pushxcolor(L, globalconf.colors.bg);
+        luaA_pushxcolor(L, _G_bg);
         break;
       case A_TK_VERSION:
         lua_pushliteral(L, AWESOME_VERSION);
@@ -300,11 +300,11 @@ luaA_awesome_newindex(lua_State *L)
         break;
       case A_TK_FG:
         if((buf = luaL_checklstring(L, 3, &len)))
-           xcolor_init_reply(xcolor_init_unchecked(&globalconf.colors.fg, buf, len));
+           xcolor_init_reply(xcolor_init_unchecked(&_G_fg, buf, len));
         break;
       case A_TK_BG:
         if((buf = luaL_checklstring(L, 3, &len)))
-           xcolor_init_reply(xcolor_init_unchecked(&globalconf.colors.bg, buf, len));
+           xcolor_init_reply(xcolor_init_unchecked(&_G_bg, buf, len));
         break;
       default:
         return 0;

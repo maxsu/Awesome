@@ -242,8 +242,6 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
                       | XCB_CW_WIN_GRAVITY | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
                       (const uint32_t [])
                       {
-                          globalconf.colors.bg.pixel,
-                          globalconf.colors.bg.pixel,
                           XCB_GRAVITY_NORTH_WEST,
                           XCB_GRAVITY_NORTH_WEST,
                           1,
@@ -411,7 +409,7 @@ client_kill(client_t *c)
         ev.response_type = XCB_CLIENT_MESSAGE;
         ev.window = c->window;
         ev.format = 32;
-        ev.data.data32[1] = globalconf.timestamp;
+        ev.data.data32[1] = XCB_CURRENT_TIME;
         ev.type = WM_PROTOCOLS;
         ev.data.data32[0] = WM_DELETE_WINDOW;
 
