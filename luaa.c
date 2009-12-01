@@ -32,6 +32,7 @@
 
 #include "config.h"
 #include "objects/timer.h"
+#include "objects/thread.h"
 #include "awesome-version-internal.h"
 #include "spawn.h"
 #include "objects/tag.h"
@@ -474,6 +475,9 @@ luaA_init(xdgHandle* xdg)
 
     /* Export screen */
     screen_class_setup(L);
+
+    /* Export thread */
+    thread_class_setup(L);
 
     /* add Lua search paths */
     lua_getglobal(L, "package");
