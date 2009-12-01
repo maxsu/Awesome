@@ -25,7 +25,7 @@
 
 ARRAY_FUNCS(tag_t *, tag, DO_NOTHING)
 
-LUA_OBJECT_FUNCS(&tag_class, tag_t, tag)
+LUA_OBJECT_SIGNAL_FUNCS(tag, tag_t)
 
 static void
 tag_wipe(tag_t *tag)
@@ -248,6 +248,8 @@ luaA_tag_set_name(lua_State *L, tag_t *tag)
     luaA_object_emit_signal(L, -3, "property::name", 0);
     return 0;
 }
+
+LUA_CLASS_FUNCS(tag, &tag_class)
 
 void
 tag_class_setup(lua_State *L)

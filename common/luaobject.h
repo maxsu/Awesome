@@ -41,8 +41,7 @@ void luaA_object_connect_signal_from_stack(lua_State *, int, const char *, int);
 void luaA_object_disconnect_signal_from_stack(lua_State *, int, const char *, int);
 void luaA_object_emit_signal(lua_State *, int, const char *, int);
 
-#define LUA_OBJECT_FUNCS(lua_class, type, prefix)                              \
-    LUA_CLASS_FUNCS(prefix, lua_class)                                         \
+#define LUA_OBJECT_SIGNAL_FUNCS(prefix, type)                                  \
     static inline void                                                         \
     prefix##_emit_signal(lua_State *L, type *obj, const char *name, int nargs) \
     {                                                                          \
@@ -54,7 +53,9 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
         luaA_object_emit_signal(L, - nargs - 1, name, nargs);                  \
         /* Remove object */                                                    \
         lua_pop(L, 1);                                                         \
-    }                                                                          \
+    }
+
+#define LUA_OBJECT_FUNCS(lua_class, type, prefix)                              \
     static inline type *                                                       \
     prefix##_make_light(lua_State *L, type *item)                              \
     {                                                                          \

@@ -39,7 +39,7 @@ typedef struct
 } timer_callback_data_t;
 
 static lua_class_t timer_class;
-LUA_OBJECT_FUNCS(&timer_class, atimer_t, timer)
+LUA_OBJECT_SIGNAL_FUNCS(timer, atimer_t)
 
 static void
 timer_wipe(atimer_t *timer)
@@ -51,9 +51,7 @@ static void
 ev_timer_emit_signal(struct ev_loop *loop, struct ev_timer *w, int revents)
 {
     timer_callback_data_t *data = w->data;
-    luaA_object_push(data->L, data->timer);
-    luaA_object_emit_signal(data->L, -1, "timeout", 0);
-    lua_pop(data->L, 1);
+    timer_emit_signal(data->L, data->timer, "timeout", 0);
 }
 
 static int
@@ -116,6 +114,8 @@ luaA_timer_stop(lua_State *L)
 }
 
 static LUA_OBJECT_EXPORT_PROPERTY(timer, atimer_t, started, lua_pushboolean)
+
+LUA_CLASS_FUNCS(timer, &timer_class)
 
 void
 timer_class_setup(lua_State *L)

@@ -850,6 +850,8 @@ window_init(lua_State *L, window_t *window)
     window->cursor = a_strdup(CURSOR_DEFAULT_NAME);
 }
 
+LUA_CLASS_FUNCS(window, &window_class)
+
 void
 window_class_setup(lua_State *L)
 {

@@ -82,7 +82,7 @@ window_cmp(const void *a, const void *b)
 #include "common/luaobject.h"
 
 lua_class_t window_class;
-LUA_OBJECT_FUNCS(&window_class, window_t, window)
+LUA_OBJECT_SIGNAL_FUNCS(window, window_t)
 
 void window_class_setup(lua_State *);
 

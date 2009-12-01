@@ -34,6 +34,8 @@
 #include "common/atoms.h"
 #include "common/xutil.h"
 
+LUA_OBJECT_SIGNAL_FUNCS(client, client_t)
+
 /** Collect a client.
  * \param L The Lua VM state.
  * \return The number of element pushed on stack.
@@ -358,11 +360,9 @@ client_unmanage(client_t *c)
     lua_pop(globalconf.L, 1);
 
     if(strut_has_value(&c->strut))
-    {
-        lua_pushlightuserdata(globalconf.L, screen_getbycoord(c->geometry.x, c->geometry.y));
-        luaA_object_emit_signal(globalconf.L, -1, "property::workarea", 0);
-        lua_pop(globalconf.L, 1);
-    }
+        screen_emit_signal(globalconf.L,
+                           screen_getbycoord(c->geometry.x, c->geometry.y),
+                           "property::workarea", 0);
 
     /* Clear our event mask so that we don't receive any events from now on,
      * especially not for the following requests. */
@@ -528,6 +528,8 @@ client_take_focus(lua_State *L)
         xwindow_takefocus(c->window);
     return 0;
 }
+
+LUA_CLASS_FUNCS(client, (lua_class_t *) &client_class)
 
 void
 client_class_setup(lua_State *L)

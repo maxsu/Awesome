@@ -773,6 +773,8 @@ luaA_image_get_alpha(lua_State *L, image_t *image)
     return 1;
 }
 
+LUA_CLASS_FUNCS(image, (lua_class_t *) &image_class)
+
 void
 image_class_setup(lua_State *L)
 {

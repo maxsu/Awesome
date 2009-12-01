@@ -401,6 +401,8 @@ luaA_screen_get_outputs(lua_State *L, screen_t *screen)
     return 1;
 }
 
+LUA_CLASS_FUNCS(screen, &screen_class)
+
 void
 screen_class_setup(lua_State *L)
 {

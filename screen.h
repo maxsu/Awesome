@@ -44,6 +44,15 @@ typedef struct
 } screen_t;
 DO_ARRAY(screen_t, screen, DO_NOTHING)
 
+LUA_OBJECT_SIGNAL_FUNCS(screen, screen_t)
+
+/** The graphic context. */
+xcb_gcontext_t _G_gc;
+/** The default visual, used to draw */
+xcb_visualtype_t *_G_visual;
+/** Screen's root window */
+window_t *_G_root;
+
 void screen_class_setup(lua_State *);
 void screen_scan(lua_State *);
 screen_t *screen_getbycoord(int, int);

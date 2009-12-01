@@ -27,7 +27,7 @@
 #include "common/luaobject.h"
 #include "common/xutil.h"
 
-LUA_OBJECT_FUNCS((lua_class_t *) &ewindow_class, ewindow_t, ewindow)
+LUA_OBJECT_SIGNAL_FUNCS(ewindow, ewindow_t)
 
 bool
 ewindow_isvisible(ewindow_t *ewindow)
@@ -66,11 +66,8 @@ luaA_ewindow_struts(lua_State *L)
         luaA_tostrut(L, 2, &ewindow->strut);
         luaA_object_emit_signal(L, 1, "property::struts", 0);
         if(ewindow_isvisible(ewindow))
-        {
-            lua_pushlightuserdata(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y));
-            luaA_object_emit_signal(L, -1, "property::workarea", 0);
-            lua_pop(L, 1);
-        }
+            screen_emit_signal(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y),
+                               "property::workarea", 0);
     }
 
     return luaA_pushstrut(L, ewindow->strut);
@@ -92,11 +89,8 @@ ewindow_set_minimized(lua_State *L, ewindow_t *ewindow, bool s)
         else
             xwindow_set_state(ewindow->window, XCB_WM_STATE_NORMAL);
         if(strut_has_value(&ewindow->strut))
-        {
-            lua_pushlightuserdata(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y));
-            luaA_object_emit_signal(L, -1, "property::workarea", 0);
-            lua_pop(L, 1);
-        }
+            screen_emit_signal(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y),
+                               "property::workarea", 0);
         ewindow_emit_signal(L, ewindow, "property::minimized", 0);
     }
 }
@@ -498,6 +492,8 @@ ewindow_init(lua_State *L, ewindow_t *ewindow)
     ewindow->opacity = -1;
 }
 
+LUA_CLASS_FUNCS(ewindow, (lua_class_t *) &ewindow_class)
+
 void
 ewindow_class_setup(lua_State *L)
 {
@@ -510,7 +506,8 @@ ewindow_class_setup(lua_State *L)
     };
 
     luaA_class_setup(L, (lua_class_t *) &ewindow_class, "ewindow", &window_class,
-                     sizeof(ewindow_t), (lua_class_initializer_t) ewindow_init, NULL, NULL,
+                     sizeof(ewindow_t), (lua_class_initializer_t) ewindow_init,
+                     NULL, NULL,
                      luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      ewindow_methods, NULL, NULL);
 
