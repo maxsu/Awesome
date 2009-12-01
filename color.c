@@ -83,7 +83,7 @@ color_parse(const char *colstr, ssize_t len,
  * \param len The length of colstr (which still MUST be NULL terminated).
  * \return request informations.
  */
-#include "globalconf.h"
+#include "screen.h"
 color_init_cookie_t
 color_init_unchecked(color_t *color, const char *colstr, ssize_t len)
 {
@@ -116,7 +116,7 @@ color_init_unchecked(color_t *color, const char *colstr, ssize_t len)
         req.color = color;
         req.colstr = colstr;
         req.cookie = xcb_alloc_named_color_unchecked(_G_connection,
-                                                     globalconf.screen->default_colormap,
+                                                     _G_screen->default_colormap,
                                                      len,
                                                      colstr);
     }
@@ -196,7 +196,7 @@ xcolor_init_unchecked(xcolor_t *color, const char *colstr, ssize_t len)
 
         req.is_hexa = true;
         req.cookie_hexa = xcb_alloc_color_unchecked(_G_connection,
-                                                    globalconf.screen->default_colormap,
+                                                    _G_screen->default_colormap,
                                                     RGB_8TO16(red),
                                                     RGB_8TO16(green),
                                                     RGB_8TO16(blue));
@@ -205,7 +205,7 @@ xcolor_init_unchecked(xcolor_t *color, const char *colstr, ssize_t len)
     {
         req.is_hexa = false;
         req.cookie_named = xcb_alloc_named_color_unchecked(_G_connection,
-                                                           globalconf.screen->default_colormap, len,
+                                                           _G_screen->default_colormap, len,
                                                            colstr);
     }
 

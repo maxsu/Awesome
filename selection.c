@@ -41,7 +41,7 @@ luaA_selection_get(lua_State *L)
     if(selection_window == XCB_NONE)
     {
         selection_window = xcb_generate_id(_G_connection);
-        xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT, selection_window, globalconf.screen->root,
+        xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT, selection_window, _G_screen->root,
                           0, 0, 1, 1, 0, XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT,
                           XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK,
                           (uint32_t[]) { true, XCB_EVENT_MASK_PROPERTY_CHANGE });

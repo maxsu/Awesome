@@ -129,7 +129,7 @@ draw_context_init(draw_context_t *d,
                   int width, int height)
 {
     d->surface = cairo_xcb_surface_create(_G_connection,
-                                          pixmap, globalconf.visual,
+                                          pixmap, _G_visual,
                                           width, height);
     d->cr = cairo_create(d->surface);
     d->layout = pango_cairo_create_layout(d->cr);

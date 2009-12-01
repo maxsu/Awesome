@@ -46,8 +46,6 @@
 #include "common/xutil.h"
 #include "common/backtrace.h"
 
-awesome_t globalconf;
-
 /** argv used to run awesome */
 static char *awesome_argv;
 
@@ -88,7 +86,7 @@ scan(void)
 
     /* Get the window tree associated to this screen */
     tree_c = xcb_query_tree_unchecked(_G_connection,
-                                      globalconf.screen->root);
+                                      _G_screen->root);
 
     tree_r = xcb_query_tree_reply(_G_connection,
                                   tree_c,
@@ -350,12 +348,12 @@ main(int argc, char **argv)
     if(xcb_connection_has_error(_G_connection))
         fatal("cannot open display");
 
-    globalconf.screen = xcb_aux_get_screen(_G_connection, _G_default_screen);
+    _G_screen = xcb_aux_get_screen(_G_connection, _G_default_screen);
 
     /* The default GC is just a newly created associated to the root window */
-    globalconf.gc = xcb_generate_id(_G_connection);
-    xcb_create_gc(_G_connection, globalconf.gc, globalconf.screen->root, XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
-                  (const uint32_t[]) { globalconf.screen->black_pixel, globalconf.screen->white_pixel });
+    _G_gc = xcb_generate_id(_G_connection);
+    xcb_create_gc(_G_connection, _G_gc, _G_screen->root, XCB_GC_FOREGROUND | XCB_GC_BACKGROUND,
+                  (const uint32_t[]) { _G_screen->black_pixel, _G_screen->white_pixel });
 
     /* Prefetch all the extensions we might need */
     xcb_prefetch_extension_data(_G_connection, &xcb_big_requests_id);
@@ -387,7 +385,7 @@ main(int argc, char **argv)
 
         /* This causes an error if some other window manager is running */
         xcb_change_window_attributes(_G_connection,
-                                     globalconf.screen->root,
+                                     _G_screen->root,
                                      XCB_CW_EVENT_MASK, &select_input_val);
     }
 
@@ -456,7 +454,7 @@ main(int argc, char **argv)
         };
 
         xcb_change_window_attributes(_G_connection,
-                                     globalconf.screen->root,
+                                     _G_screen->root,
                                      XCB_CW_EVENT_MASK,
                                      change_win_vals);
     }

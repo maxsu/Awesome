@@ -116,7 +116,7 @@ wibox_draw_context_update(lua_State *L, int ud)
 
     /* Create a pixmap. */
     w->pixmap = xcb_generate_id(_G_connection);
-    xcb_screen_t *xcb_screen = globalconf.screen;
+    xcb_screen_t *xcb_screen = _G_screen;
     xcb_create_pixmap(_G_connection, xcb_screen->root_depth,
                       w->pixmap, xcb_screen->root,
                       w->geometry.width, w->geometry.height);
@@ -159,7 +159,7 @@ wibox_refresh_pixmap_partial(wibox_t *wibox,
                              uint16_t w, uint16_t h)
 {
     xcb_copy_area(_G_connection, wibox->pixmap,
-                  wibox->window, globalconf.gc, x, y, x, y,
+                  wibox->window, _G_gc, x, y, x, y,
                   w, h);
 }
 
@@ -187,7 +187,7 @@ wibox_render(wibox_t *wibox)
     {
         if(wibox->parent->pixmap)
             xcb_copy_area(_G_connection, wibox->parent->pixmap,
-                          wibox->pixmap, globalconf.gc,
+                          wibox->pixmap, _G_gc,
                           wibox->geometry.x + wibox->border_width,
                           wibox->geometry.y + wibox->border_width,
                           0, 0,

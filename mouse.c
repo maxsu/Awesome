@@ -101,7 +101,7 @@ luaA_mouse_query(lua_State *L)
     int16_t x, y;
     xcb_window_t child;
 
-    if(!mouse_query_pointer(globalconf.screen->root, &x, &y, &child, &mask))
+    if(!mouse_query_pointer(_G_screen->root, &x, &y, &child, &mask))
         return 0;
 
     luaA_object_push(L, ewindow_getbywin(child));

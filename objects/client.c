@@ -194,7 +194,7 @@ client_update_properties(client_t *c)
     property_update_net_wm_icon_name(c, net_wm_icon_name);
     property_update_wm_class(c, wm_class);
     property_update_wm_protocols(c, wm_protocols);
-    ewindow_set_opacity(_G_L, -1, xwindow_get_opacity_from_cookie(opacity));
+    ewindow_set_opacity(_G_L, (ewindow_t *) c, xwindow_get_opacity_from_cookie(opacity));
 }
 
 /** Manage a new client.
@@ -226,7 +226,7 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
     xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, w);
 
     client_t *c = (client_t *) luaA_object_new(_G_L, (lua_class_t *) &client_class);
-    xcb_screen_t *s = globalconf.screen;
+    xcb_screen_t *s = _G_screen;
 
     /* Store window */
     c->window = w;
@@ -374,7 +374,7 @@ client_unmanage(client_t *c)
                                  (const uint32_t []) { 0 });
 
     xcb_unmap_window(_G_connection, c->window);
-    xcb_reparent_window(_G_connection, c->window, globalconf.screen->root,
+    xcb_reparent_window(_G_connection, c->window, _G_screen->root,
             c->geometry.x, c->geometry.y);
     xcb_destroy_window(_G_connection, c->frame_window);
 

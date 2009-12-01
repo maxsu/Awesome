@@ -21,7 +21,6 @@
 #ifndef AWESOME_PROPERTY_H
 #define AWESOME_PROPERTY_H
 
-#include "globalconf.h"
 #include "objects/client.h"
 #include "objects/window.h"
 

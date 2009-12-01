@@ -81,7 +81,7 @@ ewmh_update_desktop_geometry(void)
     uint32_t sizes[] = { geom.width, geom.height };
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
+                        _G_screen->root,
                         _NET_DESKTOP_GEOMETRY, XCB_ATOM_CARDINAL, 32, countof(sizes), sizes);
 }
 
@@ -90,7 +90,7 @@ ewmh_update_net_active_window(lua_State *L)
 {
     client_t *c = luaA_checkudata(L, 1, (lua_class_t *) &client_class);
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
+                        _G_screen->root,
                         _NET_ACTIVE_WINDOW, XCB_ATOM_WINDOW, 32, 1, (xcb_window_t[]) { c->window });
     return 0;
 }
@@ -99,7 +99,7 @@ static int
 ewmh_reset_net_active_window(lua_State *L)
 {
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
+                        _G_screen->root,
 			_NET_ACTIVE_WINDOW, WINDOW, 32, 1, (xcb_window_t[]) { XCB_NONE });
     return 0;
 }
@@ -114,7 +114,7 @@ ewmh_update_net_client_list(lua_State *L)
         wins[n++] = (*client)->window;
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
+                        _G_screen->root,
 			_NET_CLIENT_LIST, WINDOW, 32, n, wins);
 
     return 0;
@@ -124,7 +124,7 @@ static int
 ewmh_update_net_current_desktop(lua_State *L)
 {
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
+                        _G_screen->root,
                         _NET_CURRENT_DESKTOP, CARDINAL, 32, 1,
                         (uint32_t[]) { tags_get_first_selected_index() });
     return 0;
@@ -144,7 +144,7 @@ ewmh_update_net_desktop_names(lua_State *L)
     }
 
     xcb_change_property(_G_connection, XCB_PROP_MODE_REPLACE,
-                        globalconf.screen->root,
+                        _G_screen->root,
 			_NET_DESKTOP_NAMES, UTF8_STRING, 8, buf.len, buf.s);
     buffer_wipe(&buf);
 
@@ -155,7 +155,7 @@ void
 ewmh_init(lua_State *L)
 {
     xcb_window_t father;
-    xcb_screen_t *xscreen = globalconf.screen;
+    xcb_screen_t *xscreen = _G_screen;
     xcb_atom_t atom[] =
     {
         _NET_SUPPORTED,

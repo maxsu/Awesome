@@ -90,7 +90,7 @@ screen_scan_randr(void)
              * Each CRTC can draw stuff on one or more OUTPUT. */
             luaA_object_ref(_G_L, -1);
 
-            xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, globalconf.screen->root);
+            xcb_randr_get_screen_resources_cookie_t screen_res_c = xcb_randr_get_screen_resources(_G_connection, _G_screen->root);
             xcb_randr_get_screen_resources_reply_t *screen_res_r = xcb_randr_get_screen_resources_reply(_G_connection, screen_res_c, NULL);
 
             /* Only use the data from XRandR if there is more than one screen
@@ -220,7 +220,7 @@ screen_scan_xinerama(void)
 static void screen_scan_x11(void)
 {
     /* One screen only / Zaphod mode */
-    xcb_screen_t *xcb_screen = globalconf.screen;
+    xcb_screen_t *xcb_screen = _G_screen;
     screen_t s;
     p_clear(&s, 1);
     s.geometry.x = 0;
@@ -242,7 +242,7 @@ screen_scan(lua_State *L)
     foreach(screen, _G_screens)
         screen_make_light(L, screen);
 
-    globalconf.visual = screen_default_visual(globalconf.screen);
+    _G_visual = screen_default_visual(_G_screen);
 }
 
 /** Return the Xinerama screen number where the coordinates belongs to.

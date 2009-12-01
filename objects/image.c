@@ -26,7 +26,6 @@
 #include "config.h"
 #include "luaa.h"
 #include "common/luaobject.h"
-#include "globalconf.h"
 
 struct image
 {
@@ -186,7 +185,7 @@ image_draw_to_1bit_ximage(image_t *image, xcb_image_t *img)
 }
 
 // Convert an image to a 1bit pixmap
-#include "globalconf.h"
+#include "screen.h"
 xcb_pixmap_t
 image_to_1bit_pixmap(image_t *image, xcb_drawable_t d)
 {
@@ -207,7 +206,7 @@ image_to_1bit_pixmap(image_t *image, xcb_drawable_t d)
     image_draw_to_1bit_ximage(image, img);
 
     /* Paint the image to the pixmap */
-    xcb_image_put(_G_connection, pixmap, globalconf.gc, img, 0, 0, 0);
+    xcb_image_put(_G_connection, pixmap, _G_gc, img, 0, 0, 0);
 
     xcb_image_destroy(img);
 

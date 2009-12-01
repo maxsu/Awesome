@@ -31,6 +31,11 @@
 
 #define SYSTEM_TRAY_REQUEST_DOCK 0 /* Begin icon docking */
 
+static struct systray_t {
+    xcb_window_t window;
+    bool registered;
+} _G_systray;
+
 /** Initialize systray information in X.
  */
 void
@@ -54,20 +59,20 @@ systray_init(void)
 
     p_delete(&atom_name);
 
-    globalconf.systray.window = xcb_generate_id(_G_connection);
+    _G_systray.window = xcb_generate_id(_G_connection);
     xcb_create_window(_G_connection, XCB_COPY_FROM_PARENT,
-                      globalconf.systray.window, globalconf.screen->root,
+                      _G_systray.window, _G_screen->root,
                       -1, -1, 1, 1, 0,
                       XCB_COPY_FROM_PARENT, XCB_COPY_FROM_PARENT, 0, NULL);
 
     /* Fill event */
     p_clear(&ev, 1);
     ev.response_type = XCB_CLIENT_MESSAGE;
-    ev.window = globalconf.screen->root,
+    ev.window = _G_screen->root,
     ev.format = 32;
     ev.type = MANAGER;
     ev.data.data32[0] = XCB_CURRENT_TIME;
-    ev.data.data32[2] = globalconf.systray.window;
+    ev.data.data32[2] = _G_systray.window;
     ev.data.data32[3] = ev.data.data32[4] = 0;
 
     if(!(atom_systray_r = xcb_intern_atom_reply(_G_connection, atom_systray_q, NULL)))
@@ -81,11 +86,11 @@ systray_init(void)
     p_delete(&atom_systray_r);
 
     xcb_set_selection_owner(_G_connection,
-                            globalconf.systray.window,
+                            _G_systray.window,
                             atom_systray,
                             XCB_CURRENT_TIME);
 
-    xcb_send_event(_G_connection, false, globalconf.screen->root, 0xFFFFFF, (char *) &ev);
+    xcb_send_event(_G_connection, false, _G_screen->root, 0xFFFFFF, (char *) &ev);
 }
 
 
@@ -103,16 +108,16 @@ void
 systray_register(void)
 {
     xcb_client_message_event_t ev;
-    xcb_screen_t *xscreen = globalconf.screen;
+    xcb_screen_t *xscreen = _G_screen;
     char *atom_name;
     xcb_intern_atom_cookie_t atom_systray_q;
     xcb_intern_atom_reply_t *atom_systray_r;
     xcb_atom_t atom_systray;
 
     /* Set registered even if it fails to don't try again unless forced */
-    if(globalconf.systray.registered)
+    if(_G_systray.registered)
         return;
-    globalconf.systray.registered = true;
+    _G_systray.registered = true;
 
     /* Send requests */
     if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", _G_default_screen)))
@@ -133,7 +138,7 @@ systray_register(void)
     ev.format = 32;
     ev.type = MANAGER;
     ev.data.data32[0] = XCB_CURRENT_TIME;
-    ev.data.data32[2] = globalconf.systray.window;
+    ev.data.data32[2] = _G_systray.window;
     ev.data.data32[3] = ev.data.data32[4] = 0;
 
     if(!(atom_systray_r = xcb_intern_atom_reply(_G_connection, atom_systray_q, NULL)))
@@ -147,7 +152,7 @@ systray_register(void)
     p_delete(&atom_systray_r);
 
     xcb_set_selection_owner(_G_connection,
-                            globalconf.systray.window,
+                            _G_systray.window,
                             atom_systray,
                             XCB_CURRENT_TIME);
 
@@ -162,9 +167,9 @@ systray_cleanup(void)
     xcb_intern_atom_reply_t *atom_systray_r;
     char *atom_name;
 
-    if(!globalconf.systray.registered)
+    if(!_G_systray.registered)
         return;
-    globalconf.systray.registered = false;
+    _G_systray.registered = false;
 
     if(!(atom_name = xcb_atom_name_by_screen("_NET_SYSTEM_TRAY", _G_default_screen))
        || !(atom_systray_r = xcb_intern_atom_reply(_G_connection,
@@ -220,7 +225,7 @@ systray_request_handle(xcb_window_t embed_win, xembed_info_t *info)
      */
     xcb_change_save_set(_G_connection, XCB_SET_MODE_INSERT, embed_win);
     xcb_reparent_window(_G_connection, embed_win,
-                        globalconf.systray.window,
+                        _G_systray.window,
                         0, 0);
 
     em.win = embed_win;
@@ -231,7 +236,7 @@ systray_request_handle(xcb_window_t embed_win, xembed_info_t *info)
         xembed_info_get_reply(_G_connection, em_cookie, &em.info);
 
     xembed_embedded_notify(_G_connection, em.win,
-                           globalconf.systray.window,
+                           _G_systray.window,
                            MIN(XEMBED_VERSION, em.info.version));
 
     return 0;
@@ -256,7 +261,7 @@ systray_process_client_message(xcb_client_message_event_t *ev)
         if(!(geom_r = xcb_get_geometry_reply(_G_connection, geom_c, NULL)))
             return -1;
 
-        if(globalconf.screen->root == geom_r->root)
+        if(_G_screen->root == geom_r->root)
             ret = systray_request_handle(ev->data.data32[2], NULL);
 
         p_delete(&geom_r);

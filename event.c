@@ -41,7 +41,7 @@
 static window_t *
 window_getbywin(xcb_window_t window)
 {
-    if(globalconf.screen->root == window)
+    if(_G_screen->root == window)
         return _G_screens.tab[0].root;
     return (window_t *) ewindow_getbywin(window);
 }
@@ -183,10 +183,9 @@ event_handle_configurerequest(xcb_configure_request_event_t *ev)
 static void
 event_handle_configurenotify(xcb_configure_notify_event_t *ev)
 {
-    if(ev->window == globalconf.screen->root)
+    if(ev->window == _G_screen->root)
     {
         bool geometry_has_changed = false;
-        window_t *_G_root = _G_screens.tab[0].root;
 
         luaA_object_push(_G_L, _G_root);
 
@@ -541,7 +540,7 @@ event_handle_reparentnotify(xcb_reparent_notify_event_t *ev)
     {
         /* Ignore reparents to the root window, they *might* be caused by
          * ourselves if a client quickly unmaps and maps itself again. */
-        if (ev->parent != globalconf.screen->root)
+        if (ev->parent != _G_screen->root)
             client_unmanage(c);
     }
 }

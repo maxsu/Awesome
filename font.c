@@ -40,7 +40,7 @@ font_init(font_t *font, const char *fontname)
      * order to get font informations */
     surface = cairo_xcb_surface_create(_G_connection,
                                        _G_default_screen,
-                                       globalconf.visual, 1, 1);
+                                       _G_visual, 1, 1);
 
     cr = cairo_create(surface);
     layout = pango_cairo_create_layout(cr);
