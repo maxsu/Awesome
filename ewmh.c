@@ -155,7 +155,7 @@ ewmh_client_reset_urgent(lua_State *L)
 {
     /* EWMH indicates that the WM must reset urgent when client gets attention,
      * i.e. focus. */
-    client_set_urgent(L, 1, false);
+    client_set_urgent(L, luaA_checkudata(L, 1, (lua_class_t *) &client_class), false);
     return 0;
 }
 
@@ -446,12 +446,14 @@ ewmh_process_state_atom(client_t *c, xcb_atom_t state, int set)
     else if(state == _NET_WM_STATE_DEMANDS_ATTENTION)
     {
         if(set == _NET_WM_STATE_REMOVE)
-            client_set_urgent(globalconf.L, -1, false);
+            client_set_urgent(globalconf.L, c, false);
         else if(set == _NET_WM_STATE_ADD)
-            client_set_urgent(globalconf.L, -1, true);
+            client_set_urgent(globalconf.L, c, true);
         else if(set == _NET_WM_STATE_TOGGLE)
-            client_set_urgent(globalconf.L, -1, !c->urgent);
+            client_set_urgent(globalconf.L, c, !c->urgent);
     }
+
+    lua_pop(globalconf.L, 1);
 }
 
 int
