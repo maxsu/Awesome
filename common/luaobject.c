@@ -281,15 +281,6 @@ luaA_object_unref_item(lua_State *L, int ud, const void *pointer)
     lua_pop(L, 1);
 }
 
-int
-luaA_settype(lua_State *L, lua_class_t *lua_class)
-{
-    lua_pushlightuserdata(L, lua_class);
-    lua_rawget(L, LUA_REGISTRYINDEX);
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
 void
 luaA_object_connect_signal(lua_State *L, int oud,
                            const char *name, lua_CFunction fn)

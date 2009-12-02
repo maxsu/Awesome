@@ -41,6 +41,15 @@ DO_ARRAY(lua_class_t *, lua_class, DO_NOTHING)
 
 static lua_class_array_t luaA_classes;
 
+int
+luaA_settype(lua_State *L, lua_class_t *lua_class)
+{
+    lua_pushlightuserdata(L, lua_class);
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
 /** Convert a object to a udata if possible.
  * \param L The Lua VM state.
  * \param ud The index.

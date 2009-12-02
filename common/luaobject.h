@@ -23,7 +23,6 @@
 
 #include "common/luaclass.h"
 
-int luaA_settype(lua_State *, lua_class_t *);
 void luaA_object_setup(lua_State *);
 void luaA_object_store_registry(lua_State *, int);
 int luaA_object_push(lua_State *, const void *);
