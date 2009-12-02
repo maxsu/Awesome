@@ -64,6 +64,7 @@ set(AWE_SRCS
     ${SOURCE_DIR}/common/xcursor.c
     ${SOURCE_DIR}/common/xembed.c
     ${SOURCE_DIR}/common/xutil.c
+    ${SOURCE_DIR}/objects/class.c
     ${SOURCE_DIR}/objects/client.c
     ${SOURCE_DIR}/objects/ewindow.c
     ${SOURCE_DIR}/objects/image.c
