@@ -41,6 +41,7 @@
 #include "selection.h"
 #include "font.h"
 #include "screen.h"
+#include "objects/class.h"
 #include "common/backtrace.h"
 
 #ifdef WITH_DBUS
@@ -451,6 +452,9 @@ luaA_init(xdgHandle* xdg)
     /* Export D-Bus lib */
     luaL_register(L, "mouse", awesome_mouse_lib);
     lua_pop(L, 1); /* luaL_register() leaves the table on stack */
+
+    /* Export class */
+    luaclass_class_setup(L);
 
     /* Export image */
     image_class_setup(L);
