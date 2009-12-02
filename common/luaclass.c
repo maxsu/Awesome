@@ -439,6 +439,10 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
     lua_pushcfunction(L, luaA_class_gc);
     lua_setfield(L, -2, "__gc");
 
+    /* Protect metatable from userland */
+    lua_pushstring(L, name);
+    lua_setfield(L, -2, "__metatable");
+
     /* Set __index and __newindex metamethod in the metatable */
     lua_pushcfunction(L, luaA_class_index);
     lua_setfield(L, -2, "__index");
