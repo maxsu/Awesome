@@ -27,6 +27,7 @@
 #include "awesome.h"
 #include "ewmh.h"
 #include "objects/tag.h"
+#include "objects/client.h"
 #include "objects/screen.h"
 #include "common/buffer.h"
 #include "common/xutil.h"
@@ -636,9 +637,7 @@ ewmh_process_client_strut(client_t *c, xcb_get_property_reply_t *strut_r)
             c->strut.bottom_start_x = strut[10];
             c->strut.bottom_end_x = strut[11];
 
-            luaA_object_push(_G_L, c);
-            luaA_object_emit_signal(_G_L, -1, "property::struts", 0);
-            lua_pop(_G_L, 1);
+            client_emit_signal(_G_L, c, "property::struts", 0);
         }
     }
 

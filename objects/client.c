@@ -34,8 +34,6 @@
 #include "common/atoms.h"
 #include "common/xutil.h"
 
-LUA_OBJECT_SIGNAL_FUNCS(client, client_t)
-
 /** Collect a client.
  * \param L The Lua VM state.
  * \return The number of element pushed on stack.

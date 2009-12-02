@@ -63,6 +63,7 @@ DO_BARRAY(client_t *, client, DO_NOTHING, window_cmp)
 
 /** Client class */
 lua_interface_window_t client_class;
+LUA_OBJECT_SIGNAL_FUNCS(client, client_t)
 
 /** Clients list */
 client_array_t _G_clients;
