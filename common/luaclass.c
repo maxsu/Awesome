@@ -37,10 +37,6 @@ struct lua_class_property
     lua_class_propfunc_t newindex;
 };
 
-DO_ARRAY(lua_class_t *, lua_class, DO_NOTHING)
-
-static lua_class_array_t luaA_classes;
-
 int
 luaA_settype(lua_State *L, lua_class_t *lua_class)
 {
@@ -488,8 +484,6 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
     class->checker = checker;
     if(!parent) parent = &luaobject_class;
     class->parent = parent;
-
-    lua_class_array_append(&luaA_classes, class);
 }
 
 void
