@@ -49,10 +49,9 @@ typedef int (*lua_class_propfunc_t)(lua_State *, lua_object_t *);
 typedef struct lua_class_t lua_class_t;
 
 #define LUA_CLASS_HEADER \
+    LUA_OBJECT_HEADER \
     /** Class name */ \
     const char *name; \
-    /** Class signals */ \
-    signal_array_t signals; \
     /** Parent class */ \
     lua_class_t *parent; \
     /** Size of objects */ \
