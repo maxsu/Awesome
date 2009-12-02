@@ -171,7 +171,7 @@ luaA_class_add_property(lua_class_t *lua_class,
 static int
 luaA_class_gc(lua_State *L)
 {
-    lua_object_t *item = lua_touserdata(L, 1);
+    lua_object_t *item = luaA_checkudata(L, 1, &luaobject_class);
     signal_array_wipe(&item->signals);
     /* Get the object class */
     lua_class_t *class = luaA_class_get_from_stack(L, 1);
