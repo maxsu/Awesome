@@ -719,7 +719,6 @@ image_class_setup(lua_State *L)
                      sizeof(image_t), NULL,
                      (lua_class_collector_t) image_wipe,
                      NULL,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      image_methods, image_module_meta, NULL);
     luaA_class_add_property(&image_class, "width",
                             NULL,

@@ -326,15 +326,8 @@ luaA_class_index(lua_State *L)
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
 
-    lua_class_propfunc_t func = NULL;
-
     /* Property does exist and has an index callback */
-    if(prop)
-        func = prop->index;
-    else
-        func = class->index_miss_property;
-
-    if(func)
+    if(prop && prop->index)
     {
         /* Push wrapper function */
         lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
@@ -363,20 +356,13 @@ luaA_class_newindex(lua_State *L)
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
 
-    lua_class_propfunc_t func = NULL;
-
     /* Property does exist and has a newindex callback */
-    if(prop)
-        func = prop->newindex;
-    else
-        func = class->newindex_miss_property;
-    
-    if(func)
+    if(prop && prop->newindex)
     {
         /* Push wrapper function */
         lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
         /* Push property function */
-        lua_pushlightuserdata(L, func);
+        lua_pushlightuserdata(L, prop->newindex);
         /* Push object */
         lua_pushvalue(L, 1);
         /* Duplicate key */
@@ -398,10 +384,6 @@ luaA_class_newindex(lua_State *L)
  * \param collector The collector function used when garbage collecting an
  * object.
  * \param checker The check function to call when using luaA_checkudata().
- * \param index_miss_property Function to call when an object of this class
- * receive a __index request on an unknown property.
- * \param newindex_miss_property Function to call when an object of this class
- * receive a __newindex request on an unknown property.
  * \param methods The methods to set on the class table.
  * \param metatable_module The metatable to set on the module/class table.
  * \param metatable_object The metatable of the objects. Some field like __gc,
@@ -415,8 +397,6 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
                  lua_class_initializer_t initializer,
                  lua_class_collector_t collector,
                  lua_class_checker_t checker,
-                 lua_class_propfunc_t index_miss_property,
-                 lua_class_propfunc_t newindex_miss_property,
                  const struct luaL_reg methods[],
                  const struct luaL_reg metatable_module[],
                  const struct luaL_reg metatable_object[])
@@ -483,8 +463,6 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
     class->initializer = initializer;
     class->object_size = object_size;
     class->name = name;
-    class->index_miss_property = index_miss_property;
-    class->newindex_miss_property = newindex_miss_property;
     class->checker = checker;
     if(!parent) parent = &luaobject_class;
     class->parent = parent;
@@ -605,19 +583,12 @@ luaA_class_new(lua_State *L, lua_class_t *lua_class)
         {
             lua_class_property_t *prop = luaA_class_property_get(L, lua_class, -2);
 
-            lua_class_propfunc_t func = NULL;
-
-            if(prop)
-                func = prop->new;
-            else
-                func = lua_class->newindex_miss_property;
-
-            if(func)
+            if(prop && prop->new)
             {
                 /* Push wrapper function */
                 lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
                 /* Push property function */
-                lua_pushlightuserdata(L, func);
+                lua_pushlightuserdata(L, prop->new);
                 /* Push object */
                 lua_pushvalue(L, 3);
                 /* Duplicate key */

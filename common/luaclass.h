@@ -62,10 +62,6 @@ typedef struct lua_class_t lua_class_t;
     lua_class_collector_t collector; \
     /** Class properties */ \
     lua_class_property_array_t properties; \
-    /** Function to call when a indexing an unknown property */ \
-    lua_class_propfunc_t index_miss_property; \
-    /** Function to call when a indexing an unknown property */ \
-    lua_class_propfunc_t newindex_miss_property; \
     /** Function to call to check if an object is valid */ \
     lua_class_checker_t checker;
 
@@ -88,7 +84,6 @@ void luaA_class_emit_signal(lua_State *, lua_class_t *, const char *, int);
 void luaA_class_setup(lua_State *, lua_class_t *, const char *, lua_class_t *, size_t,
                       lua_class_initializer_t, lua_class_collector_t,
                       lua_class_checker_t,
-                      lua_class_propfunc_t, lua_class_propfunc_t,
                       const struct luaL_reg[], const struct luaL_reg[], const struct luaL_reg[]);
 
 void luaA_class_add_property(lua_class_t *, const char *,

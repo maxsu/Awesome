@@ -136,7 +136,6 @@ timer_class_setup(lua_State *L)
 
     luaA_class_setup(L, &timer_class, "timer", NULL, sizeof(atimer_t),
                      NULL, (lua_class_collector_t) timer_wipe, NULL,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      timer_methods, timer_module_meta, NULL);
     luaA_class_add_property(&timer_class, "timeout",
                             (lua_class_propfunc_t) luaA_timer_set_timeout,

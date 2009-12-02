@@ -421,7 +421,6 @@ screen_class_setup(lua_State *L)
 
     luaA_class_setup(L, &screen_class, "screen", NULL, sizeof(screen_t),
                      NULL, NULL, NULL,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      screen_methods, screen_module_meta, NULL);
 
     luaA_class_add_property(&screen_class, "index",

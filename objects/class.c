@@ -63,7 +63,6 @@ luaclass_class_setup(lua_State *L)
 
     luaA_class_setup(L, &luaclass_class, "class", NULL, sizeof(lua_class_t),
                      NULL, NULL, NULL,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      luaclass_methods, luaclass_module_meta, NULL);
     luaA_class_add_property(&luaclass_class, "parent",
                             (lua_class_propfunc_t) luaA_luaclass_set_parent,
