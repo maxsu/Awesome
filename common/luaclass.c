@@ -229,29 +229,33 @@ luaA_use_methods(lua_State *L, int idxobj, int idxfield)
         lua_pushlightuserdata(L, class);
         /* Get its metatable from registry */
         lua_rawget(L, LUA_REGISTRYINDEX);
+        /* Does it have a metatable? */
+        if(lua_isnil(L, -1))
+        {
+            /* No, remove nil, continue */
+            lua_pop(L, 1);
+            continue;
+        }
         /* Get the __methods table */
         lua_getfield(L, -1, "__methods");
+        /* Remove the metatable */
+        lua_remove(L, -2);
         /* Check we have a __methods table */
         if(lua_isnil(L, -1))
             /* No, then remove nil */
             lua_pop(L, 1);
         else
         {
-            /* Remove the metatable */
-            lua_remove(L, -2);
             /* Push the field */
             lua_pushvalue(L, idxfield);
             /* Get the field in the methods table */
             lua_rawget(L, -2);
             /* Do we have a field like that? */
             if(!lua_isnil(L, -1))
-            {
-                /* Yes, so remove the method table and return it! */
-                lua_remove(L, -2);
+                /* Yes, so return it! */
                 return 1;
-            }
-            /* No, so remove the metatable and the field value (nil) */
-            lua_pop(L, 2);
+            /* No, so remove the field value (nil) */
+            lua_pop(L, 1);
         }
     }
 
