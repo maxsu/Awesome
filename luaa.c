@@ -593,18 +593,4 @@ bailout:
     return ret;
 }
 
-int
-luaA_class_index_miss_property(lua_State *L, lua_object_t *obj)
-{
-    signal_object_emit(L, &global_signals, "debug::index::miss", 2);
-    return 0;
-}
-
-int
-luaA_class_newindex_miss_property(lua_State *L, lua_object_t *obj)
-{
-    signal_object_emit(L, &global_signals, "debug::newindex::miss", 3);
-    return 0;
-}
-
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

@@ -502,7 +502,6 @@ ewindow_class_setup(lua_State *L)
     luaA_class_setup(L, (lua_class_t *) &ewindow_class, "ewindow", &window_class,
                      sizeof(ewindow_t), (lua_class_initializer_t) ewindow_init,
                      NULL, NULL,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      ewindow_methods, NULL, NULL);
 
     luaA_class_add_property((lua_class_t *) &ewindow_class, "opacity",

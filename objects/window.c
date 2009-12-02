@@ -842,7 +842,6 @@ window_class_setup(lua_State *L)
     luaA_class_setup(L, &window_class, "window", NULL, sizeof(window_t),
                      (lua_class_initializer_t) window_init,
                      (lua_class_collector_t) window_wipe, NULL,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      window_methods, NULL, NULL);
 
     luaA_class_add_property(&window_class, "window",

@@ -675,7 +675,6 @@ wibox_class_setup(lua_State *L)
                      (lua_class_initializer_t) wibox_init,
                      (lua_class_collector_t) wibox_wipe,
                      NULL,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      wibox_methods, wibox_module_meta, NULL);
     luaA_class_add_property((lua_class_t *) &wibox_class, "fg",
                             (lua_class_propfunc_t) luaA_wibox_set_fg,

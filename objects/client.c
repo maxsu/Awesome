@@ -397,7 +397,6 @@ client_class_setup(lua_State *L)
                      sizeof(client_t), NULL,
                      (lua_class_collector_t) client_wipe,
                      (lua_class_checker_t) client_checker,
-                     luaA_class_index_miss_property, luaA_class_newindex_miss_property,
                      client_methods, NULL, NULL);
 
     luaA_class_add_property((lua_class_t *) &client_class, "name",
