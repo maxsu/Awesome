@@ -22,6 +22,9 @@
 #include "common/luaclass.h"
 #include "common/luaobject.h"
 
+/** The default class for all object */
+static lua_class_t luaobject_class = { .name = "object" };
+
 struct lua_class_property
 {
     /** ID matching the property */
@@ -474,6 +477,7 @@ luaA_class_setup(lua_State *L, lua_class_t *class,
     class->index_miss_property = index_miss_property;
     class->newindex_miss_property = newindex_miss_property;
     class->checker = checker;
+    if(!parent) parent = &luaobject_class;
     class->parent = parent;
 
     lua_class_array_append(&luaA_classes, class);
