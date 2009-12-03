@@ -310,7 +310,7 @@ luaA_object_connect_signal_from_stack(lua_State *L, int oud,
                                       const char *name, int ud)
 {
     luaA_checkfunction(L, ud);
-    lua_object_t *obj = lua_touserdata(L, oud);
+    lua_object_t *obj = luaA_checkudata(L, oud, &luaobject_class);
     if(obj)
         signal_add(&obj->signals, name, luaA_object_ref_item_from_stack(L, oud, ud));
 }
@@ -326,7 +326,7 @@ luaA_object_disconnect_signal_from_stack(lua_State *L, int oud,
                                          const char *name, int ud)
 {
     luaA_checkfunction(L, ud);
-    lua_object_t *obj = lua_touserdata(L, oud);
+    lua_object_t *obj = luaA_checkudata(L, oud, &luaobject_class);
     if(obj)
     {
         void *ref = (void *) lua_topointer(L, ud);
@@ -375,7 +375,7 @@ void
 luaA_object_emit_signal(lua_State *L, int oud,
                         const char *name, int nargs)
 {
-    lua_object_t *obj = lua_touserdata(L, oud);
+    lua_object_t *obj = luaA_checkudata(L, oud, &luaobject_class);
     if(!obj)
     {
         /* Consume arguments at least */
