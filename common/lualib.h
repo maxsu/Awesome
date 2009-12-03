@@ -90,9 +90,9 @@ luaA_dofunction_error(lua_State *L)
  * \param L The Lua stack.
  * \param nargs The number of arguments for the Lua function.
  * \param nret The number of returned value from the Lua function.
- * \return True on no error, false otherwise.
+ * \return The number of argument returned, or -1 on error.
  */
-static inline bool
+static inline int __attribute__ ((warn_unused_result))
 luaA_dofunction(lua_State *L, int nargs, int nret)
 {
     /* Push error handling function */
@@ -105,11 +105,14 @@ luaA_dofunction(lua_State *L, int nargs, int nret)
         warn("%s", lua_tostring(L, -1));
         /* Remove error function and error string */
         lua_pop(L, 2);
-        return false;
+        return -1;
     }
     /* Remove error function */
     lua_remove(L, error_func_pos);
-    return true;
+    if(nret == LUA_MULTRET)
+        /* error_func_pos is (size of the initial stack + 1) */
+        nret = lua_gettop(L) - (error_func_pos - 1);
+    return nret;
 }
 
 #define luaA_checktable(L, n) \
