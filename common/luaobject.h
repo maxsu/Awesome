@@ -32,7 +32,8 @@ void * luaA_object_ref_item_from_stack(lua_State *, int, int);
 void * luaA_object_ref_item(lua_State *, lua_object_t *, int);
 void luaA_object_unref_item(lua_State *, int, const void *);
 
-void signal_object_emit(lua_State *, const signal_array_t *, const char *, int);
+int signal_object_emit(lua_State *, const signal_array_t *, const char *, int)
+    __attribute__ ((warn_unused_result));
 
 void luaA_object_connect_signal(lua_State *, int, const char *, lua_CFunction);
 void luaA_object_disconnect_signal(lua_State *, int, const char *, lua_CFunction);
