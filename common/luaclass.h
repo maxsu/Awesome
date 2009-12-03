@@ -70,6 +70,9 @@ struct lua_class_t
     LUA_CLASS_HEADER
 };
 
+/** The base class of all classes */
+lua_class_t luaobject_class;
+
 int luaA_settype(lua_State *, lua_class_t *);
 
 const char * luaA_classname(lua_State *, int);

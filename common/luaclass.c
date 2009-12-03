@@ -23,7 +23,7 @@
 #include "common/luaobject.h"
 
 /** The default class for all object */
-static lua_class_t luaobject_class = { .name = "object" };
+lua_class_t luaobject_class = { .name = "object" };
 
 struct lua_class_property
 {

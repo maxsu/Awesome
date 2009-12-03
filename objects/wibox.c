@@ -468,7 +468,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
                           | XCB_EVENT_MASK_PROPERTY_CHANGE
                       });
 
-    luaA_object_emit_signal(L, 1, "property::window", 0);
+    luaA_object_emit_signal(L, -1, "property::window", 0);
 
     wibox_draw_context_update(L, wibox);
 }
