@@ -336,9 +336,10 @@ luaA_object_disconnect_signal_from_stack(lua_State *L, int oud,
     lua_remove(L, ud);
 }
 
-void
+int
 signal_object_emit(lua_State *L, const signal_array_t *arr, const char *name, int nargs)
 {
+    int nret = 0;
     signal_t *sigfound = signal_array_getbyid(arr,
                                               a_strhash((const unsigned char *) name));
 
@@ -352,17 +353,32 @@ signal_object_emit(lua_State *L, const signal_array_t *arr, const char *name, in
         foreach_rev(func, sigfound->sigfuncs)
             luaA_object_push(L, (void *) *func);
 
-        for(int i = 0; i < nbfunc; i++)
+        for(; nbfunc > 0; nbfunc--)
         {
             /* push all args */
-            for(int j = 0; j < nargs; j++)
-                lua_pushvalue(L, - nargs - nbfunc + i);
-            if(luaA_dofunction(L, nargs, 0) != 0)
-                continue;
+            for(int i = 0; i < nargs; i++)
+                lua_pushvalue(L, - nargs - nbfunc);
+            int local_nret = luaA_dofunction(L, nargs, LUA_MULTRET);
+            /* push all results before args and remaining functions */
+            for(int j = local_nret; j > 0; j--)
+                /* On the stack now:
+                 * args  x nargs
+                 * func  x (nbfunc - 1)
+                 * ret   x j
+                 * After the loop:
+                 * ret   x nret
+                 * args  x nargs
+                 * func x (nbfunc - 1)
+                 */
+                lua_insert(L, - (nbfunc - 1) - nargs - local_nret);
+            if(local_nret > 0)
+                nret += local_nret;
         }
     }
     /* remove args */
     lua_pop(L, nargs);
+
+    return nret;
 }
 
 /** Emit a signal to an object.
