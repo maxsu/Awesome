@@ -357,7 +357,8 @@ signal_object_emit(lua_State *L, const signal_array_t *arr, const char *name, in
             /* push all args */
             for(int j = 0; j < nargs; j++)
                 lua_pushvalue(L, - nargs - nbfunc + i);
-            luaA_dofunction(L, nargs, 0);
+            if(luaA_dofunction(L, nargs, 0) != 0)
+                continue;
         }
     }
     /* remove args */
