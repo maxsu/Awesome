@@ -341,7 +341,8 @@ luaA_class_index(lua_State *L)
         lua_pushvalue(L, 1);
         /* Duplicate key */
         lua_pushvalue(L, 2);
-        luaA_dofunction(L, 3, 1);
+        if(luaA_dofunction(L, 3, 1) != 1)
+            return 0;
 
         return 1;
     }
@@ -373,7 +374,8 @@ luaA_class_newindex(lua_State *L)
         lua_pushvalue(L, 2);
         /* Duplicate value */
         lua_pushvalue(L, 3);
-        luaA_dofunction(L, 4, 0);
+        if(luaA_dofunction(L, 4, 0) != 0)
+            return 0;
     }
 
     return 0;
@@ -599,7 +601,8 @@ luaA_class_new(lua_State *L, lua_class_t *lua_class)
                 lua_pushvalue(L, -5);
                 /* Duplicate value */
                 lua_pushvalue(L, -5);
-                luaA_dofunction(L, 4, 0);
+                if(luaA_dofunction(L, 4, 0) != 0)
+                    continue;
             }
         }
         /* Remove value */

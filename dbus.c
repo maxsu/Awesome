@@ -324,21 +324,17 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
             /* there can be only ONE handler to send reply */
             void *func = (void *) sig->sigfuncs.tab[0];
 
-            int n = lua_gettop(_G_L) - nargs;
-
             luaA_object_push(_G_L, (void *) func);
             /* Move function before args */
             lua_insert(_G_L, - nargs - 1);
-            luaA_dofunction(_G_L, nargs, LUA_MULTRET);
-
-            n -= lua_gettop(_G_L);
+            int nret = luaA_dofunction(_G_L, nargs, LUA_MULTRET);
 
             DBusMessage *reply = dbus_message_new_method_return(msg);
 
             dbus_message_iter_init_append(reply, &iter);
 
             /* i is negative */
-            for(int i = n; i < 0; i += 2)
+            for(int i = nret; i < 0; i += 2)
             {
                 /* i is the type name, i+1 the value */
                 size_t len;
