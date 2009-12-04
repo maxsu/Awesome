@@ -39,10 +39,17 @@ void luaA_object_connect_signal(lua_State *, int, const char *, lua_CFunction);
 void luaA_object_disconnect_signal(lua_State *, int, const char *, lua_CFunction);
 void luaA_object_connect_signal_from_stack(lua_State *, int, const char *, int);
 void luaA_object_disconnect_signal_from_stack(lua_State *, int, const char *, int);
-void luaA_object_emit_signal(lua_State *, int, const char *, int);
+int luaA_object_emit_signal(lua_State *, int, const char *, int)
+    __attribute__ ((warn_unused_result));
+
+static inline void
+luaA_object_emit_signal_noret(lua_State *L, int idx, const char *name, int nargs)
+{
+    lua_pop(L, luaA_object_emit_signal(L, idx, name, nargs));
+}
 
 #define LUA_OBJECT_SIGNAL_FUNCS(prefix, type)                                  \
-    static inline void                                                         \
+    static inline int                                                          \
     prefix##_emit_signal(lua_State *L, type *obj, const char *name, int nargs) \
     {                                                                          \
         /* Push object */                                                      \
@@ -50,9 +57,16 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
         /* Insert it before args */                                            \
         lua_insert(L, - nargs - 1);                                            \
         /* Emit signal */                                                      \
-        luaA_object_emit_signal(L, - nargs - 1, name, nargs);                  \
+        int nret = luaA_object_emit_signal(L, - nargs - 1, name, nargs);       \
         /* Remove object */                                                    \
         lua_pop(L, 1);                                                         \
+        return nret;                                                           \
+    }                                                                          \
+    static inline void                                                         \
+    prefix##_emit_signal_noret(lua_State *L, type *obj, const char *name,      \
+                               int nargs)                                      \
+    {                                                                          \
+        lua_pop(L, prefix##_emit_signal(L, obj, name, nargs));                 \
     }
 
 #define LUA_OBJECT_FUNCS(lua_class, type, prefix)                              \
@@ -95,7 +109,7 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
         if(item->prop != value) \
         { \
             item->prop = value; \
-            pfx##_emit_signal(L, item, "property::" #prop, 0); \
+            pfx##_emit_signal_noret(L, item, "property::" #prop, 0); \
         } \
     }
 
@@ -116,7 +130,7 @@ void luaA_object_emit_signal(lua_State *, int, const char *, int);
         vidx = luaA_absindex(L, vidx); \
         luaA_checkudataornil(L, vidx, (target_class)); \
         item->prop = luaA_object_ref_item(L, (lua_object_t *) item, vidx); \
-        prefix##_emit_signal(L, item, "property::" #prop, 0); \
+        prefix##_emit_signal_noret(L, item, "property::" #prop, 0); \
     }
 
 #endif

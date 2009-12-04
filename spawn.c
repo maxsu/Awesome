@@ -73,7 +73,7 @@ spawn_monitor_timeout(struct ev_loop *loop, ev_timer *w, int revents)
         lua_pushstring(_G_L, sn_startup_sequence_get_id(w->data));
         lua_setfield(_G_L, -2, "id");
         /* send a timeout signal */
-        signal_object_emit(_G_L, &global_signals, "spawn::timeout", 1);
+        lua_pop(_G_L, signal_object_emit(_G_L, &global_signals, "spawn::timeout", 1));
     }
     sn_startup_sequence_unref(w->data);
     p_delete(&w);
@@ -166,7 +166,7 @@ spawn_monitor_event(SnMonitorEvent *event, void *data)
         break;
     }
 
-    signal_object_emit(_G_L, &global_signals, event_type_str, 1);
+    lua_pop(_G_L, signal_object_emit(_G_L, &global_signals, event_type_str, 1));
 }
 
 /** Tell the spawn module that an app has been started.

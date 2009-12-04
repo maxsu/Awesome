@@ -82,7 +82,8 @@ lua_class_t * luaA_class_get(lua_State *, lua_object_t *);
 void luaA_class_connect_signal(lua_State *, lua_class_t *, const char *, lua_CFunction);
 void luaA_class_connect_signal_from_stack(lua_State *, lua_class_t *, const char *, int);
 void luaA_class_disconnect_signal_from_stack(lua_State *, lua_class_t *, const char *, int);
-void luaA_class_emit_signal(lua_State *, lua_class_t *, const char *, int);
+int luaA_class_emit_signal(lua_State *, lua_class_t *, const char *, int)
+    __attribute__ ((warn_unused_result));
 
 void luaA_class_setup(lua_State *, lua_class_t *, const char *, lua_class_t *, size_t,
                       lua_class_initializer_t, lua_class_collector_t,
@@ -136,12 +137,10 @@ luaA_checkudataornil(lua_State *L, int udx, lua_class_t *class)
     luaA_##prefix##_class_emit_signal(lua_State *L)                            \
     {                                                                          \
         if(luaA_toudata(L, 1, (lua_class)))                                    \
-            luaA_object_emit_signal(L, 1, luaL_checkstring(L, 2),              \
-                                    lua_gettop(L) - 1);                        \
-        else                                                                   \
-            luaA_class_emit_signal(L, (lua_class), luaL_checkstring(L, 1),     \
-                                   lua_gettop(L) - 1);                         \
-        return 0;                                                              \
+            return luaA_object_emit_signal(L, 1, luaL_checkstring(L, 2),       \
+                                           lua_gettop(L) - 1);                 \
+        return luaA_class_emit_signal(L, (lua_class), luaL_checkstring(L, 1),  \
+                                     lua_gettop(L) - 1);                       \
     }
 
 #define LUA_CLASS_METHODS(class) \

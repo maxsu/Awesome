@@ -64,9 +64,9 @@ luaA_ewindow_struts(lua_State *L)
     if(lua_gettop(L) == 2)
     {
         luaA_tostrut(L, 2, &ewindow->strut);
-        luaA_object_emit_signal(L, 1, "property::struts", 0);
+        luaA_object_emit_signal_noret(L, 1, "property::struts", 0);
         if(ewindow_isvisible(ewindow))
-            screen_emit_signal(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y),
+            screen_emit_signal_noret(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y),
                                "property::workarea", 0);
     }
 
@@ -89,9 +89,9 @@ ewindow_set_minimized(lua_State *L, ewindow_t *ewindow, bool s)
         else
             xwindow_set_state(ewindow->window, XCB_WM_STATE_NORMAL);
         if(strut_has_value(&ewindow->strut))
-            screen_emit_signal(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y),
+            screen_emit_signal_noret(L, screen_getbycoord(ewindow->geometry.x, ewindow->geometry.y),
                                "property::workarea", 0);
-        ewindow_emit_signal(L, ewindow, "property::minimized", 0);
+        ewindow_emit_signal_noret(L, ewindow, "property::minimized", 0);
     }
 }
 
@@ -117,9 +117,9 @@ ewindow_set_fullscreen(lua_State *L, ewindow_t *ewindow, bool s)
             ewindow_set_ontop(L, ewindow, false);
         }
         lua_pushboolean(L, s);
-        ewindow_emit_signal(L, ewindow, "request::fullscreen", 1);
+        ewindow_emit_signal_noret(L, ewindow, "request::fullscreen", 1);
         ewindow->fullscreen = s;
-        ewindow_emit_signal(L, ewindow, "property::fullscreen", 0);
+        ewindow_emit_signal_noret(L, ewindow, "property::fullscreen", 0);
     }
 }
 
@@ -137,9 +137,9 @@ ewindow_set_fullscreen(lua_State *L, ewindow_t *ewindow, bool s)
             if(s) \
                 ewindow_set_fullscreen(L, ewindow, false); \
             lua_pushboolean(L, s); \
-            ewindow_emit_signal(L, ewindow, "request::maximized_" #type, 1); \
+            ewindow_emit_signal_noret(L, ewindow, "request::maximized_" #type, 1); \
             ewindow->maximized_##type = s; \
-            ewindow_emit_signal(L, ewindow, "property::maximized_" #type, 0); \
+            ewindow_emit_signal_noret(L, ewindow, "property::maximized_" #type, 0); \
         } \
     }
 DO_FUNCTION_CLIENT_MAXIMIZED(vertical)
@@ -164,7 +164,7 @@ ewindow_set_above(lua_State *L, ewindow_t *ewindow, bool s)
             ewindow_set_fullscreen(L, ewindow, false);
         }
         ewindow->above = s;
-        ewindow_emit_signal(L, ewindow, "property::above", 0);
+        ewindow_emit_signal_noret(L, ewindow, "property::above", 0);
     }
 }
 
@@ -186,7 +186,7 @@ ewindow_set_below(lua_State *L, ewindow_t *ewindow, bool s)
             ewindow_set_fullscreen(L, ewindow, false);
         }
         ewindow->below = s;
-        ewindow_emit_signal(L, ewindow, "property::below", 0);
+        ewindow_emit_signal_noret(L, ewindow, "property::below", 0);
     }
 }
 
@@ -208,7 +208,7 @@ ewindow_set_ontop(lua_State *L, ewindow_t *ewindow, bool s)
             ewindow_set_fullscreen(L, ewindow, false);
         }
         ewindow->ontop = s;
-        ewindow_emit_signal(L, ewindow, "property::ontop", 0);
+        ewindow_emit_signal_noret(L, ewindow, "property::ontop", 0);
     }
 }
 
@@ -224,7 +224,7 @@ ewindow_set_opacity(lua_State *L, ewindow_t *ewindow, double opacity)
     {
         ewindow->opacity = opacity;
         xwindow_set_opacity(ewindow->window, opacity);
-        ewindow_emit_signal(L, ewindow, "property::opacity", 0);
+        ewindow_emit_signal_noret(L, ewindow, "property::opacity", 0);
     }
 }
 
@@ -386,7 +386,7 @@ luaA_ewindow_set_border_color(lua_State *L, ewindow_t *ewindow)
        xcolor_init_reply(xcolor_init_unchecked(&ewindow->border_color, color_name, len)))
     {
         xwindow_set_border_color(ewindow->window, &ewindow->border_color);
-        luaA_object_emit_signal(L, -3, "property::border_color", 0);
+        luaA_object_emit_signal_noret(L, -3, "property::border_color", 0);
     }
 
     return 0;
@@ -409,7 +409,7 @@ ewindow_set_border_width(lua_State *L, ewindow_t *ewindow, int width)
 
     ewindow->border_width = width;
 
-    ewindow_emit_signal(L, ewindow, "property::border_width", 0);
+    ewindow_emit_signal_noret(L, ewindow, "property::border_width", 0);
 }
 
 static LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(ewindow, ewindow_t, border_width, luaL_checknumber)

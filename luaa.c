@@ -358,8 +358,7 @@ luaA_awesome_disconnect_signal(lua_State *L)
 static int
 luaA_awesome_emit_signal(lua_State *L)
 {
-    signal_object_emit(L, &global_signals, luaL_checkstring(L, 1), lua_gettop(L) - 1);
-    return 0;
+    return signal_object_emit(L, &global_signals, luaL_checkstring(L, 1), lua_gettop(L) - 1);
 }
 
 static int
@@ -381,7 +380,7 @@ luaA_dofunction_on_error(lua_State *L)
     /* duplicate string error */
     lua_pushvalue(L, -1);
     /* emit error signal */
-    signal_object_emit(L, &global_signals, "debug::error", 1);
+    lua_pop(L, signal_object_emit(L, &global_signals, "debug::error", 1));
 
     if(!luaL_dostring(L, "return debug.traceback(\"error while running function\", 3)"))
     {
