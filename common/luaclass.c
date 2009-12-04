@@ -514,7 +514,9 @@ luaA_class_emit_signal(lua_State *L, lua_class_t *lua_class,
        nret += signal_object_emit(L, &lua_class->signals, name, nargs);
     }
 
-    lua_pop(L, nargs);
+    /* remove args */
+    for(int i = 0; i < nargs; i++)
+        lua_remove(L, - nret - 1);
 
     return nret;
 }
