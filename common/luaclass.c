@@ -219,7 +219,7 @@ luaA_class_tostring(lua_State *L)
  * \return The number of element pushed on stack.
  */
 static int
-luaA_use_methods(lua_State *L, int idxobj, int idxfield)
+luaA_use_class_fields(lua_State *L, int idxobj, int idxfield)
 {
     lua_class_t *class = luaA_class_get_from_stack(L, idxobj);
 
@@ -322,10 +322,6 @@ luaA_class_property_call_function_wrapper(lua_State *L)
 static int
 luaA_class_index(lua_State *L)
 {
-    /* Try to use metatable first. */
-    if(luaA_use_methods(L, 1, 2))
-        return 1;
-
     lua_class_t *class = luaA_class_get_from_stack(L, 1);
 
     lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
@@ -341,11 +337,13 @@ luaA_class_index(lua_State *L)
         lua_pushvalue(L, 1);
         /* Duplicate key */
         lua_pushvalue(L, 2);
-        if(luaA_dofunction(L, 3, 1) != 1)
-            return 0;
-
-        return 1;
+        if(luaA_dofunction(L, 3, 1) > 0)
+            return 1;
     }
+
+    /* Try to use class fields then */
+    if(luaA_use_class_fields(L, 1, 2))
+        return 1;
 
     return 0;
 }
