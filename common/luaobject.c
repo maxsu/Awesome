@@ -408,9 +408,13 @@ luaA_object_emit_signal(lua_State *L, int oud,
     /* Emit signal */
     int nret = signal_object_emit(L, &obj->signals, name, nargs + 1);
 
+    /* put results before args */
+    for(int i = 0; i < nret; i++)
+        lua_insert(L, - nargs - nret - 1);
+
     /* Then emit signal on the class */
     lua_pushvalue(L, oud);
-    lua_insert(L, - nargs - 1 - nret);
+    lua_insert(L, - nargs - 1);
     nret += luaA_class_emit_signal(L, luaA_class_get_from_stack(L, - nargs - 1), name, nargs + 1);
 
     return nret;
