@@ -49,7 +49,7 @@ static char *awesome_argv;
 void
 awesome_atexit(void)
 {
-    signal_object_emit(_G_L, &global_signals, "exit", 0);
+    lua_pop(_G_L, signal_object_emit(_G_L, &global_signals, "exit", 0));
 
     a_dbus_cleanup();
 

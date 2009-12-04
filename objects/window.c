@@ -104,7 +104,7 @@ void
 window_focus_update(window_t *window)
 {
     window_focused = window;
-    window_emit_signal(_G_L, window, "focus", 0);
+    window_emit_signal_noret(_G_L, window, "focus", 0);
 }
 
 /** Record that a window lost focus.
@@ -114,7 +114,7 @@ void
 window_unfocus_update(window_t *window)
 {
     window_focused = NULL;
-    window_emit_signal(_G_L, window, "unfocus", 0);
+    window_emit_signal_noret(_G_L, window, "unfocus", 0);
 }
 
 /** Give focus to window.
@@ -406,15 +406,15 @@ window_set_geometry(lua_State *L, window_t *window, area_t geometry)
             xcb_configure_window(_G_connection, window->window, mask_vals, set_geometry_win_vals);
 
         if(mask_vals & XCB_CONFIG_WINDOW_X)
-            window_emit_signal(L, window, "property::x", 0);
+            window_emit_signal_noret(L, window, "property::x", 0);
         if(mask_vals & XCB_CONFIG_WINDOW_Y)
-            window_emit_signal(L, window, "property::y", 0);
+            window_emit_signal_noret(L, window, "property::y", 0);
         if(mask_vals & XCB_CONFIG_WINDOW_WIDTH)
-            window_emit_signal(L, window, "property::width", 0);
+            window_emit_signal_noret(L, window, "property::width", 0);
         if(mask_vals & XCB_CONFIG_WINDOW_HEIGHT)
-            window_emit_signal(L, window, "property::height", 0);
+            window_emit_signal_noret(L, window, "property::height", 0);
 
-        window_emit_signal(L, window, "property::geometry", 0);
+        window_emit_signal_noret(L, window, "property::geometry", 0);
 
         return true;
     }
@@ -598,7 +598,7 @@ luaA_window_set_cursor(lua_State *L, window_t *window)
             p_delete(&window->cursor);
             window->cursor = a_strdup(buf);
             xwindow_set_cursor(window->window, cursor);
-            luaA_object_emit_signal(L, -3, "property::cursor", 0);
+            luaA_object_emit_signal_noret(L, -3, "property::cursor", 0);
         }
     }
     return 0;

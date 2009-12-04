@@ -60,20 +60,20 @@ luaA_tag_set_attached(lua_State *L, tag_t *tag)
         if(!tag_index)
         {
             tag_array_append(&_G_tags, luaA_object_ref(L, 1));
-            luaA_object_emit_signal(L, 1, "property::attached", 0);
+            luaA_object_emit_signal_noret(L, 1, "property::attached", 0);
         }
     }
     else if(tag_index)
     {
         tag_array_remove(&_G_tags, tag_index);
-        luaA_object_emit_signal(L, 1, "property::attached", 0);
+        luaA_object_emit_signal_noret(L, 1, "property::attached", 0);
     }
 
     return 0;
 }
 
 static void
-tag_ewindow_emit_signal(lua_State *L, int tidx, int widx, const char *signame)
+tag_ewindow_emit_signal_noret(lua_State *L, int tidx, int widx, const char *signame)
 {
     /* transform indexes in absolute value */
     tidx = luaA_absindex(L, tidx);
@@ -81,11 +81,11 @@ tag_ewindow_emit_signal(lua_State *L, int tidx, int widx, const char *signame)
 
     /* emit signal on window, with new tag as argument */
     lua_pushvalue(L, tidx);
-    luaA_object_emit_signal(L, widx, signame, 1);
+    luaA_object_emit_signal_noret(L, widx, signame, 1);
 
     /* now do the opposite! */
     lua_pushvalue(L, widx);
-    luaA_object_emit_signal(L, tidx, signame, 1);
+    luaA_object_emit_signal_noret(L, tidx, signame, 1);
 }
 
 /** Tag an ewindow.
@@ -110,7 +110,7 @@ tag_ewindow(lua_State *L, int widx, int tidx)
     lua_pushvalue(L, tidx);
     tag_array_append(&ewindow->tags, luaA_object_ref_item_from_stack(L, widx, -1));
 
-    tag_ewindow_emit_signal(L, tidx, widx, "tagged");
+    tag_ewindow_emit_signal_noret(L, tidx, widx, "tagged");
 }
 
 /** Untag a window with specified tag.
@@ -130,7 +130,7 @@ untag_ewindow(lua_State *L, int widx, int tidx)
     luaA_object_unref_item(L, tidx, ewindow);
     /* Unref tag from ewindow */
     luaA_object_unref_item(L, widx, tag);
-    tag_ewindow_emit_signal(L, tidx, widx, "untagged");
+    tag_ewindow_emit_signal_noret(L, tidx, widx, "untagged");
 }
 
 /** Check if an ewindow is tagged with the specified tag.
@@ -245,7 +245,7 @@ luaA_tag_set_name(lua_State *L, tag_t *tag)
     const char *buf = luaL_checklstring(L, -1, &len);
     p_delete(&tag->name);
     a_iso2utf8(buf, len, &tag->name, NULL);
-    luaA_object_emit_signal(L, -3, "property::name", 0);
+    luaA_object_emit_signal_noret(L, -3, "property::name", 0);
     return 0;
 }
 

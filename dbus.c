@@ -314,20 +314,14 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
 
     if(dbus_message_get_no_reply(msg))
         /* emit signals */
-        signal_object_emit(_G_L, &dbus_signals, NONULL(interface), nargs);
+        lua_pop(_G_L, signal_object_emit(_G_L, &dbus_signals, NONULL(interface), nargs));
     else
     {
-        signal_t *sig = signal_array_getbyid(&dbus_signals,
-                                             a_strhash((const unsigned char *) NONULL(interface)));
-        if(sig)
+        int nret = signal_object_emit(_G_L, &dbus_signals, NONULL(interface), nargs);
+        if(nret > 0)
         {
-            /* there can be only ONE handler to send reply */
-            void *func = (void *) sig->sigfuncs.tab[0];
-
-            luaA_object_push(_G_L, (void *) func);
-            /* Move function before args */
-            lua_insert(_G_L, - nargs - 1);
-            int nret = luaA_dofunction(_G_L, nargs, LUA_MULTRET);
+            if(nret % 2 != 0)
+                luaL_error(_G_L, "your D-Bus signal handling method returned bad number of data");
 
             DBusMessage *reply = dbus_message_new_method_return(msg);
 
@@ -341,11 +335,8 @@ a_dbus_process_request(DBusConnection *dbus_connection, DBusMessage *msg)
                 const char *type = lua_tolstring(_G_L, i, &len);
 
                 if(!type || len != 1)
-                {
                     luaL_error(_G_L,
                                "your D-Bus signal handling method returned bad data");
-                    break;
-                }
 
                 switch(*type)
                 {

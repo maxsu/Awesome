@@ -361,7 +361,7 @@ property_handle_xrootpmap_id(void *data __attribute__ ((unused)),
     if(pixmap != _G_root->pixmap)
     {
         _G_root->pixmap = pixmap;
-        window_emit_signal(_G_L, _G_root, "property::pixmap", 0);
+        window_emit_signal_noret(_G_L, _G_root, "property::pixmap", 0);
     }
 
     return 0;

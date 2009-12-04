@@ -82,7 +82,7 @@ client_set_urgent(lua_State *L, client_t *c, bool urgent)
 
         xcb_ungrab_server(_G_connection);
 
-        client_emit_signal(L, c, "property::urgent", 0);
+        client_emit_signal_noret(L, c, "property::urgent", 0);
     }
 }
 
@@ -96,7 +96,7 @@ LUA_OBJECT_DO_SET_PROPERTY_FUNC(client, client_t, skip_taskbar)
     { \
         p_delete(&c->prop); \
         c->prop = value; \
-        client_emit_signal(L, c, "property::" #prop, 0); \
+        client_emit_signal_noret(L, c, "property::" #prop, 0); \
     }
 DO_CLIENT_SET_STRING_PROPERTY(name)
 DO_CLIENT_SET_STRING_PROPERTY(alt_name)
@@ -112,9 +112,9 @@ client_set_class_instance(lua_State *L, client_t *c, const char *class, const ch
     p_delete(&c->class);
     p_delete(&c->instance);
     c->class = a_strdup(class);
-    client_emit_signal(L, c, "property::class", 0);
+    client_emit_signal_noret(L, c, "property::class", 0);
     c->instance = a_strdup(instance);
-    client_emit_signal(L, c, "property::instance", 0);
+    client_emit_signal_noret(L, c, "property::instance", 0);
 }
 
 /** Get a client by its window.
@@ -173,10 +173,10 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
 
     /* Store window */
     c->window = w;
-    luaA_object_emit_signal(_G_L, -1, "property::window", 0);
+    luaA_object_emit_signal_noret(_G_L, -1, "property::window", 0);
     /* Store parent */
     c->parent = _G_root;
-    luaA_object_emit_signal(_G_L, -1, "property::parent", 0);
+    luaA_object_emit_signal_noret(_G_L, -1, "property::parent", 0);
     /* Consider window is focusable by default */
     c->focusable = true;
     /* Consider the window banned */
@@ -193,14 +193,14 @@ client_manage(xcb_window_t w, xcb_get_geometry_reply_t *wgeom, bool startup)
      * been set. */
 #define HANDLE_GEOM(attr) \
     c->geometry.attr = wgeom->attr; \
-    luaA_object_emit_signal(_G_L, -1, "property::" #attr, 0);
+    luaA_object_emit_signal_noret(_G_L, -1, "property::" #attr, 0);
 HANDLE_GEOM(x)
 HANDLE_GEOM(y)
 HANDLE_GEOM(width)
 HANDLE_GEOM(height)
 #undef HANDLE_GEOM
 
-    luaA_object_emit_signal(_G_L, -1, "property::geometry", 0);
+    luaA_object_emit_signal_noret(_G_L, -1, "property::geometry", 0);
 
     /* Set border width */
     ewindow_set_border_width(_G_L, (ewindow_t *) c, wgeom->border_width);
@@ -246,7 +246,7 @@ HANDLE_GEOM(height)
     /* client is still on top of the stack; push startup value,
      * and emit signals with one arg */
     lua_pushboolean(_G_L, startup);
-    luaA_object_emit_signal(_G_L, -2, "manage", 1);
+    luaA_object_emit_signal_noret(_G_L, -2, "manage", 1);
     /* pop client */
     lua_pop(_G_L, 1);
 }
@@ -272,11 +272,11 @@ client_unmanage(lua_State *L, client_t *c)
         lua_pop(L, 1);
     }
 
-    luaA_object_emit_signal(L, -1, "unmanage", 0);
+    luaA_object_emit_signal_noret(L, -1, "unmanage", 0);
     lua_pop(L, 1);
 
     if(strut_has_value(&c->strut))
-        screen_emit_signal(L,
+        screen_emit_signal_noret(L,
                            screen_getbycoord(c->geometry.x, c->geometry.y),
                            "property::workarea", 0);
 

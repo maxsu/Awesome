@@ -386,8 +386,9 @@ signal_object_emit(lua_State *L, const signal_array_t *arr, const char *name, in
  * \param oud The object index on the stack.
  * \param name The name of the signal.
  * \param nargs The number of arguments to pass to the called functions.
+ * \return The number of value returned.
  */
-void
+int
 luaA_object_emit_signal(lua_State *L, int oud,
                         const char *name, int nargs)
 {
@@ -396,7 +397,7 @@ luaA_object_emit_signal(lua_State *L, int oud,
     {
         /* Consume arguments at least */
         lua_pop(L, nargs);
-        return;
+        return 0;
     }
 
     /* Push object */
@@ -405,12 +406,14 @@ luaA_object_emit_signal(lua_State *L, int oud,
     for(int i = 0; i < nargs; i++)
         lua_pushvalue(L, - nargs - 1);
     /* Emit signal */
-    signal_object_emit(L, &obj->signals, name, nargs + 1);
+    int nret = signal_object_emit(L, &obj->signals, name, nargs + 1);
 
     /* Then emit signal on the class */
     lua_pushvalue(L, oud);
-    lua_insert(L, - nargs - 1);
-    luaA_class_emit_signal(L, luaA_class_get_from_stack(L, - nargs - 1), name, nargs + 1);
+    lua_insert(L, - nargs - 1 - nret);
+    nret += luaA_class_emit_signal(L, luaA_class_get_from_stack(L, - nargs - 1), name, nargs + 1);
+
+    return nret;
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

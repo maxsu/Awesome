@@ -56,7 +56,7 @@ void
 stack_window_lower(lua_State *L, window_t *window)
 {
     stack_window_push(window);
-    window_emit_signal(L, window, "lower", 0);
+    window_emit_signal_noret(L, window, "lower", 0);
 }
 
 /** Put window on top of the stack.
@@ -68,7 +68,7 @@ stack_window_raise(lua_State *L, window_t *window)
 {
     /* Push window on top of the stack. */
     stack_window_append(window);
-    window_emit_signal(L, window, "raise", 0);
+    window_emit_signal_noret(L, window, "raise", 0);
 }
 
 /** Restack windows.

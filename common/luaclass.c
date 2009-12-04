@@ -500,21 +500,25 @@ luaA_class_disconnect_signal_from_stack(lua_State *L, lua_class_t *lua_class,
     lua_remove(L, ud);
 }
 
-void
+int
 luaA_class_emit_signal(lua_State *L, lua_class_t *lua_class,
                        const char *name, int nargs)
 {
+    int nret = 0;
+
     /* emit signal on parent classes */
     for(; lua_class; lua_class = lua_class->parent)
     {
         /* duplicate arguments */
         for(int i = 0; i < nargs; i++)
-            lua_pushvalue(L, - nargs);
+            lua_pushvalue(L, - nargs - nret);
         /* emit signal on class */
-        signal_object_emit(L, &lua_class->signals, name, nargs);
+       nret += signal_object_emit(L, &lua_class->signals, name, nargs);
     }
 
     lua_pop(L, nargs);
+
+    return nret;
 }
 
 static lua_class_t *
@@ -561,7 +565,7 @@ luaA_object_new(lua_State *L, lua_class_t *lua_class)
 
     /* Emit class signal */
     lua_pushvalue(L, -1);
-    luaA_class_emit_signal(L, lua_class, "new", 1);
+    lua_pop(L, luaA_class_emit_signal(L, lua_class, "new", 1));
     return object;
 }
 

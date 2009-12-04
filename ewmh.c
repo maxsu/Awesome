@@ -637,7 +637,7 @@ ewmh_process_client_strut(client_t *c, xcb_get_property_reply_t *strut_r)
             c->strut.bottom_start_x = strut[10];
             c->strut.bottom_end_x = strut[11];
 
-            client_emit_signal(_G_L, c, "property::struts", 0);
+            client_emit_signal_noret(_G_L, c, "property::struts", 0);
         }
     }
 

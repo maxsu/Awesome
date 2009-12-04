@@ -51,7 +51,7 @@ static void
 ev_timer_emit_signal(struct ev_loop *loop, struct ev_timer *w, int revents)
 {
     timer_callback_data_t *data = w->data;
-    timer_emit_signal(data->L, data->timer, "timeout", 0);
+    timer_emit_signal_noret(data->L, data->timer, "timeout", 0);
 }
 
 static int
@@ -72,7 +72,7 @@ luaA_timer_set_timeout(lua_State *L, atimer_t *timer)
 {
     double timeout = luaL_checknumber(L, -1);
     ev_timer_set(&timer->timer, timeout, timeout);
-    luaA_object_emit_signal(L, -3, "property::timeout", 0);
+    luaA_object_emit_signal_noret(L, -3, "property::timeout", 0);
     return 0;
 }
 

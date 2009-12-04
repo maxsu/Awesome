@@ -50,7 +50,7 @@ wibox_wipe(wibox_t *wibox)
 
     /* \todo make this common for all ewindows? */
     if(strut_has_value(&wibox->strut))
-        screen_emit_signal(_G_L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y),
+        screen_emit_signal_noret(_G_L, screen_getbycoord(wibox->geometry.x, wibox->geometry.y),
                            "property::workarea", 0);
 }
 
@@ -126,7 +126,7 @@ wibox_draw_context_update(lua_State *L, wibox_t *wibox)
                       wibox->geometry.height);
 
     wibox->need_update = true;
-    wibox_emit_signal(L, wibox, "property::pixmap", 0);
+    wibox_emit_signal_noret(L, wibox, "property::pixmap", 0);
 }
 
 static LUA_CLASS_METHOD_BRIDGE(wibox, draw_context_update, (lua_class_t *) &wibox_class, wibox_draw_context_update)
@@ -228,7 +228,7 @@ wibox_render(wibox_t *wibox)
     wibox->need_update = false;
 
     /* Emit pixmap signal so childs now that they may have to redraw */
-    wibox_emit_signal(_G_L, wibox, "property::pixmap", 0);
+    wibox_emit_signal_noret(_G_L, wibox, "property::pixmap", 0);
 }
 
 static void
@@ -340,7 +340,7 @@ luaA_wibox_set_parent(lua_State *L, wibox_t *wibox)
             wibox->need_update = true;
 
         /* Emit parent change signal */
-        luaA_object_emit_signal(L, 1, "property::parent", 0);
+        luaA_object_emit_signal_noret(L, 1, "property::parent", 0);
     }
 
     return 0;
@@ -383,7 +383,7 @@ luaA_wibox_set_fg(lua_State *L, wibox_t *wibox)
     const char *buf = luaL_checklstring(L, -1, &len);
     if(color_init_reply(color_init_unchecked(&wibox->fg, buf, len)))
         wibox->need_update = true;
-    luaA_object_emit_signal(L, -3, "property::fg", 0);
+    luaA_object_emit_signal_noret(L, -3, "property::fg", 0);
     return 0;
 }
 
@@ -406,7 +406,7 @@ luaA_wibox_set_bg(lua_State *L, wibox_t *wibox)
                                          (uint32_t[]) { wibox->bg.pixel });
         wibox->need_update = true;
     }
-    luaA_object_emit_signal(L, -3, "property::bg", 0);
+    luaA_object_emit_signal_noret(L, -3, "property::bg", 0);
     return 0;
 }
 
@@ -424,15 +424,15 @@ static void
 wibox_init(lua_State *L, wibox_t *wibox)
 {
     wibox->visible = wibox->movable = wibox->resizable = true;
-    luaA_object_emit_signal(L, -1, "property::visible", 0);
-    luaA_object_emit_signal(L, -1, "property::movable", 0);
-    luaA_object_emit_signal(L, -1, "property::resizable", 0);
+    luaA_object_emit_signal_noret(L, -1, "property::visible", 0);
+    luaA_object_emit_signal_noret(L, -1, "property::movable", 0);
+    luaA_object_emit_signal_noret(L, -1, "property::resizable", 0);
     xcolor_to_color(&_G_fg, &wibox->fg);
     wibox->bg = _G_bg;
     wibox->geometry.width = wibox->geometry.height = 1;
     wibox->text_ctx.valign = AlignTop;
     wibox->image_valign = AlignTop;
-    luaA_object_emit_signal(L, -1, "property::image_valign", 0);
+    luaA_object_emit_signal_noret(L, -1, "property::image_valign", 0);
     wibox->parent = _G_root;
     window_array_append(&wibox->parent->childrens, (window_t *) wibox);
     stack_window_raise(L, (window_t *) wibox);
@@ -468,7 +468,7 @@ wibox_init(lua_State *L, wibox_t *wibox)
                           | XCB_EVENT_MASK_PROPERTY_CHANGE
                       });
 
-    luaA_object_emit_signal(L, -1, "property::window", 0);
+    luaA_object_emit_signal_noret(L, -1, "property::window", 0);
 
     wibox_draw_context_update(L, wibox);
 }
@@ -618,7 +618,7 @@ luaA_wibox_set_wrap(lua_State *L, wibox_t *wibox)
         const char *buf = luaL_checklstring(L, -1, &len); \
         wibox->text_ctx.field = draw_##field##_fromstr(buf, len); \
         wibox->need_update = true; \
-        luaA_object_emit_signal(L, 1, "property::text_" #field, 0); \
+        luaA_object_emit_signal_noret(L, 1, "property::text_" #field, 0); \
         return 0; \
     } \
     static int \
@@ -639,7 +639,7 @@ DO_WIBOX_TEXT_ALIGN_FUNC(valign)
         const char *buf = luaL_checklstring(L, -1, &len); \
         wibox->image_##field = draw_##field##_fromstr(buf, len); \
         wibox->need_update = true; \
-        luaA_object_emit_signal(L, 1, "property::image_" #field, 0); \
+        luaA_object_emit_signal_noret(L, 1, "property::image_" #field, 0); \
         return 0; \
     } \
     static int \

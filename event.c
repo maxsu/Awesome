@@ -83,10 +83,10 @@ event_handle_button(void *data, xcb_connection_t *connection, xcb_button_press_e
     switch(ev->response_type)
     {
       case XCB_BUTTON_PRESS:
-        window_emit_signal(_G_L, window_getbywin(ev->event), "button::press", 2);
+        window_emit_signal_noret(_G_L, window_getbywin(ev->event), "button::press", 2);
         break;
       case XCB_BUTTON_RELEASE:
-        window_emit_signal(_G_L, window_getbywin(ev->event), "button::release", 2);
+        window_emit_signal_noret(_G_L, window_getbywin(ev->event), "button::release", 2);
         break;
       default: /* wtf? */
         lua_pop(_G_L, 2);
@@ -194,19 +194,19 @@ event_handle_configurenotify(void *data __attribute__ ((unused)),
         if(_G_root->geometry.width != ev->width)
         {
             _G_root->geometry.width = ev->width;
-            window_emit_signal(_G_L, _G_root, "property::width", 0);
+            window_emit_signal_noret(_G_L, _G_root, "property::width", 0);
             geometry_has_changed = true;
         }
 
         if(_G_root->geometry.height != ev->height)
         {
             _G_root->geometry.height = ev->height;
-            window_emit_signal(_G_L, _G_root, "property:height", 0);
+            window_emit_signal_noret(_G_L, _G_root, "property:height", 0);
             geometry_has_changed = true;
         }
 
         if(geometry_has_changed)
-            window_emit_signal(_G_L, _G_root, "property::geometry", 0);
+            window_emit_signal_noret(_G_L, _G_root, "property::geometry", 0);
     }
 
     return 0;
@@ -257,7 +257,7 @@ event_handle_motionnotify(void *data __attribute__ ((unused)),
     lua_pushinteger(_G_L, ev->event_y);
     lua_pushinteger(_G_L, ev->root_x);
     lua_pushinteger(_G_L, ev->root_y);
-    window_emit_signal(_G_L, window, "mouse::move", 5);
+    window_emit_signal_noret(_G_L, window, "mouse::move", 5);
     return 0;
 }
 
@@ -282,10 +282,10 @@ event_handle_enterleavenotify(void *data __attribute__ ((unused)),
     switch(ev->response_type)
     {
       case XCB_ENTER_NOTIFY:
-        window_emit_signal(_G_L, window_getbywin(ev->event), "mouse::enter", 5);
+        window_emit_signal_noret(_G_L, window_getbywin(ev->event), "mouse::enter", 5);
         break;
       case XCB_LEAVE_NOTIFY:
-        window_emit_signal(_G_L, window_getbywin(ev->event), "mouse::leave", 5);
+        window_emit_signal_noret(_G_L, window_getbywin(ev->event), "mouse::leave", 5);
         break;
       default: /* wtf */
         lua_pop(_G_L, 3);
@@ -421,10 +421,10 @@ event_handle_key(void *data __attribute__ ((unused)),
     switch(ev->response_type)
     {
       case XCB_KEY_PRESS:
-        window_emit_signal(_G_L, window_getbywin(ev->event), "key::press", 7);
+        window_emit_signal_noret(_G_L, window_getbywin(ev->event), "key::press", 7);
         break;
       case XCB_KEY_RELEASE:
-        window_emit_signal(_G_L, window_getbywin(ev->event), "key::release", 7);
+        window_emit_signal_noret(_G_L, window_getbywin(ev->event), "key::release", 7);
         break;
       default: /* wtf? */
         lua_pop(_G_L, 7);
