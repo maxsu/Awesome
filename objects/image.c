@@ -26,6 +26,7 @@
 #include "config.h"
 #include "luaa.h"
 #include "common/luaobject.h"
+#include "common/luaclass_property.h"
 
 struct image
 {
@@ -720,18 +721,21 @@ image_class_setup(lua_State *L)
                      (lua_class_collector_t) image_wipe,
                      NULL,
                      image_methods, image_module_meta, NULL);
-    luaA_class_add_property(&image_class, "width",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_image_get_width,
-                            NULL);
-    luaA_class_add_property(&image_class, "height",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_image_get_height,
-                            NULL);
-    luaA_class_add_property(&image_class, "alpha",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_image_get_alpha,
-                            NULL);
+
+    static const lua_class_property_entry_t image_property_get[] =
+    {
+        { "width", (lua_class_propfunc_t) luaA_image_get_width },
+        { "height", (lua_class_propfunc_t) luaA_image_get_height },
+        { "alpha", (lua_class_propfunc_t) luaA_image_get_alpha },
+        { NULL, NULL }
+    };
+
+    static const lua_class_property_entry_t image_property_set[] =
+    {
+        { NULL, NULL }
+    };
+
+    luaA_class_property_setup(L, &image_class, image_property_get, image_property_set);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

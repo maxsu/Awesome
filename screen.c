@@ -32,6 +32,7 @@
 #include "objects/wibox.h"
 #include "luaa.h"
 #include "common/xutil.h"
+#include "common/luaclass_property.h"
 
 static lua_class_t screen_class;
 LUA_OBJECT_FUNCS(&screen_class, screen_t, screen)
@@ -422,27 +423,21 @@ screen_class_setup(lua_State *L)
     luaA_class_setup(L, &screen_class, "screen", NULL, sizeof(screen_t),
                      NULL, NULL, NULL,
                      screen_methods, screen_module_meta, NULL);
+    static const lua_class_property_entry_t screen_property_get[] =
+    {
+        { "index", (lua_class_propfunc_t) luaA_screen_get_index },
+        { "root", (lua_class_propfunc_t) luaA_screen_get_root },
+        { "geometry", (lua_class_propfunc_t) luaA_screen_get_geometry },
+        { "workarea", (lua_class_propfunc_t) luaA_screen_get_workarea },
+        { "outputs", (lua_class_propfunc_t) luaA_screen_get_outputs },
+    };
 
-    luaA_class_add_property(&screen_class, "index",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_screen_get_index,
-                            NULL);
-    luaA_class_add_property(&screen_class, "root",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_screen_get_root,
-                            NULL);
-    luaA_class_add_property(&screen_class, "geometry",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_screen_get_geometry,
-                            NULL);
-    luaA_class_add_property(&screen_class, "workarea",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_screen_get_workarea,
-                            NULL);
-    luaA_class_add_property(&screen_class, "outputs",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_screen_get_outputs,
-                            NULL);
+    static const lua_class_property_entry_t screen_property_set[] =
+    {
+        { NULL, NULL },
+    };
+
+    luaA_class_property_setup(L, &screen_class, screen_property_get, screen_property_set);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

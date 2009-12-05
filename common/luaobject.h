@@ -87,52 +87,6 @@ luaA_object_emit_signal_noret(lua_State *L, int idx, const char *name, int nargs
         return prefix##_make_light(L, p_new(type, 1));                         \
     }
 
-#define OBJECT_EXPORT_PROPERTY(pfx, type, field) \
-    fieldtypeof(type, field) \
-    pfx##_get_##field(type *object) \
-    { \
-        return object->field; \
-    }
-
-#define LUA_OBJECT_EXPORT_PROPERTY(pfx, type, field, pusher) \
-    int \
-    luaA_##pfx##_get_##field(lua_State *L, type *object) \
-    { \
-        pusher(L, object->field); \
-        return 1; \
-    }
-
-#define LUA_OBJECT_DO_SET_PROPERTY_FUNC(pfx, type, prop) \
-    void \
-    pfx##_set_##prop(lua_State *L, type *item, fieldtypeof(type, prop) value) \
-    { \
-        if(item->prop != value) \
-        { \
-            item->prop = value; \
-            pfx##_emit_signal_noret(L, item, "property::" #prop, 0); \
-        } \
-    }
-
-#define LUA_OBJECT_FAKE_CHECKER(L, idx) idx
-
-#define LUA_OBJECT_DO_LUA_SET_PROPERTY_FUNC(pfx, type, prop, checker) \
-    int \
-    luaA_##pfx##_set_##prop(lua_State *L, type *c) \
-    { \
-        pfx##_set_##prop(L, c, checker(L, 3)); \
-        return 0; \
-    }
-
-#define LUA_OBJECT_DO_SET_PROPERTY_WITH_REF_FUNC(prefix, target_class, type, prop) \
-    void \
-    prefix##_set_##prop(lua_State *L, type *item, int vidx) \
-    { \
-        vidx = luaA_absindex(L, vidx); \
-        luaA_checkudataornil(L, vidx, (target_class)); \
-        item->prop = luaA_object_ref_item(L, (lua_object_t *) item, vidx); \
-        prefix##_emit_signal_noret(L, item, "property::" #prop, 0); \
-    }
-
 #endif
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

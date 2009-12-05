@@ -31,6 +31,7 @@
 #include "xwindow.h"
 #include "objects/client.h"
 #include "objects/tag.h"
+#include "common/luaclass_property.h"
 #include "common/atoms.h"
 #include "common/xutil.h"
 
@@ -500,66 +501,37 @@ client_class_setup(lua_State *L)
                      (lua_class_checker_t) client_checker,
                      client_methods, NULL, NULL);
 
-    luaA_class_add_property((lua_class_t *) &client_class, "name",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_name,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "skip_taskbar",
-                            (lua_class_propfunc_t) luaA_client_set_skip_taskbar,
-                            (lua_class_propfunc_t) luaA_client_get_skip_taskbar,
-                            (lua_class_propfunc_t) luaA_client_set_skip_taskbar);
-    luaA_class_add_property((lua_class_t *) &client_class, "class",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_class,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "instance",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_instance,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "role",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_role,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "pid",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_pid,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "leader_window",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_leader_window,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "machine",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_machine,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "icon_name",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_icon_name,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "group_window",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_group_window,
-                            NULL);
-    luaA_class_add_property((lua_class_t *) &client_class, "icon",
-                            (lua_class_propfunc_t) luaA_client_set_icon,
-                            (lua_class_propfunc_t) luaA_client_get_icon,
-                            (lua_class_propfunc_t) luaA_client_set_icon);
-    luaA_class_add_property((lua_class_t *) &client_class, "urgent",
-                            (lua_class_propfunc_t) luaA_client_set_urgent,
-                            (lua_class_propfunc_t) luaA_client_get_urgent,
-                            (lua_class_propfunc_t) luaA_client_set_urgent);
-    luaA_class_add_property((lua_class_t *) &client_class, "transient_for",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_client_get_transient_for,
-                            NULL);
-    /* Property overrides */
-    /* Cursor is not available */
-    luaA_class_add_property((lua_class_t *) &client_class, "cursor", NULL, NULL, NULL);
-    /* Type is not modifiable */
-    luaA_class_add_property((lua_class_t *) &client_class, "type",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_ewindow_get_type,
-                            NULL);
+    static const lua_class_property_entry_t client_property_get[] =
+    {
+        { "name", (lua_class_propfunc_t) luaA_client_get_name },
+        { "skip_taskbar", (lua_class_propfunc_t) luaA_client_get_skip_taskbar },
+        { "class", (lua_class_propfunc_t) luaA_client_get_class },
+        { "instance", (lua_class_propfunc_t) luaA_client_get_instance },
+        { "role", (lua_class_propfunc_t) luaA_client_get_role },
+        { "pid", (lua_class_propfunc_t) luaA_client_get_pid },
+        { "leader_window", (lua_class_propfunc_t) luaA_client_get_leader_window },
+        { "machine", (lua_class_propfunc_t) luaA_client_get_machine },
+        { "icon_name", (lua_class_propfunc_t) luaA_client_get_icon_name },
+        { "group_window", (lua_class_propfunc_t) luaA_client_get_group_window },
+        { "icon", (lua_class_propfunc_t) luaA_client_get_icon },
+        { "urgent", (lua_class_propfunc_t) luaA_client_get_urgent },
+        { "transient_for", (lua_class_propfunc_t) luaA_client_get_transient_for },
+        { "type", NULL },
+        /* Cursor is not available */
+        { "cursor", NULL },
+        { NULL, NULL },
+    };
+
+    static const lua_class_property_entry_t client_property_set[] =
+    {
+        { "skip_taskbar", (lua_class_propfunc_t) luaA_client_set_skip_taskbar },
+        { "urgent", (lua_class_propfunc_t) luaA_client_set_urgent },
+        /* Cursor is not available */
+        { "cursor", NULL },
+        { NULL, NULL },
+    };
+
+    luaA_class_property_setup(L, (lua_class_t *) &client_class, client_property_get, client_property_set);
 
     luaA_class_connect_signal(L, (lua_class_t *) &client_class, "focus", client_take_focus);
 }

@@ -23,6 +23,7 @@
 
 #include "common/xcursor.h"
 #include "common/util.h"
+#include "common/luaclass_property.h"
 
 static char const * const xcursor_font[] =
 {

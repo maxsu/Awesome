@@ -28,6 +28,7 @@
 #include "xwindow.h"
 #include "screen.h"
 #include "common/atoms.h"
+#include "common/luaclass_property.h"
 
 #define SYSTEM_TRAY_REQUEST_DOCK 0 /* Begin icon docking */
 

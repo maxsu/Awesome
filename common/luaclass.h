@@ -44,8 +44,6 @@ typedef void (*lua_class_initializer_t)(lua_State *, lua_object_t *);
 typedef void (*lua_class_collector_t)(lua_object_t *);
 typedef bool (*lua_class_checker_t)(lua_object_t *);
 
-typedef int (*lua_class_propfunc_t)(lua_State *, lua_object_t *);
-
 typedef struct lua_class_t lua_class_t;
 
 #define LUA_CLASS_HEADER \
@@ -60,8 +58,6 @@ typedef struct lua_class_t lua_class_t;
     lua_class_initializer_t initializer; \
     /** Garbage collection function */ \
     lua_class_collector_t collector; \
-    /** Class properties */ \
-    lua_class_property_array_t properties; \
     /** Function to call to check if an object is valid */ \
     lua_class_checker_t checker;
 
@@ -89,9 +85,6 @@ void luaA_class_setup(lua_State *, lua_class_t *, const char *, lua_class_t *, s
                       lua_class_initializer_t, lua_class_collector_t,
                       lua_class_checker_t,
                       const struct luaL_reg[], const struct luaL_reg[], const struct luaL_reg[]);
-
-void luaA_class_add_property(lua_class_t *, const char *,
-                             lua_class_propfunc_t, lua_class_propfunc_t, lua_class_propfunc_t);
 
 lua_object_t * luaA_object_new(lua_State *, lua_class_t *);
 int luaA_class_new(lua_State *, lua_class_t *);

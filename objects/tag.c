@@ -22,6 +22,7 @@
 #include "tag.h"
 #include "objects/ewindow.h"
 #include "luaa.h"
+#include "common/luaclass_property.h"
 
 ARRAY_FUNCS(tag_t *, tag, DO_NOTHING)
 
@@ -59,7 +60,9 @@ luaA_tag_set_attached(lua_State *L, tag_t *tag)
         /* Tag not already attached? */
         if(!tag_index)
         {
-            tag_array_append(&_G_tags, luaA_object_ref(L, 1));
+            /* copy object as it is popped by luaA_object_ref */
+            lua_pushvalue(L, 1);
+            tag_array_append(&_G_tags, luaA_object_ref(L, -1));
             luaA_object_emit_signal_noret(L, 1, "property::attached", 0);
         }
     }
@@ -242,10 +245,10 @@ static int
 luaA_tag_set_name(lua_State *L, tag_t *tag)
 {
     size_t len;
-    const char *buf = luaL_checklstring(L, -1, &len);
+    const char *buf = luaL_checklstring(L, 3, &len);
     p_delete(&tag->name);
     a_iso2utf8(buf, len, &tag->name, NULL);
-    luaA_object_emit_signal_noret(L, -3, "property::name", 0);
+    luaA_object_emit_signal_noret(L, 1, "property::name", 0);
     return 0;
 }
 
@@ -271,18 +274,24 @@ tag_class_setup(lua_State *L)
                      (lua_class_collector_t) tag_wipe,
                      NULL,
                      tag_methods, tag_module_meta, NULL);
-    luaA_class_add_property(&tag_class, "name",
-                            (lua_class_propfunc_t) luaA_tag_set_name,
-                            (lua_class_propfunc_t) luaA_tag_get_name,
-                            (lua_class_propfunc_t) luaA_tag_set_name);
-    luaA_class_add_property(&tag_class, "selected",
-                            (lua_class_propfunc_t) luaA_tag_set_selected,
-                            (lua_class_propfunc_t) luaA_tag_get_selected,
-                            (lua_class_propfunc_t) luaA_tag_set_selected);
-    luaA_class_add_property(&tag_class, "attached",
-                            (lua_class_propfunc_t) luaA_tag_set_attached,
-                            (lua_class_propfunc_t) luaA_tag_get_attached,
-                            (lua_class_propfunc_t) luaA_tag_set_attached);
+
+    static const lua_class_property_entry_t tag_property_get[] =
+    {
+        { "name", (lua_class_propfunc_t) luaA_tag_get_name, },
+        { "selected", (lua_class_propfunc_t) luaA_tag_get_selected },
+        { "attached", (lua_class_propfunc_t) luaA_tag_get_attached },
+        { NULL, NULL }
+    };
+
+    static const lua_class_property_entry_t tag_property_set[] =
+    {
+        { "name", (lua_class_propfunc_t) luaA_tag_set_name, },
+        { "selected", (lua_class_propfunc_t) luaA_tag_set_selected },
+        { "attached", (lua_class_propfunc_t) luaA_tag_set_attached },
+        { NULL, NULL }
+    };
+
+    luaA_class_property_setup(L, &tag_class, tag_property_get, tag_property_set);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

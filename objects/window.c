@@ -33,6 +33,8 @@
 #include "common/luaobject.h"
 #include "common/xutil.h"
 #include "common/xcursor.h"
+#include "common/luaclass_property.h"
+
 
 /** Focused window */
 static window_t *window_focused;
@@ -453,7 +455,7 @@ luaA_window_geometry(lua_State *L)
 static int
 luaA_window_set_x(lua_State *L, window_t *window)
 {
-    window_set_geometry(L, window, (area_t) { .x = luaL_checknumber(L, -1),
+    window_set_geometry(L, window, (area_t) { .x = luaL_checknumber(L, 3),
                                               .y = window->geometry.y,
                                               .width = window->geometry.width,
                                               .height = window->geometry.height });
@@ -471,7 +473,7 @@ static int
 luaA_window_set_y(lua_State *L, window_t *window)
 {
     window_set_geometry(L, window, (area_t) { .x = window->geometry.x,
-                                              .y = luaL_checknumber(L, -1),
+                                              .y = luaL_checknumber(L, 3),
                                               .width = window->geometry.width,
                                               .height = window->geometry.height });
     return 0;
@@ -487,7 +489,7 @@ luaA_window_get_y(lua_State *L, window_t *window)
 static int
 luaA_window_set_width(lua_State *L, window_t *window)
 {
-    int width = luaL_checknumber(L, -1);
+    int width = luaL_checknumber(L, 3);
     if(width <= 0)
         luaL_error(L, "invalid width");
     window_set_geometry(L, window, (area_t) { .x = window->geometry.x,
@@ -507,7 +509,7 @@ luaA_window_get_width(lua_State *L, window_t *window)
 static int
 luaA_window_set_height(lua_State *L, window_t *window)
 {
-    int height = luaL_checknumber(L, -1);
+    int height = luaL_checknumber(L, 3);
     if(height <= 0)
         luaL_error(L, "invalid height");
     window_set_geometry(L, window, (area_t) { .x = window->geometry.x,
@@ -588,7 +590,7 @@ luaA_window_set_layer(lua_State *L, window_t *window)
 static int
 luaA_window_set_cursor(lua_State *L, window_t *window)
 {
-    const char *buf = luaL_checkstring(L, -1);
+    const char *buf = luaL_checkstring(L, 3);
     if(buf)
     {
         uint16_t cursor_font = xcursor_font_fromstr(buf);
@@ -844,62 +846,37 @@ window_class_setup(lua_State *L)
                      (lua_class_collector_t) window_wipe, NULL,
                      window_methods, NULL, NULL);
 
-    luaA_class_add_property(&window_class, "window",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_window,
-                            NULL);
-    luaA_class_add_property(&window_class, "focusable",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_focusable,
-                            NULL);
-    luaA_class_add_property(&window_class, "cursor",
-                            (lua_class_propfunc_t) luaA_window_set_cursor,
-                            (lua_class_propfunc_t) luaA_window_get_cursor,
-                            (lua_class_propfunc_t) luaA_window_set_cursor);
-    luaA_class_add_property(&window_class, "parent",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_parent,
-                            NULL);
-    luaA_class_add_property(&window_class, "size_hints",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_size_hints,
-                            NULL);
-    luaA_class_add_property(&window_class, "x",
-                            (lua_class_propfunc_t) luaA_window_set_x,
-                            (lua_class_propfunc_t) luaA_window_get_x,
-                            (lua_class_propfunc_t) luaA_window_set_x);
-    luaA_class_add_property(&window_class, "y",
-                            (lua_class_propfunc_t) luaA_window_set_y,
-                            (lua_class_propfunc_t) luaA_window_get_y,
-                            (lua_class_propfunc_t) luaA_window_set_y);
-    luaA_class_add_property(&window_class, "width",
-                            (lua_class_propfunc_t) luaA_window_set_width,
-                            (lua_class_propfunc_t) luaA_window_get_width,
-                            (lua_class_propfunc_t) luaA_window_set_width);
-    luaA_class_add_property(&window_class, "height",
-                            (lua_class_propfunc_t) luaA_window_set_height,
-                            (lua_class_propfunc_t) luaA_window_get_height,
-                            (lua_class_propfunc_t) luaA_window_set_height);
-    luaA_class_add_property(&window_class, "content",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_content,
-                            NULL);
-    luaA_class_add_property(&window_class, "movable",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_movable,
-                            NULL);
-    luaA_class_add_property(&window_class, "resizable",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_resizable,
-                            NULL);
-    luaA_class_add_property(&window_class, "visible",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_window_get_visible,
-                            NULL);
-    luaA_class_add_property(&window_class, "layer",
-                            (lua_class_propfunc_t) luaA_window_set_layer,
-                            (lua_class_propfunc_t) luaA_window_get_layer,
-                            (lua_class_propfunc_t) luaA_window_set_layer);
+    static const lua_class_property_entry_t window_property_get[] =
+    {
+        { "window", (lua_class_propfunc_t) luaA_window_get_window },
+        { "focusable", (lua_class_propfunc_t) luaA_window_get_focusable },
+        { "cursor", (lua_class_propfunc_t) luaA_window_get_cursor },
+        { "parent", (lua_class_propfunc_t) luaA_window_get_parent },
+        { "size_hints", (lua_class_propfunc_t) luaA_window_get_size_hints },
+        { "x", (lua_class_propfunc_t) luaA_window_get_x },
+        { "y", (lua_class_propfunc_t) luaA_window_get_y },
+        { "width", (lua_class_propfunc_t) luaA_window_get_width },
+        { "height", (lua_class_propfunc_t) luaA_window_get_height },
+        { "content", (lua_class_propfunc_t) luaA_window_get_content },
+        { "movable", (lua_class_propfunc_t) luaA_window_get_movable },
+        { "resizable", (lua_class_propfunc_t) luaA_window_get_resizable },
+        { "visible", (lua_class_propfunc_t) luaA_window_get_visible },
+        { "layer", (lua_class_propfunc_t) luaA_window_get_layer },
+        { NULL, NULL }
+    };
+
+    static const lua_class_property_entry_t window_property_set[] =
+    {
+        { "cursor", (lua_class_propfunc_t) luaA_window_set_cursor },
+        { "x", (lua_class_propfunc_t) luaA_window_set_x },
+        { "y", (lua_class_propfunc_t) luaA_window_set_y },
+        { "width", (lua_class_propfunc_t) luaA_window_set_width },
+        { "height", (lua_class_propfunc_t) luaA_window_set_height },
+        { "layer", (lua_class_propfunc_t) luaA_window_set_layer },
+        { NULL, NULL }
+    };
+
+    luaA_class_property_setup(L, &window_class, window_property_get, window_property_set);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80

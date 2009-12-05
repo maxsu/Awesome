@@ -21,21 +21,10 @@
 #include "common/lualib.h"
 #include "common/luaclass.h"
 #include "common/luaobject.h"
+#include "common/luaclass_property.h"
 
 /** The default class for all object */
 lua_class_t luaobject_class = { .name = "object" };
-
-struct lua_class_property
-{
-    /** ID matching the property */
-    unsigned long id;
-    /** Callback function called when the property is found in object creation. */
-    lua_class_propfunc_t new;
-    /** Callback function called when the property is found in object __index. */
-    lua_class_propfunc_t index;
-    /** Callback function called when the property is found in object __newindex. */
-    lua_class_propfunc_t newindex;
-};
 
 int
 luaA_settype(lua_State *L, lua_class_t *lua_class)
@@ -144,31 +133,6 @@ luaA_classname(lua_State *L, int idx)
     return lua_typename(L, type);
 }
 
-static int
-lua_class_property_cmp(const void *a, const void *b)
-{
-    const lua_class_property_t *x = a, *y = b;
-    return x->id > y->id ? 1 : (x->id < y->id ? -1 : 0);
-}
-
-BARRAY_FUNCS(lua_class_property_t, lua_class_property, DO_NOTHING, lua_class_property_cmp)
-
-void
-luaA_class_add_property(lua_class_t *lua_class,
-                        const char *name,
-                        lua_class_propfunc_t cb_new,
-                        lua_class_propfunc_t cb_index,
-                        lua_class_propfunc_t cb_newindex)
-{
-    lua_class_property_array_insert(&lua_class->properties, (lua_class_property_t)
-                                    {
-                                        .id = a_strhash((const unsigned char *) name),
-                                        .new = cb_new,
-                                        .index = cb_index,
-                                        .newindex = cb_newindex
-                                    });
-}
-
 /** Garbage collect a Lua object.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -262,59 +226,6 @@ luaA_use_class_fields(lua_State *L, int idxobj, int idxfield)
     return 0;
 }
 
-static lua_class_property_t *
-lua_class_property_array_getbyid(lua_class_property_array_t *arr,
-                                 unsigned long id)
-{
-    return lua_class_property_array_lookup(arr, (lua_class_property_t) { .id = id });
-}
-
-/** Get a property of a object.
- * \param L The Lua VM state.
- * \param lua_class The Lua class.
- * \param fieldidx The index of the field name.
- * \return The object property if found, NULL otherwise.
- */
-static lua_class_property_t *
-luaA_class_property_get(lua_State *L, lua_class_t *lua_class, int fieldidx)
-{
-    /* Lookup the property using id */
-    unsigned long id = a_strhash((const unsigned char*) luaL_checkstring(L, fieldidx));
-
-    /* Look for the property in the class; if not found, go in the parent class. */
-    for(; lua_class; lua_class = lua_class->parent)
-    {
-        lua_class_property_t *prop =
-            lua_class_property_array_getbyid(&lua_class->properties, id);
-
-        if(prop)
-            return prop;
-    }
-
-    return NULL;
-}
-
-/** This is a wrapper for calling property function in a clean env.
- * On the stack it gets:
- * 1. function to call
- * 2. object
- * (3. key
- *  4. value,
- *  etc, we don't care)
- *  It then pop 1. function to call, and calls it with L and 2. object has
- *  argument.
- * \param L The Lua VM state.
- * \return The number of elements pushed on stack.
- */
-static int
-luaA_class_property_call_function_wrapper(lua_State *L)
-{
-    lua_class_propfunc_t func = lua_topointer(L, 1);
-    lua_remove(L, 1);
-    lua_object_t *object = lua_touserdata(L, 1);
-    return func(L, object);
-}
-
 /** Generic index meta function for objects.
  * \param L The Lua VM state.
  * \return The number of elements pushed on stack.
@@ -322,30 +233,17 @@ luaA_class_property_call_function_wrapper(lua_State *L)
 static int
 luaA_class_index(lua_State *L)
 {
-    lua_class_t *class = luaA_class_get_from_stack(L, 1);
-
-    lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
-
-    /* Property does exist and has an index callback */
-    if(prop && prop->index)
+    /* duplicate key */
+    lua_pushvalue(L, 2);
+    int nret = luaA_object_emit_signal(L, 1, "property::get", 1);
+    if(nret > 0)
     {
-        /* Push wrapper function */
-        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-        /* Push property function */
-        lua_pushlightuserdata(L, prop->index);
-        /* Push object */
-        lua_pushvalue(L, 1);
-        /* Duplicate key */
-        lua_pushvalue(L, 2);
-        if(luaA_dofunction(L, 3, 1) > 0)
-            return 1;
+        warn("%d", nret);
+        luaA_dumpstack(L);
+        return nret;
     }
 
-    /* Try to use class fields then */
-    if(luaA_use_class_fields(L, 1, 2))
-        return 1;
-
-    return 0;
+    return luaA_use_class_fields(L, 1, 2);
 }
 
 /** Generic newindex meta function for objects.
@@ -355,27 +253,7 @@ luaA_class_index(lua_State *L)
 static int
 luaA_class_newindex(lua_State *L)
 {
-    lua_class_t *class = luaA_class_get_from_stack(L, 1);
-
-    lua_class_property_t *prop = luaA_class_property_get(L, class, 2);
-
-    /* Property does exist and has a newindex callback */
-    if(prop && prop->newindex)
-    {
-        /* Push wrapper function */
-        lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-        /* Push property function */
-        lua_pushlightuserdata(L, prop->newindex);
-        /* Push object */
-        lua_pushvalue(L, 1);
-        /* Duplicate key */
-        lua_pushvalue(L, 2);
-        /* Duplicate value */
-        lua_pushvalue(L, 3);
-        if(luaA_dofunction(L, 4, 0) != 0)
-            return 0;
-    }
-
+    luaA_object_emit_signal_noret(L, 1, "property::set", 2);
     return 0;
 }
 
@@ -586,31 +464,12 @@ luaA_class_new(lua_State *L, lua_class_t *lua_class)
     /* Iterate over the property keys */
     while(lua_next(L, 2))
     {
-        /* Check that the key is a string.
-         * We cannot call tostring blindly or Lua will convert a key that is a
-         * number TO A STRING, confusing lua_next() */
-        if(lua_isstring(L, -2))
-        {
-            lua_class_property_t *prop = luaA_class_property_get(L, lua_class, -2);
-
-            if(prop && prop->new)
-            {
-                /* Push wrapper function */
-                lua_pushcfunction(L, luaA_class_property_call_function_wrapper);
-                /* Push property function */
-                lua_pushlightuserdata(L, prop->new);
-                /* Push object */
-                lua_pushvalue(L, 3);
-                /* Duplicate key */
-                lua_pushvalue(L, -5);
-                /* Duplicate value */
-                lua_pushvalue(L, -5);
-                if(luaA_dofunction(L, 4, 0) != 0)
-                    continue;
-            }
-        }
-        /* Remove value */
-        lua_pop(L, 1);
+        /* Duplicate key */
+        lua_pushvalue(L, -2);
+        /* Insert key before value */
+        lua_insert(L, -2);
+        /* Emit signal with key/value */
+        luaA_object_emit_signal_noret(L, 3, "property::set", 2);
     }
 
     return 1;

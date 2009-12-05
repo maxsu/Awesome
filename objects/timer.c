@@ -24,6 +24,7 @@
 #include "luaa.h"
 #include "timer.h"
 #include "common/luaobject.h"
+#include "common/luaclass_property.h"
 
 typedef struct
 {
@@ -70,9 +71,9 @@ luaA_timer_new(lua_State *L)
 static int
 luaA_timer_set_timeout(lua_State *L, atimer_t *timer)
 {
-    double timeout = luaL_checknumber(L, -1);
+    double timeout = luaL_checknumber(L, 3);
     ev_timer_set(&timer->timer, timeout, timeout);
-    luaA_object_emit_signal_noret(L, -3, "property::timeout", 0);
+    luaA_object_emit_signal_noret(L, 1, "property::timeout", 0);
     return 0;
 }
 
@@ -131,20 +132,27 @@ timer_class_setup(lua_State *L)
     static const struct luaL_reg timer_module_meta[] =
     {
         { "__call", luaA_timer_new },
-        { NULL, NULL },
+        { NULL, NULL }
     };
 
     luaA_class_setup(L, &timer_class, "timer", NULL, sizeof(atimer_t),
                      NULL, (lua_class_collector_t) timer_wipe, NULL,
                      timer_methods, timer_module_meta, NULL);
-    luaA_class_add_property(&timer_class, "timeout",
-                            (lua_class_propfunc_t) luaA_timer_set_timeout,
-                            (lua_class_propfunc_t) luaA_timer_get_timeout,
-                            (lua_class_propfunc_t) luaA_timer_set_timeout);
-    luaA_class_add_property(&timer_class, "started",
-                            NULL,
-                            (lua_class_propfunc_t) luaA_timer_get_started,
-                            NULL);
+
+    static const lua_class_property_entry_t timer_property_get[] =
+    {
+        { "timeout", (lua_class_propfunc_t) luaA_timer_get_timeout },
+        { "started", (lua_class_propfunc_t) luaA_timer_get_started },
+        { NULL, NULL }
+    };
+
+    static const lua_class_property_entry_t timer_property_set[] =
+    {
+        { "timeout", (lua_class_propfunc_t) luaA_timer_set_timeout },
+        { NULL, NULL }
+    };
+
+    luaA_class_property_setup(L, &timer_class, timer_property_get, timer_property_set);
 }
 
 // vim: filetype=c:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=80
